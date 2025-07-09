@@ -154,3 +154,6 @@ dmypy.json
 
 # Cython debug symbols
 cython_debug/
+
+# Pycharm project files that we dont want to commit
+.idea/misc.xml
