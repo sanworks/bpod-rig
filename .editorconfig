@@ -1,0 +1,22 @@
+# https://editorconfig.org/
+
+root = true
+
+# MOLI uses tabs for indentation.
+# Why?
+# Accessibiliy:  so that programmers may choose their tab width in $EDITOR_OF_CHOICE
+# and... because it's fewer bytes overall than $NUM spaces are. :-)
+[*]
+indent_style = tab
+insert_final_newline = true
+trim_trailing_whitespace = true
+end_of_line = lf
+charset = utf-8
+
+[**.min.js]
+indent_style = ignore
+indent_final_newline = ignore
+
+[**.min.css]
+indent_style = ignore
+indent_final_newline = ignore
