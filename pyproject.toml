@@ -15,9 +15,9 @@ authors = [
 	{name = "Steven Smith", email = "steven@stevenlsmith.com"}
 ]
 requires-python = ">=3.10"
-dependences = [
-	"bpod-core",
-	"bpod-gui"
+dependencies = [
+	"bpod-core>=0.1.0a2",
+	#"bpod-gui"
 ]
 
 [project.urls]
