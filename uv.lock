@@ -36,6 +36,7 @@ wheels = [
 
 [[package]]
 name = "bpod-rig"
+version = "0.0.1"
 source = { editable = "." }
 dependencies = [
     { name = "bpod-core" },
