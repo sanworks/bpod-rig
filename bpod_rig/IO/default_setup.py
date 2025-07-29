@@ -44,7 +44,8 @@ def create_default_directories(default_path_override: Path = None) -> Path:
 
     return bpod_folder_path
 
-def copy_default_files(bpod_dir: Path, only_if_empty:bool = True):
+
+def copy_default_files(bpod_dir: Path, only_if_empty: bool = True):
     """
     Function to copy default settings and calibration .json files from the included
     examples package
@@ -63,28 +64,22 @@ def copy_default_files(bpod_dir: Path, only_if_empty:bool = True):
     bpod_calibration_dir_contents = list(bpod_calibration_dir.iterdir())
     bpod_settings_dir_contents = list(bpod_settings_dir.iterdir())
 
-
-    if (
-        (only_if_empty and len(bpod_calibration_dir_contents) == 0) or
-        not only_if_empty
-    ):
+    if (only_if_empty and len(bpod_calibration_dir_contents) == 0) or not only_if_empty:
         # If only_if_empty is true, the calibration dir must be empty; if only_if_empty
         # is false, we'll copy no matter what
         for cal_file in default_calibration_files:
             try:
                 logger.debug("Copying %s to %s...", cal_file, bpod_calibration_dir)
                 shutil.copy2(cal_file, bpod_calibration_dir)
-            except Exception as e:
+            except Exception as e:  # NOQA PERF203
                 logger.error("Error copying %s! Original Exception: %s", cal_file, e)
 
-    if (
-        (only_if_empty and len(bpod_settings_dir_contents) == 0) or
-        not only_if_empty
-    ):
+    if (only_if_empty and len(bpod_settings_dir_contents) == 0) or not only_if_empty:
         for setting_file in default_settings_files:
             try:
                 logger.debug("Copying %s to %s...", setting_file, bpod_settings_dir)
                 shutil.copy2(setting_file, bpod_settings_dir)
-            except Exception as e:
-                logger.error("Error copying %s! Original Exception: %s", setting_file, e)
-
+            except Exception as e:  # NOQA PERF203
+                logger.error(
+                    "Error copying %s! Original Exception: %s", setting_file, e
+                )
