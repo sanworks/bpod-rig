@@ -5,7 +5,7 @@ import shutil
 
 from pathlib import Path
 
-from examples import calibration, settings
+from bpod_rig.examples import calibration, settings
 
 DEFAULT_SUBDIRS = ["Calibrations", "Data", "Protocols", "Settings"]
 DEFAULT_DIR_NAME = "Bpod"
