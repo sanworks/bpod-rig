@@ -27,10 +27,16 @@ Homepage = "https://github.com/sanworks/bpod-rig"
 Issues = "https://github.com/sanworks/bpod-rig/issues"
 Repository = "https://github.com/sanworks/bpod-rig.git"
 
+[tool.setuptools]
+include-package-data = true
+# We want to include the examples folder in the wheel incase its needed
+
+[tool.setuptools.packages]
+find = {where = [""], include = ["*", "examples"]}
+# We need to explicitly include examples as it is a reserved name
+
 [tool.setuptools.dynamic]
 version = {attr="bpod_rig.__version__"}
-
-
 
 [tool.ruff]
 # Exclude a variety of commonly ignored directories.
