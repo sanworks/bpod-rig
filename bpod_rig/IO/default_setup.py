@@ -39,13 +39,13 @@ def create_default_directories(default_path_override: Path = None) -> Path:
         logger.debug("Creating default Bpod directory in %s", default_root_location)
         bpod_folder_path.mkdir(parents=True, exist_ok=True)
 
-    for _dir in DEFAULT_SUBDIRS:
-        _path = bpod_folder_path.joinpath(_dir)
-        if not _path.exists():
+    for subdir in DEFAULT_SUBDIRS:
+        new_path = bpod_folder_path.joinpath(subdir)
+        if not new_path.exists():
             logger.debug(
-                "Creating default subdirectory [%s] in %s", _dir, bpod_folder_path
+                "Creating default subdirectory [%s] in %s", subdir, bpod_folder_path
             )
-            _path.mkdir(parents=True, exist_ok=True)
+            new_path.mkdir(parents=True, exist_ok=True)
 
     return bpod_folder_path
 
