@@ -17,10 +17,15 @@ def create_default_directories(default_path_override: Path = None) -> Path:
     """
     Function creates the default Bpod folder structure in the users home directory
     or in a user-supplied path
-    :param default_path_override: (pathlib.Path) Optional: path to override the default
-    Bpod folder
-    structure location
-    :return: (pathlib.Path) Bpod directory path
+    Parameters
+    ----------
+    default_path_override (pathlib.Path) Optional: path to override the default
+    Bpod folder structure location
+
+
+    Returns
+    -------
+    Bpod directory path (pathlib.Path)
     """
 
     default_root_location = Path.home()
@@ -49,11 +54,17 @@ def copy_default_files(bpod_dir: Path, only_if_empty: bool = True):
     """
     Function to copy default settings and calibration .json files from the included
     examples package
-    :param bpod_dir: (pathlib.Path): Path to the Bpod directory
-    :param only_if_empty: (bool) (Optional): Only copy the files if the destination
+    Parameters
+    ----------
+    bpod_dir (pathlib.Path): Path to the Bpod directory
+    only_if_empty (bool) (Optional): Only copy the files if the destination
      directory is empty
-    :return:
+
+    Returns
+    -------
+    None
     """
+
     calibration_example_dir = Path(calibration.__path__[0])
     settings_example_dir = Path(settings.__path__[0])
     default_calibration_files = calibration_example_dir.glob("*.json")
