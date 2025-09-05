@@ -68,8 +68,8 @@ class TestValveDataManagerClass(unittest.TestCase):
     def setUp(self):
         self.manager = ValveDataManagerClass()
         self.manager.create_valve("Test Valve")
-        dummy = liquid.create_empty_valve_data_manager()
-        liquid.add_dummy_measurements(dummy)
+        dummy = utils.create_empty_valve_data_manager()
+        utils.add_dummy_measurements(dummy)
         self.dummy = dummy
 
     def test_create_valve(self):
@@ -112,15 +112,15 @@ class TestGen2CalibrationFile(unittest.TestCase):
 
     def test_valve_modtime(self):
         valvemanager = ValveDataManagerClass.model_validate_json(self.jsontext)
-        self.assertFalse(liquid.check_valvemanager_user_updated(valvemanager))
+        self.assertFalse(utils.check_valvemanager_user_updated(valvemanager))
         newvalve = ValveDataManagerClass.model_validate_json(valvemanager.to_json())
-        self.assertTrue(liquid.check_valvemanager_user_updated(newvalve))
+        self.assertTrue(utils.check_valvemanager_user_updated(newvalve))
 
 
 class TestValveDataManagerJSON(unittest.TestCase):
     def setUp(self):
-        self.manager = liquid.create_empty_valve_data_manager()
-        liquid.add_dummy_measurements(self.manager)
+        self.manager = utils.create_empty_valve_data_manager()
+        utils.add_dummy_measurements(self.manager)
         self.json_str = self.manager.to_json()
         self.loaded_manager = ValveDataManagerClass.model_validate_json(self.json_str)
 
@@ -140,7 +140,7 @@ class TestSuggestDuration(unittest.TestCase):
         self.valve = ValveDataClass(ValveName="Test Valve")
         self.range_low = 2
         self.range_high = 10
-        self.suggest_duration = lambda: liquid.suggest_duration(
+        self.suggest_duration = lambda: utils.suggest_duration(
             self.valve, self.range_low, self.range_high
         )
 
