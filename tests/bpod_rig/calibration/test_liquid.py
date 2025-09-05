@@ -1,18 +1,20 @@
 import unittest
 import urllib.request
 
-from bpod_rig.calibration import liquid
+from bpod_rig.calibration.liquid import liquid
+from bpod_rig.calibration.liquid.models import ValveDataClass, ValveDataManagerClass
 
 class TestValveDataClass(unittest.TestCase):
 
     def setUp(self):
-        self.valve = liquid.ValveDataClass(ValveName="Test Valve")
+        self.valve = ValveDataClass(ValveName="Test Valve")
 
     def test_init_alias(self):
         # Test that alias works correctly
         # type checker may complain about this because of pydantic aliasing
-        self.assertEqual(liquid.ValveDataClass(name='attrname').name, 'attrname')
-        self.assertEqual(liquid.ValveDataClass(ValveName='aliasname').name, 'aliasname')
+        self.assertEqual(ValveDataClass(name='attrname').name, 'attrname')
+        self.assertEqual(
+            ValveDataClass(ValveName='aliasname').name, 'aliasname')
 
     def test_add_measurement(self):
         self.valve.add_measurement(10, 1.0)
@@ -65,7 +67,7 @@ class TestValveDataClass(unittest.TestCase):
 class TestValveDataManagerClass(unittest.TestCase):
 
     def setUp(self):
-        self.manager = liquid.ValveDataManagerClass()
+        self.manager = ValveDataManagerClass()
         self.manager.create_valve("Test Valve")
         dummy = liquid.create_empty_valve_data_manager()
         liquid.add_dummy_measurements(dummy)
@@ -77,7 +79,7 @@ class TestValveDataManagerClass(unittest.TestCase):
 
     def test_get_valve(self):
         valve = self.manager.get_valve("Test Valve")
-        self.assertIsInstance(valve, liquid.ValveDataClass)
+        self.assertIsInstance(valve, ValveDataClass)
 
     def test_measurements(self):
         """Test that the default values are behaving as expeted."""
@@ -103,15 +105,17 @@ class TestGen2CalibrationFile(unittest.TestCase):
         cls.jsontext = urllib.request.urlopen(url).read().decode()
 
     def test_load_calibration_file(self):
-        loaded_valves = liquid.ValveDataManagerClass.model_validate_json(self.jsontext)
-        self.assertIsInstance(loaded_valves, liquid.ValveDataManagerClass)
+        loaded_valves = ValveDataManagerClass.model_validate_json(self.jsontext)
+        self.assertIsInstance(loaded_valves,
+                              ValveDataManagerClass
+                              )
         self.assertGreaterEqual(loaded_valves.n_valves, 1)
         self.assertIn("Valve1", loaded_valves.valve_names)
 
     def test_valve_modtime(self):
-        valvemanager = liquid.ValveDataManagerClass.model_validate_json(self.jsontext)
+        valvemanager = ValveDataManagerClass.model_validate_json(self.jsontext)
         self.assertFalse(liquid.check_valvemanager_user_updated(valvemanager))
-        newvalve = liquid.ValveDataManagerClass.model_validate_json(valvemanager.to_json())
+        newvalve = ValveDataManagerClass.model_validate_json(valvemanager.to_json())
         self.assertTrue(liquid.check_valvemanager_user_updated(newvalve))
 
 
@@ -121,7 +125,7 @@ class TestValveDataManagerJSON(unittest.TestCase):
         self.manager = liquid.create_empty_valve_data_manager()
         liquid.add_dummy_measurements(self.manager)
         self.json_str = self.manager.to_json()
-        self.loaded_manager = liquid.ValveDataManagerClass.model_validate_json(self.json_str)
+        self.loaded_manager = ValveDataManagerClass.model_validate_json(self.json_str)
 
     def test_json_round_trip(self):
         self.assertEqual(self.manager.n_valves, self.loaded_manager.n_valves)
@@ -137,7 +141,7 @@ class TestValveDataManagerJSON(unittest.TestCase):
 class TestSuggestDuration(unittest.TestCase):
 
     def setUp(self):
-        self.valve = liquid.ValveDataClass(ValveName="Test Valve")
+        self.valve = ValveDataClass(ValveName="Test Valve")
         self.range_low = 2
         self.range_high = 10
         self.suggest_duration = lambda: liquid.suggest_duration(self.valve, self.range_low, self.range_high)
