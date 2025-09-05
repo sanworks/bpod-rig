@@ -4,17 +4,16 @@ import urllib.request
 from bpod_rig.calibration.liquid import liquid
 from bpod_rig.calibration.liquid.models import ValveDataClass, ValveDataManagerClass
 
-class TestValveDataClass(unittest.TestCase):
 
+class TestValveDataClass(unittest.TestCase):
     def setUp(self):
         self.valve = ValveDataClass(ValveName="Test Valve")
 
     def test_init_alias(self):
         # Test that alias works correctly
         # type checker may complain about this because of pydantic aliasing
-        self.assertEqual(ValveDataClass(name='attrname').name, 'attrname')
-        self.assertEqual(
-            ValveDataClass(ValveName='aliasname').name, 'aliasname')
+        self.assertEqual(ValveDataClass(name="attrname").name, "attrname")
+        self.assertEqual(ValveDataClass(ValveName="aliasname").name, "aliasname")
 
     def test_add_measurement(self):
         self.valve.add_measurement(10, 1.0)
@@ -64,8 +63,8 @@ class TestValveDataClass(unittest.TestCase):
         self.valve.add_measurement(20, 2.0)
         self.assertIsNotNone(self.valve.coeffs)
 
-class TestValveDataManagerClass(unittest.TestCase):
 
+class TestValveDataManagerClass(unittest.TestCase):
     def setUp(self):
         self.manager = ValveDataManagerClass()
         self.manager.create_valve("Test Valve")
@@ -95,6 +94,7 @@ class TestValveDataManagerClass(unittest.TestCase):
         duration = self.dummy.get_valve(valve).get_valve_time(liquid_amount)
         self.assertAlmostEqual(duration, expected_duration, places=3)
 
+
 class TestGen2CalibrationFile(unittest.TestCase):
     """Test loading a calibration file from the Bpod_Gen2 (MATLAB) repo."""
 
@@ -106,9 +106,7 @@ class TestGen2CalibrationFile(unittest.TestCase):
 
     def test_load_calibration_file(self):
         loaded_valves = ValveDataManagerClass.model_validate_json(self.jsontext)
-        self.assertIsInstance(loaded_valves,
-                              ValveDataManagerClass
-                              )
+        self.assertIsInstance(loaded_valves, ValveDataManagerClass)
         self.assertGreaterEqual(loaded_valves.n_valves, 1)
         self.assertIn("Valve1", loaded_valves.valve_names)
 
@@ -120,7 +118,6 @@ class TestGen2CalibrationFile(unittest.TestCase):
 
 
 class TestValveDataManagerJSON(unittest.TestCase):
-
     def setUp(self):
         self.manager = liquid.create_empty_valve_data_manager()
         liquid.add_dummy_measurements(self.manager)
@@ -139,12 +136,13 @@ class TestValveDataManagerJSON(unittest.TestCase):
 
 
 class TestSuggestDuration(unittest.TestCase):
-
     def setUp(self):
         self.valve = ValveDataClass(ValveName="Test Valve")
         self.range_low = 2
         self.range_high = 10
-        self.suggest_duration = lambda: liquid.suggest_duration(self.valve, self.range_low, self.range_high)
+        self.suggest_duration = lambda: liquid.suggest_duration(
+            self.valve, self.range_low, self.range_high
+        )
 
     def test_no_measures(self):
         self.assertEqual(self.suggest_duration(), 48)

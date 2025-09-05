@@ -1,4 +1,5 @@
 """Liquid calibration data management and calibratino routines."""
+
 import datetime
 import logging
 from pydantic import Field
@@ -10,18 +11,18 @@ logger = logging.getLogger(__name__)
 
 
 def create_empty_valve_data_manager(
-        source: str = 'statemachine',
-        n_valves: int = 8,
+    source: str = "statemachine",
+    n_valves: int = 8,
 ) -> ValveDataManagerClass:
     """Create an empty valve manager with 8 valves."""
     valvemanager = ValveDataManagerClass()
-    if source == 'statemachine':
+    if source == "statemachine":
         for index in range(n_valves):
             valvemanager.create_valve(f"Valve{index + 1}")
-    elif source == 'portarray':
+    elif source == "portarray":
         for index in range(n_valves):
             for port_array in range(4):
-                valvemanager.create_valve(f"PA{port_array + 1 }_{index + 1}")
+                valvemanager.create_valve(f"PA{port_array + 1}_{index + 1}")
     else:
         raise ValueError(f"Unknown source for valve names: {source}")
 
@@ -49,6 +50,7 @@ def add_dummy_measurements(valvemanager: ValveDataManagerClass) -> None:
 
     valvemanager.metadata.modification_datetime = origin_date
 
+
 def create_default_json() -> str:
     """Produce a default valve JSON string with 8 valves and dummy measurements."""
     dummy = create_empty_valve_data_manager()
@@ -60,6 +62,7 @@ def create_default_json() -> str:
         "2000-01-01T00:00:00",
     )
     return jsontext
+
 
 def check_valvemanager_user_updated(valvemanager: ValveDataManagerClass) -> bool:
     """Check if the user has updated the valve manager has been updated from the example.
@@ -81,9 +84,9 @@ def check_valvemanager_user_updated(valvemanager: ValveDataManagerClass) -> bool
 
 
 def suggest_duration(
-        valveobject: ValveDataClass,
-        range_low: float,
-        range_high: float,
+    valveobject: ValveDataClass,
+    range_low: float,
+    range_high: float,
 ) -> float:
     """Suggest a duration for a given valve and range.
 
@@ -118,7 +121,7 @@ def suggest_duration(
         # Use a linear estimate
         suggested_duration_ms = linearly_suggest_duration(
             amounts[0], durations[0], range_low, range_high
-            )
+        )
     else:
         # Use an estimate of the middle of the range based on range and our experience with
         # the CSHL configuration (nResearch pinch valves, silastic tubing, specs in Bpod literature)
@@ -132,17 +135,18 @@ def calculate_largest_gap_midpoint(sorted_values: list[float]) -> float:
     for y in range(1, len(sorted_values)):
         distances[y] = abs(sorted_values[y] - sorted_values[y - 1])
     max_distance_pos = np.argmax(distances)
-    midpoint_value = sorted_values[max_distance_pos - 1] + (
-            sorted_values[max_distance_pos] - sorted_values[max_distance_pos - 1]
-    ) / 2
+    midpoint_value = (
+        sorted_values[max_distance_pos - 1]
+        + (sorted_values[max_distance_pos] - sorted_values[max_distance_pos - 1]) / 2
+    )
     return midpoint_value
 
 
 def linearly_suggest_duration(
-        amount: float | np.typing.ArrayLike,
-        duration: float | np.typing.ArrayLike,
-        range_low: float,
-        range_high: float,
+    amount: float | np.typing.ArrayLike,
+    duration: float | np.typing.ArrayLike,
+    range_low: float,
+    range_high: float,
 ) -> float:
     """Suggest a duration based on a single measurement and a range."""
     ul_per_ms = float(amount / duration)
@@ -159,7 +163,9 @@ def linearly_suggest_duration(
     return suggested_duration
 
 
-def calculate_ranged_amounts(amounts: np.array, range_low: float, range_high: float) -> list[float]:
+def calculate_ranged_amounts(
+    amounts: np.array, range_low: float, range_high: float
+) -> list[float]:
     """Calculate a sorted list of amounts within a given range, including the range bounds."""
     amounts_vector = amounts.tolist()
     if range_low not in amounts:
@@ -171,8 +177,9 @@ def calculate_ranged_amounts(amounts: np.array, range_low: float, range_high: fl
     amounts_vector = sorted(amounts_vector)
     startpoint = amounts_vector.index(range_low)
     endpoint = amounts_vector.index(range_high)
-    amounts_vector = amounts_vector[startpoint: endpoint + 1]
+    amounts_vector = amounts_vector[startpoint : endpoint + 1]
     return amounts_vector
+
 
 def check_COM(valvemanager: ValveDataManagerClass, com_port: str) -> str:
     """Check if the COM port in the valve manager matches the given COM port.
@@ -190,12 +197,13 @@ def check_COM(valvemanager: ValveDataManagerClass, com_port: str) -> str:
         'yes' if the COM ports match, 'no' if it's different, 'unknown' otherwise.
     """
     valvecom = valvemanager.metadata.COM
-    if valvecom == "": # e.g. uncalibrated
-        return 'unknown'
+    if valvecom == "":  # e.g. uncalibrated
+        return "unknown"
     if valvecom == com_port:
-        return 'yes'
+        return "yes"
     else:
-        return 'no'
+        return "no"
+
 
 class PendingValve(ValveDataClass):
     pending_durations: list[float] = Field(
@@ -225,13 +233,17 @@ class PendingMeasurementsManager:
 
     def __init__(self, valvemanager: ValveDataManagerClass):
         self._valvemanager = valvemanager
-        self.valves = [PendingValve(ValveName=valve.name) for valve in valvemanager.valve_datas]
+        self.valves = [
+            PendingValve(ValveName=valve.name) for valve in valvemanager.valve_datas
+        ]
 
     def get_pending(self, valvename: str) -> list[float]:
         if valvename not in self._valvemanager.valve_names:
             raise KeyError(f"Valvename '{valvename}' not found in manager.")
 
-        return next(valve for valve in self.valves if valve.name == valvename).pending_durations
+        return next(
+            valve for valve in self.valves if valve.name == valvename
+        ).pending_durations
 
     def add_pending(self, valvename: str, duration: float) -> None:
         if duration in self.get_pending(valvename):
@@ -247,16 +259,19 @@ class PendingMeasurementsManager:
 
         self.get_pending(valvename).remove(duration)
 
-    def complete_measurement(self, valvename: str, duration: float, amount: float) -> None:
+    def complete_measurement(
+        self, valvename: str, duration: float, amount: float
+    ) -> None:
         self.remove_pending(valvename, duration)
         self._valvemanager.get_valve(valvename).add_mesurement(duration, amount)
 
+
 def run_calibration(
-        pending_manager: PendingMeasurementsManager,
-        n_pulses: int,
-        pulse_interval: float = 0.2,
-        pulse_set_pause: float = 0.5,
-        verbose: bool = True,
+    pending_manager: PendingMeasurementsManager,
+    n_pulses: int,
+    pulse_interval: float = 0.2,
+    pulse_set_pause: float = 0.5,
+    verbose: bool = True,
 ) -> None:
     """Run a calibration sequence using Bpod state machine.
 
@@ -270,14 +285,14 @@ def run_calibration(
     fsm = StateMachine()
 
     fsm.add_state(
-        name='Port1Light',
+        name="Port1Light",
         timer=1,
-        state_change_conditions={'BNC1_High': 'Port2Light'},
-        output_actions={'PWM1': 255},
+        state_change_conditions={"BNC1_High": "Port2Light"},
+        output_actions={"PWM1": 255},
     )
     fsm.add_state(
-        name='Port2Light',
+        name="Port2Light",
         timer=1,
-        state_change_conditions={'Tup': '>exit'},
-        output_actions={'PWM2': 255},
+        state_change_conditions={"Tup": ">exit"},
+        output_actions={"PWM2": 255},
     )

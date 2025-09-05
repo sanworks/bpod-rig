@@ -6,6 +6,7 @@ from pydantic import BaseModel, Field, ConfigDict, field_serializer
 
 logger = logging.getLogger(__name__)
 
+
 class ValveDataClass(BaseModel):
     name: str = Field(alias="ValveName")
     lastdatemodified: datetime.datetime | str = Field(
@@ -31,7 +32,9 @@ class ValveDataClass(BaseModel):
     )
 
     model_config = ConfigDict(
-        serialize_by_alias=True, validate_by_name=True, validate_by_alias=True,
+        serialize_by_alias=True,
+        validate_by_name=True,
+        validate_by_alias=True,
     )
 
     def get_valve_time(self, amount: float) -> float:
@@ -126,7 +129,7 @@ class ValveDataClass(BaseModel):
 
     @field_serializer("lastdatemodified")
     def serialize_datetime(self, dt: datetime.datetime, _info):
-        if isinstance(dt, str): # if uncalibrated it is an empty string
+        if isinstance(dt, str):  # if uncalibrated it is an empty string
             return dt
         return dt.isoformat(timespec="seconds")
 
@@ -204,7 +207,9 @@ class ValveDataManagerClass(BaseModel):
             # check if the COM is changing
             if (self.metadata.COM != "") & (self.metadata.COM != machineid):
                 logger.warning(
-                    "COM port of liquid calibration file is changing from %s to %s", self.metadata.COM, machineid
+                    "COM port of liquid calibration file is changing from %s to %s",
+                    self.metadata.COM,
+                    machineid,
                 )
             self.metadata.COM = machineid
         self.metadata.modification_datetime = datetime.datetime.now()
