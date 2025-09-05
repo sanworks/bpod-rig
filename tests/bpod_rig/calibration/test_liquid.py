@@ -1,7 +1,7 @@
 import unittest
 import urllib.request
 
-from bpod_rig.calibration.liquid import liquid
+from bpod_rig.calibration.liquid import utils
 from bpod_rig.calibration.liquid.models import ValveDataClass, ValveDataManagerClass
 
 
