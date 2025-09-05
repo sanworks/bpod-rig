@@ -1,0 +1,96 @@
+{
+  "metadata": {
+    "modification_datetime": "2000-01-01T00:00:00",
+    "COM": ""
+  },
+  "ValveDatas": [
+    {
+      "ValveName": "Valve1",
+      "LastDateModified": "2000-01-01T00:00:00",
+      "Coeffs": [
+        -0.30576102280847484,
+        9.320110469495358,
+        4.82071882423374
+      ],
+      "Durations": [
+        22,
+        66,
+        44,
+        57,
+        34
+      ],
+      "Amounts": [
+        2,
+        9.5,
+        5,
+        7.5,
+        3.5
+      ]
+    },
+    {
+      "ValveName": "Valve2",
+      "LastDateModified": "",
+      "Coeffs": [],
+      "Durations": [],
+      "Amounts": []
+    },
+    {
+      "ValveName": "Valve3",
+      "LastDateModified": "2000-01-01T00:00:00",
+      "Coeffs": [
+        0.047977795400477294,
+        5.724028548770809,
+        13.60021808088822
+      ],
+      "Durations": [
+        22,
+        46,
+        59,
+        35,
+        66
+      ],
+      "Amounts": [
+        1.5,
+        5.5,
+        7.5,
+        3.5,
+        8.5
+      ]
+    },
+    {
+      "ValveName": "Valve4",
+      "LastDateModified": "",
+      "Coeffs": [],
+      "Durations": [],
+      "Amounts": []
+    },
+    {
+      "ValveName": "Valve5",
+      "LastDateModified": "",
+      "Coeffs": [],
+      "Durations": [],
+      "Amounts": []
+    },
+    {
+      "ValveName": "Valve6",
+      "LastDateModified": "",
+      "Coeffs": [],
+      "Durations": [],
+      "Amounts": []
+    },
+    {
+      "ValveName": "Valve7",
+      "LastDateModified": "",
+      "Coeffs": [],
+      "Durations": [],
+      "Amounts": []
+    },
+    {
+      "ValveName": "Valve8",
+      "LastDateModified": "",
+      "Coeffs": [],
+      "Durations": [],
+      "Amounts": []
+    }
+  ]
+}
