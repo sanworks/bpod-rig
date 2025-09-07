@@ -1,7 +1,7 @@
 import unittest
 import urllib.request
 
-from bpod_rig.calibration.liquid import utils
+from bpod_rig.calibration.liquid import utils, populate_examples
 from bpod_rig.calibration.liquid.models import ValveDataClass, ValveDataManagerClass
 
 
@@ -69,7 +69,7 @@ class TestValveDataManagerClass(unittest.TestCase):
         self.manager = ValveDataManagerClass()
         self.manager.create_valve("Test Valve")
         dummy = utils.create_empty_valve_data_manager()
-        utils.add_dummy_measurements(dummy)
+        populate_examples.add_dummy_measurements(dummy)
         self.dummy = dummy
 
     def test_create_valve(self):
@@ -120,7 +120,7 @@ class TestGen2CalibrationFile(unittest.TestCase):
 class TestValveDataManagerJSON(unittest.TestCase):
     def setUp(self):
         self.manager = utils.create_empty_valve_data_manager()
-        utils.add_dummy_measurements(self.manager)
+        populate_examples.add_dummy_measurements(self.manager)
         self.json_str = self.manager.to_json()
         self.loaded_manager = ValveDataManagerClass.model_validate_json(self.json_str)
 
