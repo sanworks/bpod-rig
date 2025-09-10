@@ -4,7 +4,7 @@ import datetime
 import logging
 import numpy as np
 
-from .models import ValveDataClass, ValveDataManagerClass
+from .models import ValveData, ValveDataManager
 
 logger = logging.getLogger(__name__)
 
@@ -12,9 +12,9 @@ logger = logging.getLogger(__name__)
 def create_empty_valve_data_manager(
     source: str = "statemachine",
     n_valves: int = 8,
-) -> ValveDataManagerClass:
+) -> ValveDataManager:
     """Create an empty valve manager with 8 valves."""
-    valvemanager = ValveDataManagerClass()
+    valvemanager = ValveDataManager()
     if source == "statemachine":
         for index in range(n_valves):
             valvemanager.create_valve(f"Valve{index + 1}")
@@ -28,7 +28,7 @@ def create_empty_valve_data_manager(
     return valvemanager
 
 
-def check_valvemanager_user_updated(valvemanager: ValveDataManagerClass) -> bool:
+def check_valvemanager_user_updated(valvemanager: ValveDataManager) -> bool:
     """Check if the user has updated the valve manager has been updated from the example.
 
     This is determined by checking if any valve has a modification date later than the
@@ -36,7 +36,7 @@ def check_valvemanager_user_updated(valvemanager: ValveDataManagerClass) -> bool
 
     Parameters
     ----------
-    valvemanager : ValveDataManagerClass
+    valvemanager : ValveDataManager
         The valve manager to check.
 
     Returns
@@ -48,7 +48,7 @@ def check_valvemanager_user_updated(valvemanager: ValveDataManagerClass) -> bool
 
 
 def suggest_duration(
-    valveobject: ValveDataClass,
+    valveobject: ValveData,
     range_low: float,
     range_high: float,
 ) -> float:
@@ -56,7 +56,7 @@ def suggest_duration(
 
     Parameters
     ----------
-    valveobject : ValveDataClass
+    valveobject : ValveData
         The valve object to use for the suggestion.
     range_low : float
         The lower bound of microliters (uL) for the range.
@@ -145,12 +145,12 @@ def calculate_ranged_amounts(
     return amounts_vector
 
 
-def check_COM(valvemanager: ValveDataManagerClass, com_port: str) -> str:
+def check_COM(valvemanager: ValveDataManager, com_port: str) -> str:
     """Check if the COM port in the valve manager matches the given COM port.
 
     Parameters
     ----------
-    valvemanager : ValveDataManagerClass
+    valvemanager : ValveDataManager
         The valve manager to check.
     com_port : str
         The COM port to check against.

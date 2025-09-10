@@ -1,10 +1,10 @@
 from pydantic import Field
 from bpod_core.fsm import StateMachine
 
-from bpod_rig.calibration.liquid.models import ValveDataManagerClass, ValveDataClass
+from bpod_rig.calibration.liquid.models import ValveDataManager, ValveData
 
 
-class PendingValve(ValveDataClass):
+class PendingValve(ValveData):
     pending_durations: list[float] = Field(
         default=[],
         description="List of durations that are pending calibration measurements.",
@@ -63,13 +63,13 @@ class PendingMeasurementsManager:
 
     Object would handle all
     """
-    _valvemanager: ValveDataManagerClass
+    _valvemanager: ValveDataManager
     valves: list[PendingValve]
     n_pulses: int = 100
     pulse_interval: float = 0.2
     pulse_set_pause: float = 0.5
 
-    def __init__(self, valvemanager: ValveDataManagerClass):
+    def __init__(self, valvemanager: ValveDataManager):
         self._valvemanager = valvemanager
         self.valves = [
             PendingValve(ValveName=valve.name) for valve in valvemanager.valve_datas

@@ -3,11 +3,11 @@ import datetime
 from pathlib import Path
 
 from bpod_rig.examples import calibration as example_folder
-from bpod_rig.calibration.liquid.models import ValveDataManagerClass
+from bpod_rig.calibration.liquid.models import ValveDataManager
 from bpod_rig.calibration.liquid.utils import create_empty_valve_data_manager
 
 
-def add_dummy_measurements(valvemanager: ValveDataManagerClass) -> None:
+def add_dummy_measurements(valvemanager: ValveDataManager) -> None:
     """Add dummy measurements to the valves in manager."""
     origin_date = datetime.datetime(2000, 1, 1)
     valve1 = valvemanager.get_valve("Valve1")

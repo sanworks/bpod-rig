@@ -1,12 +1,12 @@
 import unittest
 
 from bpod_rig.calibration.liquid import utils
-from bpod_rig.calibration.liquid.models import ValveDataClass
+from bpod_rig.calibration.liquid.models import ValveData
 
 
 class TestSuggestDuration(unittest.TestCase):
     def setUp(self):
-        self.valve = ValveDataClass(ValveName="Test Valve")
+        self.valve = ValveData(ValveName="Test Valve")
         self.range_low = 2
         self.range_high = 10
         self.suggest_duration = lambda: utils.suggest_duration(

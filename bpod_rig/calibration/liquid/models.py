@@ -7,8 +7,11 @@ from pydantic import BaseModel, Field, ConfigDict, field_serializer
 logger = logging.getLogger(__name__)
 
 
-class ValveDataClass(BaseModel):
-    name: str = Field(alias="ValveName")
+class ValveData(BaseModel):
+    name: str = Field(
+        alias="ValveName",
+        description="Name of valve (1-indexed)"
+        )
     lastdatemodified: datetime.datetime | str = Field(
         serialization_alias="LastDateModified",
         validation_alias="LastDateModified",
@@ -146,15 +149,15 @@ class ValveManagerMetaData(BaseModel):
         return modification_datetime.isoformat(timespec="seconds")
 
 
-class ValveDataManagerClass(BaseModel):
+class ValveDataManager(BaseModel):
     metadata: ValveManagerMetaData = Field(default_factory=ValveManagerMetaData)
-    valve_datas: list[ValveDataClass] = Field(
+    valve_datas: list[ValveData] = Field(
         alias="ValveDatas", default=[], description="Array of valve data objects."
     )
 
     model_config = ConfigDict(serialize_by_alias=True, validate_by_name=True)
 
-    def get_valve(self, valvename: str) -> ValveDataClass:
+    def get_valve(self, valvename: str) -> ValveData:
         """Get a valve by name.
 
         Parameters
@@ -164,7 +167,7 @@ class ValveDataManagerClass(BaseModel):
 
         Returns
         -------
-        ValveDataClass
+        ValveData
         """
         # Check if the valve exists in the ValveDatas list
         if valvename in self.valve_names:
@@ -179,7 +182,9 @@ class ValveDataManagerClass(BaseModel):
         """Create a new valve with the given name."""
         if valvename in self.valve_names:
             raise KeyError(f"Valve '{valvename}' already exists.")
-        self.valve_datas.append(ValveDataClass(name=valvename))  # noqa: aliasing with pydantic can cause type check issues
+        self.valve_datas.append(
+            ValveData(name=valvename)
+            )  # noqa: aliasing with pydantic can cause type check issues
         logger.debug(f"Created new valve: {valvename}")
 
     @property
