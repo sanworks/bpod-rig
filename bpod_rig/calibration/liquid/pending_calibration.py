@@ -59,8 +59,15 @@ class PendingValve(ValveDataClass):
 
 
 class PendingMeasurementsManager:
+    """Manage valves and their pending values.
+
+    Object would handle all
+    """
     _valvemanager: ValveDataManagerClass
     valves: list[PendingValve]
+    n_pulses: int = 100
+    pulse_interval: float = 0.2
+    pulse_set_pause: float = 0.5
 
     def __init__(self, valvemanager: ValveDataManagerClass):
         self._valvemanager = valvemanager
@@ -68,15 +75,21 @@ class PendingMeasurementsManager:
             PendingValve(ValveName=valve.name) for valve in valvemanager.valve_datas
         ]
 
-    def get_pending(self, valvename: str) -> list[float]:
+
+    def get_valve(self, valvename: str) -> PendingValve:
+        """Retrieve object for a pending valve."""
         if valvename not in self._valvemanager.valve_names:
             raise KeyError(f"Valvename '{valvename}' not found in manager.")
+        return next(valve for valve in self.valves if valve.name == valvename)
 
-        return next(
-            valve for valve in self.valves if valve.name == valvename
-        ).pending_durations
+
+    def get_pending(self, valvename: str) -> list[float]:
+        """Return pending durations from a given valve."""
+        return self.get_valve(valvename).pending_durations
+
 
     def add_pending(self, valvename: str, duration: float) -> None:
+        """Add a pending duration to the valve's list."""
         if duration in self.get_pending(valvename):
             raise ValueError("Duration already pending.")
         if duration in self._valvemanager.get_valve(valvename).durations:
@@ -84,24 +97,94 @@ class PendingMeasurementsManager:
 
         self.get_pending(valvename).append(duration)
 
+
     def remove_pending(self, valvename: str, duration: float) -> None:
+        """Remove a pending duration from the valve's pending record."""
         if duration not in self.get_pending(valvename):
             raise ValueError("Duration for completed measurement is not pending.")
 
         self.get_pending(valvename).remove(duration)
 
+
     def complete_measurement(
         self, valvename: str, duration: float, amount: float
     ) -> None:
+        """Record an amount dispensed for a duration that was measured.
+
+        Remove duration from pending list and adds completed measurement to the valve
+        manager.
+
+        Parameters
+        ----------
+        valvename : str
+            Name of the valve that has been tested and weighed.
+        duration : float
+            Duration (ms) of valve opening
+        amount : float
+            Quantity (mg or mL) released from the duration.
+        """
         assert duration in self.get_pending(valvename)
         self.remove_pending(valvename, duration)
         self._valvemanager.get_valve(valvename).add_measurement(duration, amount)
 
+    def build_test_set(self) -> dict[str, float]:
+        """Create dict of valves and the duration to test.
+
+        Will take the first (oldest) duration in the valve's pending values.
+        """
+        pending_valves = [valve for valve in self.valves if valve.is_pending]
+        test_set = {}
+        for valve in pending_valves:
+            test_set[valve.name] = valve.pending_durations[0]
+        return test_set
+
+    def build_statemachine(self, test_set: dict | None = None) -> tuple[StateMachine, dict[str, float]]:
+        """Build the state machine to test all pending valves.
+
+        The state machine is constructed using object parameters:
+        - n_pulses: number of pulses to deliver
+        - pulse_interval: Duration (ms)
+        - pulse_set_pause: Duration (ms)
+
+        The amount of liquid dispensed from the state machine
+        For example, 100 pulses totaling 0.200g (200mg) is 0.200g / 100 = 2mg = 2mL
+
+        Parameters
+        ----------
+        test_set : dict | None, optional
+            Names of valves and durations to build state machine for. If not provided, test all valves that have pending durations using their oldest duration.
+        Returns
+        -------
+        tuple[StateMachine, dict[str, float]]
+            - The finite state machine.
+            - dict of which valves and what duration the state machine was built for.
+        """
+        fsm = StateMachine()
+        if test_set is None:
+            test_set = self.build_test_set()
+        valve_names = list(test_set.keys())
+        pending_valves = [valve for valve in self.valves if valve.is_pending]
+        n_pending = len(pending_valves)
+        if n_pending == 0:
+            raise AssertionError("No pending valves found.")
+        for x, valve_name in enumerate(valve_names):
+            pending_valve = self.get_valve(valve_name)
+            duration = test_set[valve_name]
+            if x < n_pending - 1:
+                next_valve = self.get_valve(valve_names[x + 1])
+            else:
+                next_valve = self.pulse_set_pause
+            add_valve_states(
+                fsm, pending_valve, duration, next_valve, self.pulse_interval
+            )
+        return fsm, test_set
+
 
 def add_valve_states(
-    fsm: StateMachine, pending_valve: PendingValve, next_valve: PendingValve | float,
+    fsm: StateMachine, pending_valve: PendingValve, duration: float,
+    next_valve: PendingValve | float,
     delay_duration: float
-) -> tuple[str, float]:
+):
     """Add the pending valve to a state machine.
 
     Parameters
@@ -110,17 +193,12 @@ def add_valve_states(
         Existing state machine to add states for the valve to.
     pending_valve : PendingValve
         Valve to create states to use for calibration
+    duration : float
+        Duration (ms) of valve open.
     next_valve : PendingValve | float
         The next valve object in the cycle, or the float for the pause duration (s) between pulse sets.
     delay_duration : float
-
-    Returns
-    -------
-    tuple[str, float]
-        Valve name and the duration (ms) of the pulse added to the state machine.
     """
-    assert len(pending_valve.durations) > 0
-    duration = pending_valve.pending_durations[0]
     last_valve = isinstance(next_valve, float)
     if last_valve:
         pulse_set_pause_duration = next_valve
@@ -137,7 +215,7 @@ def add_valve_states(
             name=f"Pulse{pending_valve.name}",
             timer=duration / 1000,
             state_change_conditions={'Tup': f"Delay{pending_valve.name}"},
-            output_actions={'Valve1'}
+            output_actions=pending_valve.action('open')
         )
     elif pending_valve.valve_controller == 'PortArray':
         # Valve is controlled by serial messaging i.e. discrete open/close messages
@@ -145,13 +223,13 @@ def add_valve_states(
             name=f"Pulse{pending_valve.name}",
             timer=duration / 1000,
             state_change_conditions={'Tup': f"EndPulse{pending_valve.name}"},
-            output_actins={}
+            output_actins=pending_valve.action('open')
         )
         fsm.add_state(
             name=f"EndPulse{pending_valve.name}",
             timer=0,
             state_change_conditions={'Tup': f"Delay{pending_valve.name}"},
-            output_actions={}
+            output_actions=pending_valve.action('close')
         )
     else:
         raise ValueError("Valve controller not recognised.")
@@ -159,8 +237,8 @@ def add_valve_states(
     fsm.add_state(
         name=f"Delay{pending_valve.name}",
         timer=delay_duration,
-        state_change_conditions={'Tup', next_state},
-        output_actions={}
+        state_change_conditions={'Tup': next_state},
+        # output_actions={}
     )
 
     if last_valve:
@@ -168,18 +246,13 @@ def add_valve_states(
             name="PulseSetPause",
             timer=pulse_set_pause_duration,
             state_change_conditions={'Tup': 'exit'},
-            output_actions={}
+            # output_actions={}
         )
-    return pending_valve.name, duration
 
 
 def run_calibration(
     pending_manager: PendingMeasurementsManager,
-    n_pulses: int,
-    pulse_interval: float = 0.2,
-    pulse_set_pause: float = 0.5,
-    verbose: bool = True,
-) -> dict[str, float]:
+):
     """Run a calibration sequence using Bpod state machine.
 
     Parameters
@@ -202,24 +275,8 @@ def run_calibration(
     """
 
     # Build the state machine
-    fsm = StateMachine()
-    pending_valves = [valve for valve in pending_manager.valves if valve.is_pending]
-    n_pending = len(pending_valves)
-    if n_pending == 0:
-        raise AssertionError("No pending valves found.")
-    test_set = {}
-    for x, pending_valve in enumerate(pending_valves):
-        if x < n_pending - 1:
-            next_valve = pending_valves[x + 1]
-        else:
-            next_valve = pulse_set_pause
-        name, duration = add_valve_states(
-            fsm, pending_valve, next_valve, pulse_interval
-            )
-        test_set[name] = duration
+    fsm, test_set = pending_manager.build_statemachine()
 
     # Run the state machine
-    for trial in range(n_pulses):
+    for trial in range(pending_manager.n_pulses):
         pass
-
-    return test_set

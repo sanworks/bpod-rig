@@ -1,5 +1,7 @@
 import unittest
 
+from bpod_core.fsm import StateMachine
+
 from bpod_rig.calibration.liquid import pending_calibration
 from bpod_rig.calibration.liquid import utils, populate_examples
 
@@ -41,8 +43,10 @@ class test_PendingMeasurementsManager(unittest.TestCase):
             self.manager.get_pending("InvalidValve")
 
     def test_add_pending(self):
-        self.manager.add_pending("Valve1", 10.0)
+        self.manager.add_pending("Valve1", 10.0) # valve with values
         self.assertIn(10.0, self.manager.get_pending("Valve1"))
+        self.manager.add_pending("Valve2", 10.0) # valve without values
+        self.assertIn(10.0, self.manager.get_pending("Valve2"))
 
     def test_add_pending_duplicate(self):
         self.manager.add_pending("Valve1", 10.0)
@@ -65,3 +69,15 @@ class test_PendingMeasurementsManager(unittest.TestCase):
         self.assertIn(10.0, valve.durations)
         self.assertIn(1.5, valve.amounts)
         self.assertNotIn(10.0, self.manager.get_pending("Valve2"))
+
+    def test_build_testset(self):
+        self.manager.add_pending("Valve1", 10)
+        self.manager.add_pending("Valve1", 5)
+        self.manager.add_pending("Valve2", 20)
+        self.assertEqual(self.manager.build_test_set(), {"Valve1": 10, "Valve2": 20})
+
+    def test_build_statemachine(self):
+        self.manager.add_pending("Valve1", 10)
+        self.manager.add_pending("Valve2", 15)
+        statemachine, test_set = self.manager.build_statemachine()
+        self.assertIsInstance(statemachine, StateMachine)
