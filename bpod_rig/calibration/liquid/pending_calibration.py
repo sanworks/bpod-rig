@@ -241,15 +241,15 @@ def add_valve_states(
         fsm.add_state(
             name=f"Pulse{pending_valve.name}",
             timer=duration / 1000,
-            state_change_conditions={'Tup': f"EndPulse{pending_valve.name}"},
-            output_actions=pending_valve.action('open'),
+            transitions={'Tup': f"EndPulse{pending_valve.name}"},
+            actions=pending_valve.action('open'),
             comment="Send message to Port Array Module to open the valve."
         )
         fsm.add_state(
             name=f"EndPulse{pending_valve.name}",
             timer=0,
-            state_change_conditions={'Tup': f"Delay{pending_valve.name}"},
-            output_actions=pending_valve.action('close'),
+            transitions={'Tup': f"Delay{pending_valve.name}"},
+            actions=pending_valve.action('close'),
             comment="Send message to Port Array module to close the valve."
         )
     else:
