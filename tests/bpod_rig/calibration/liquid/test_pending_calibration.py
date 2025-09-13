@@ -81,3 +81,9 @@ class test_PendingMeasurementsManager(unittest.TestCase):
         self.manager.add_pending("Valve2", 15)
         statemachine, test_set = self.manager.build_statemachine()
         self.assertIsInstance(statemachine, StateMachine)
+        self.assertEqual(len(test_set.keys()), 2)
+        # expect 2 states of open and delay, with final pulse set delay
+        n_states = 2 + 2 + 1
+        self.assertEqual(len(statemachine.states), n_states)
+
+    # TODO: test build, send, and run of state machine with emulator bpod
