@@ -167,5 +167,3 @@ def check_COM(valvemanager: ValveDataManager, com_port: str) -> str:
         return "yes"
     else:
         return "no"
-
-

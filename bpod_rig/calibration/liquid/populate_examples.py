@@ -1,4 +1,5 @@
 """Create the example liquid calibration JSON with 8 vales and dummy measurements."""
+
 import datetime
 from pathlib import Path
 

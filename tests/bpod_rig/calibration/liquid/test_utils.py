@@ -26,6 +26,7 @@ class TestSuggestDuration(unittest.TestCase):
         self.valve.add_measurement(66, 9.5)
         self.assertAlmostEqual(self.suggest_duration(), 44.0, places=3)
 
+
 class TestCheckValveManagerUserUpdate(unittest.TestCase):
     def setUp(self):
         self.manager = ValveDataManager()
@@ -49,10 +50,11 @@ class TestCheckValveManagerUserUpdate(unittest.TestCase):
         manager = ValveDataManager.model_validate_json(create_default_json())
         self.assertFalse(utils.check_valvemanager_user_updated(manager))
 
+
 class TestCheckCOM(unittest.TestCase):
     def setUp(self):
         self.manager = ValveDataManager()
-        self.manager.metadata.COM = 'COM3'
+        self.manager.metadata.COM = "COM3"
 
     def test_matching(self):
         self.assertEqual(utils.check_COM(self.manager, "COM3"), "yes")

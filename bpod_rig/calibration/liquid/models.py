@@ -1,4 +1,5 @@
 """Data models for liquid calibration."""
+
 import datetime
 import logging
 
@@ -14,10 +15,8 @@ class ValveData(BaseModel):
     Valves are calibrated by measuring the amount of liquid dispensed for a specific
     duration.
     """
-    name: str = Field(
-        alias="ValveName",
-        description="Name of valve (1-indexed)"
-        )
+
+    name: str = Field(alias="ValveName", description="Name of valve (1-indexed)")
     lastdatemodified: datetime.datetime | str = Field(
         serialization_alias="LastDateModified",
         validation_alias="LastDateModified",
@@ -151,7 +150,7 @@ class ValveManagerMetaData(BaseModel):
     )
     COM: str = Field(
         default="",
-        description="The COM port of the last state machine to modify the valves."
+        description="The COM port of the last state machine to modify the valves.",
     )
     # TODO : if the serial number approach to identifying Bpods works out then
     #        the serial number should be used instead of COM (which can change)
@@ -162,11 +161,11 @@ class ValveManagerMetaData(BaseModel):
 
 
 class ValveDataManager(BaseModel):
-    """Parent of multiple ValveData objects.
-    """
+    """Parent of multiple ValveData objects."""
+
     metadata: ValveManagerMetaData = Field(
         default_factory=ValveManagerMetaData,
-        description="Metadata regarding the set of valves."
+        description="Metadata regarding the set of valves.",
     )
     valve_datas: list[ValveData] = Field(
         alias="ValveDatas", default=[], description="Array of valve data objects."
@@ -199,9 +198,7 @@ class ValveDataManager(BaseModel):
         """Create a new valve with the given name."""
         if valvename in self.valve_names:
             raise KeyError(f"Valve '{valvename}' already exists.")
-        self.valve_datas.append(
-            ValveData(ValveName=valvename)
-            )  # noqa: aliasing with pydantic can cause type check issues
+        self.valve_datas.append(ValveData(ValveName=valvename))  # noqa: aliasing with pydantic can cause type check issues
         logger.debug(f"Created new valve: {valvename}")
 
     @property

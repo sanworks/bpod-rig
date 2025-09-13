@@ -43,9 +43,9 @@ class test_PendingMeasurementsManager(unittest.TestCase):
             self.manager.get_pending("InvalidValve")
 
     def test_add_pending(self):
-        self.manager.add_pending("Valve1", 10.0) # valve with values
+        self.manager.add_pending("Valve1", 10.0)  # valve with values
         self.assertIn(10.0, self.manager.get_pending("Valve1"))
-        self.manager.add_pending("Valve2", 10.0) # valve without values
+        self.manager.add_pending("Valve2", 10.0)  # valve without values
         self.assertIn(10.0, self.manager.get_pending("Valve2"))
 
     def test_add_pending_duplicate(self):
