@@ -1,9 +1,12 @@
+import logging
+
 import bpod_core.bpod
 from pydantic import Field
 from bpod_core.fsm import StateMachine
 
 from bpod_rig.calibration.liquid.models import ValveDataManager, ValveData
 
+logger = logging.getLogger(__name__)
 
 class PendingValve(ValveData):
     pending_durations: list[float] = Field(
@@ -80,10 +83,15 @@ class PendingMeasurementsManager:
     the pending durations.
     """
     _valvemanager: ValveDataManager
+    """The real data used by Bpod."""
     valves: list[PendingValve]
-    n_pulses: int = 100  # number of pulses to delivery across the test
-    pulse_interval: float = 0.2  # time (s) between two different valves pulsing
-    pulse_set_pause: float = 0.5  # time (s) between each set of pulses
+    """All of the pending valves that are being managed"""
+    n_pulses: int = 100
+    """number of pulses to delivery across the test"""
+    pulse_interval: float = 0.2
+    """time (s) between two different valves pulsing"""
+    pulse_set_pause: float = 0.5
+    """time (s) between each set of pulses"""
 
     def __init__(self, valvemanager: ValveDataManager):
         self._valvemanager = valvemanager
@@ -142,6 +150,7 @@ class PendingMeasurementsManager:
         assert duration in self.get_pending(valvename)
         self.remove_pending(valvename, duration)
         self._valvemanager.get_valve(valvename).add_measurement(duration, amount)
+        logger.debug("Completed measurement for %s %s ms", valvename, duration)
 
     def build_test_set(self) -> dict[str, float]:
         """Create dict of valves and the duration (ms) to test.
@@ -179,6 +188,7 @@ class PendingMeasurementsManager:
         if test_set is None:
             test_set = self.build_test_set()
         valve_names = list(test_set.keys())
+        logger.debug("Building test set for %s", valve_names)
         pending_valves = [valve for valve in self.valves if valve.is_pending]
         n_pending = len(pending_valves)
         if n_pending == 0:
@@ -231,9 +241,7 @@ def add_valve_states(
             name=f"Pulse{pending_valve.name}",
             timer=duration / 1000,
             transitions={'Tup': f"Delay{pending_valve.name}"},
-            # state_change_conditions={'Tup': f"Delay{pending_valve.name}"},
             actions=pending_valve.action('open'),
-            # output_actions=pending_valve.action('open'),
             comment="Open valve for duration of state, with closure at the end."
         )
     elif pending_valve.valve_controller == 'PortArray':
@@ -307,7 +315,7 @@ def run_calibration(
             print(f'- {valvename}: duration {test_set[valvename]} ms')
 
     bpodsystem.send_state_machine(fsm)
-
+    logger.debug("Running calibration state machine.")
     # Run the state machine
     for trial in range(pending_manager.n_pulses):
         bpodsystem.run_state_machine()

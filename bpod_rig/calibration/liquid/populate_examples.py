@@ -8,7 +8,16 @@ from bpod_rig.calibration.liquid.utils import create_empty_valve_data_manager
 
 
 def add_dummy_measurements(valvemanager: ValveDataManager) -> None:
-    """Add dummy measurements to the valves in manager."""
+    """Add dummy measurements to the valves in manager.
+
+    Modifies the data in place.
+    Uses 2000-01-01 as the origin date for the data.
+
+    Examples
+    --------
+    >>> dummy_liquid_manager = create_empty_valve_data_manager()
+    >>> add_dummy_measurements(dummy_liquid_manager)
+    """
     origin_date = datetime.datetime(2000, 1, 1)
     valve1 = valvemanager.get_valve("Valve1")
     valve1.add_measurement(22, 2)

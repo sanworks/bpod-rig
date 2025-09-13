@@ -1,3 +1,4 @@
+"""Data models for liquid calibration."""
 import datetime
 import logging
 
@@ -8,6 +9,11 @@ logger = logging.getLogger(__name__)
 
 
 class ValveData(BaseModel):
+    """Data model for the liquid calibration data for a single valve.
+
+    Valves are calibrated by measuring the amount of liquid dispensed for a specific
+    duration.
+    """
     name: str = Field(
         alias="ValveName",
         description="Name of valve (1-indexed)"
@@ -34,6 +40,7 @@ class ValveData(BaseModel):
         description="Amounts in uL for each dispense, corresponding to the durations.",
     )
 
+    # MATLAB .json compatibility is maintained by using the alias to load/save
     model_config = ConfigDict(
         serialize_by_alias=True,
         validate_by_name=True,
@@ -142,7 +149,12 @@ class ValveManagerMetaData(BaseModel):
         default_factory=datetime.datetime.now,
         description="Time of when the valve data was last saved to json file.",
     )
-    COM: str = ""
+    COM: str = Field(
+        default="",
+        description="The COM port of the last state machine to modify the valves."
+    )
+    # TODO : if the serial number approach to identifying Bpods works out then
+    #        the serial number should be used instead of COM (which can change)
 
     @field_serializer("modification_datetime")
     def serialize_datetime(self, modification_datetime: datetime.datetime, _info):
@@ -150,7 +162,12 @@ class ValveManagerMetaData(BaseModel):
 
 
 class ValveDataManager(BaseModel):
-    metadata: ValveManagerMetaData = Field(default_factory=ValveManagerMetaData)
+    """Parent of multiple ValveData objects.
+    """
+    metadata: ValveManagerMetaData = Field(
+        default_factory=ValveManagerMetaData,
+        description="Metadata regarding the set of valves."
+    )
     valve_datas: list[ValveData] = Field(
         alias="ValveDatas", default=[], description="Array of valve data objects."
     )
@@ -183,27 +200,32 @@ class ValveDataManager(BaseModel):
         if valvename in self.valve_names:
             raise KeyError(f"Valve '{valvename}' already exists.")
         self.valve_datas.append(
-            ValveData(name=valvename)
+            ValveData(ValveName=valvename)
             )  # noqa: aliasing with pydantic can cause type check issues
         logger.debug(f"Created new valve: {valvename}")
 
     @property
     def n_valves(self) -> int:
-        """Get the number of valves in the manager."""
+        """The number of valves in the manager."""
         return len(self.valve_datas)
 
     @property
     def valve_names(self) -> list[str]:
-        """Get a list of valve names."""
+        """List of valve names."""
         return list(valve.name for valve in self.valve_datas)
 
-    def to_json(self, machineid: str = None) -> str:
-        """Convert the ValveDataManagerPydantic to JSON string.
+    def to_json(self, machineid: str | None = None) -> str:
+        """Convert the ValveDataManager to JSON string.
 
         Parameters
         ----------
         machineid : str, optional
             The COM port or machine ID to set in the metadata.
+
+        Returns
+        -------
+        str
+            JSON text (2 space indented) for writing to file.
         """
         if machineid is not None:
             if not isinstance(machineid, str):
