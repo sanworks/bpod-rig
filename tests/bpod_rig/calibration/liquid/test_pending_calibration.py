@@ -6,7 +6,7 @@ from bpod_rig.calibration.liquid import pending_calibration
 from bpod_rig.calibration.liquid import utils, populate_examples
 
 
-class test_PendingValve(unittest.TestCase):
+class TestPendingValve(unittest.TestCase):
     def setUp(self):
         self.pending_valve = pending_calibration.PendingValve(ValveName="Valve3")
 
@@ -28,7 +28,7 @@ class test_PendingValve(unittest.TestCase):
         self.assertTrue(valve.is_pending)
 
 
-class test_PendingMeasurementsManager(unittest.TestCase):
+class TestPendingMeasurementsManager(unittest.TestCase):
     def setUp(self):
         self.valvemanager = utils.create_empty_valve_data_manager()
         populate_examples.add_dummy_measurements(self.valvemanager)
