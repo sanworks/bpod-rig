@@ -80,8 +80,8 @@ class PendingValve(ValveData):
 class PendingMeasurementsManager:
     """Manage valves and their pending values.
 
-    Maintains lists of valve pending values, and can construct a state machine to test
-    the pending durations.
+    Maintains list of pending valves (which store pending values), and can construct a
+    state machine to test the pending durations.
     """
 
     _valvemanager: ValveDataManager
@@ -273,7 +273,7 @@ def add_valve_states(
     )
 
     if last_valve:
-        # If last valve in set, following the Delay this stated is entered into.
+        # If last valve in set, enter this state following the valve's Delay.
         fsm.add_state(
             name="PulseSetPause",
             timer=pulse_set_pause_duration,

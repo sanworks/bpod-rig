@@ -1,10 +1,10 @@
-"""Liquid calibration data management and calibratino routines."""
+"""Liquid calibration data management and calibration routines."""
 
 import datetime
 import logging
 import numpy as np
 
-from .models import ValveData, ValveDataManager
+from bpod_rig.calibration.liquid.models import ValveData, ValveDataManager
 
 logger = logging.getLogger(__name__)
 
