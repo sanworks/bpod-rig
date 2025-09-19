@@ -152,8 +152,12 @@ class ValveManagerMetaData(BaseModel):
         default="",
         description="The COM port of the last state machine to modify the valves.",
     )
-    # TODO : if the serial number approach to identifying Bpods works out then
-    #        the serial number should be used instead of COM (which can change)
+
+    id: str = Field(
+        default="",
+        description="Unique identifier of the machine that controls the valve "
+        "(i.e. Bpod State Machine or Port Array Module.",
+    )
 
     @field_serializer("modification_datetime")
     def serialize_datetime(self, modification_datetime: datetime.datetime, _info):
