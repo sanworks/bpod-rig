@@ -18,7 +18,7 @@ class TestPendingValve(unittest.TestCase):
 
     def test_unrecognied_controller_assignment(self):
         with self.assertRaises(ValueError):
-            valve1 = pending_calibration.PendingValve(ValveName="HeartValve")
+            pending_calibration.PendingValve(ValveName="HeartValve")
 
     def test_ispending(self):
         valve = pending_calibration.PendingValve(ValveName="Valve1")
