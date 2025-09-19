@@ -57,11 +57,11 @@ class TestCheckCOM(unittest.TestCase):
         self.manager.metadata.COM = "COM3"
 
     def test_matching(self):
-        self.assertEqual(utils.check_COM(self.manager, "COM3"), "yes")
+        self.assertEqual(utils.check_com(self.manager, "COM3"), "yes")
 
     def test_no_match(self):
-        self.assertEqual(utils.check_COM(self.manager, "COM4"), "no")
+        self.assertEqual(utils.check_com(self.manager, "COM4"), "no")
 
     def test_unknown(self):
         self.manager.metadata.COM = ""
-        self.assertEqual(utils.check_COM(self.manager, "COM3"), "unknown")
+        self.assertEqual(utils.check_com(self.manager, "COM3"), "unknown")

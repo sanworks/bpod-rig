@@ -145,7 +145,7 @@ def calculate_ranged_amounts(
     return amounts_vector
 
 
-def check_COM(valvemanager: ValveDataManager, com_port: str) -> str:
+def check_com(valvemanager: ValveDataManager, com_port: str) -> str:
     """Check if the COM port in the valve manager matches the given COM port.
 
     Parameters
