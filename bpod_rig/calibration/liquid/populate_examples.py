@@ -45,15 +45,14 @@ def create_default_json() -> str:
     add_dummy_measurements(dummy)
     jsontext = dummy.to_json(machineid=None)
     # replace modification datetime with a fixed date for consistency
-    jsontext = jsontext.replace(
+    return jsontext.replace(
         dummy.metadata.modification_datetime.isoformat(timespec="seconds"),
         "2000-01-01T00:00:00",
     )
-    return jsontext
 
 
 def main():
-    """Create the example liquid calibration JSON with 8 valves and dummy measurements."""
+    """Create the example liquid calibration JSON in the example folder."""
     example_json = create_default_json()
     example_path = Path(example_folder.__path__[0]) / "LiquidCalibration.json"
     example_path.write_text(example_json)
