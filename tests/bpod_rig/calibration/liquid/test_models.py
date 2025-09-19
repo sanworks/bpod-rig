@@ -12,7 +12,7 @@ class TestValveDataClass(unittest.TestCase):
     def test_init_alias(self):
         # Test that alias works correctly
         # type checker may complain about this because of pydantic aliasing
-        self.assertEqual(ValveData(name="attrname").name, "attrname")
+        self.assertEqual(ValveData(name="attrname").name, "attrname")  # noqa: Pydantic's validation aliases raises Unexpected Argument
         self.assertEqual(ValveData(ValveName="aliasname").name, "aliasname")
 
     def test_add_measurement(self):
@@ -101,8 +101,13 @@ class TestGen2CalibrationFile(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         super(TestGen2CalibrationFile, cls).setUpClass()
-        url = "https://raw.githubusercontent.com/sanworks/Bpod_Gen2/refs/heads/develop/Examples/Example%20Calibration%20Files/LiquidCalibration.json"
-        cls.jsontext = urllib.request.urlopen(url).read().decode()
+        cls.jsontext = (
+            urllib.request.urlopen(
+                "https://raw.githubusercontent.com/sanworks/Bpod_Gen2/refs/heads/develop/Examples/Example%20Calibration%20Files/LiquidCalibration.json"
+            )
+            .read()
+            .decode()
+        )
 
     def test_load_calibration_file(self):
         loaded_valves = ValveDataManager.model_validate_json(self.jsontext)
