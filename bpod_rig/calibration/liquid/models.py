@@ -86,23 +86,25 @@ class ValveData(BaseModel):
         self.lastdatemodified = datetime.datetime.now()
         self._update_coeffs()
 
-    def remove_measurement(self, value: int | float, method: str = "index") -> None:
+    def remove_measurement(self, value: float, method: str = "index") -> None:
         """Remove a measurement from the valve data.
 
         Parameters
         ----------
         value : int | float
-            The index or duration to remove.
+            The index or duration (ms) to remove.
         method : str, optional (default = 'index')
-            How to use value to find the measurement to remove. 'index' to remove by index,
-            'duration' to remove by duration value (assuming unique duration).
+            How to use value to find the measurement to remove.
+            - 'duration' to remove by duration value (assuming unique duration).
+            - 'index' to remove by index in `.durations`
         """
         if method == "duration":
             if value in self.durations:
                 # Throw error if value is in durations multiple times
                 if self.durations.count(value) > 1:
                     raise ValueError(
-                        "Duration value is present multiple times. Index must be specified."
+                        "Duration value is present multiple times. "
+                        "Index must be specified."
                     )
                 index = self.durations.index(value)
                 del self.amounts[index]
@@ -125,15 +127,11 @@ class ValveData(BaseModel):
     def _update_coeffs(self) -> None:
         """Update the polynomial coefficients based on current measurements."""
         if len(self.amounts) < 2:
+            # potential feature: 1 value assumes intercept at 0
             self.coeffs = []
             return
-        # TODO: 1 value assumes intercept at 0?
-        elif len(self.amounts) == 2:
-            # If only two measurements, use linear fit
-            order = 1
-        else:
-            # Fit a polynomial of degree 2
-            order = 2
+        # If only two measurements, use linear fit, otherwise use 2 degree polynomial
+        order = 1 if len(self.amounts) == 2 else 2
         self.coeffs = np.polyfit(self.amounts, self.durations, order).tolist()
 
     @field_serializer("lastdatemodified")
@@ -148,6 +146,7 @@ class ValveManagerMetaData(BaseModel):
         default_factory=datetime.datetime.now,
         description="Time of when the valve data was last saved to json file.",
     )
+
     COM: str = Field(
         default="",
         description="The COM port of the last state machine to modify the valves.",
@@ -195,14 +194,14 @@ class ValveDataManager(BaseModel):
             if sum(name == valvename for name in self.valve_names) > 1:
                 raise KeyError(f"Multiple valves with name '{valvename}' found.")
             return next(valve for valve in self.valve_datas if valve.name == valvename)
-        else:
-            raise KeyError(f"Valve '{valvename}' not found in valve manager.")
+
+        raise KeyError(f"Valve '{valvename}' not found in valve manager.")
 
     def create_valve(self, valvename: str) -> None:
         """Create a new valve with the given name."""
         if valvename in self.valve_names:
             raise KeyError(f"Valve '{valvename}' already exists.")
-        self.valve_datas.append(ValveData(ValveName=valvename))  # noqa: aliasing with pydantic can cause type check issues
+        self.valve_datas.append(ValveData(ValveName=valvename))
         logger.debug(f"Created new valve: {valvename}")
 
     @property
@@ -213,7 +212,7 @@ class ValveDataManager(BaseModel):
     @property
     def valve_names(self) -> list[str]:
         """List of valve names."""
-        return list(valve.name for valve in self.valve_datas)
+        return [valve.name for valve in self.valve_datas]
 
     def to_json(self, machineid: str | None = None) -> str:
         """Convert the ValveDataManager to JSON string.
@@ -233,7 +232,7 @@ class ValveDataManager(BaseModel):
                 raise ValueError("machineid must be a string.")
 
             # check if the COM is changing
-            if (self.metadata.COM != "") & (self.metadata.COM != machineid):
+            if (self.metadata.COM != "") & (self.metadata.COM != machineid):  # noqa: SIM300
                 logger.warning(
                     "COM port of liquid calibration file is changing from %s to %s",
                     self.metadata.COM,
