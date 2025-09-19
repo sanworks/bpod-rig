@@ -29,7 +29,7 @@ def create_empty_valve_data_manager(
 
 
 def check_valvemanager_user_updated(valvemanager: ValveDataManager) -> bool:
-    """Check if the user has updated the valve manager has been updated from the example.
+    """Check if the user has updated the valve manager from the example.
 
     This is determined by checking if any valve has a modification date later than the
     origin date of 2000-01-01.
@@ -87,8 +87,9 @@ def suggest_duration(
             amounts[0], durations[0], range_low, range_high
         )
     else:
-        # Use an estimate of the middle of the range based on range and our experience with
-        # the CSHL configuration (nResearch pinch valves, silastic tubing, specs in Bpod literature)
+        # Use an estimate of the middle of the range based on range and our experience
+        # with the CSHL configuration.
+        # (nResearch pinch valves, silastic tubing, specs in Bpod literature)
         suggested_duration_ms = (range_high + range_low) * 4
     return suggested_duration_ms
 
@@ -99,11 +100,11 @@ def calculate_largest_gap_midpoint(sorted_values: list[float]) -> float:
     for y in range(1, len(sorted_values)):
         distances[y] = abs(sorted_values[y] - sorted_values[y - 1])
     max_distance_pos = np.argmax(distances)
-    midpoint_value = (
+    # Return the midpoint location
+    return (
         sorted_values[max_distance_pos - 1]
         + (sorted_values[max_distance_pos] - sorted_values[max_distance_pos - 1]) / 2
     )
-    return midpoint_value
 
 
 def linearly_suggest_duration(
@@ -123,14 +124,13 @@ def linearly_suggest_duration(
             target_amount = range_low + (bottom_part / 2)
         else:
             target_amount = range_high - (top_part / 2)
-    suggested_duration = round(target_amount / ul_per_ms)
-    return suggested_duration
+    return round(target_amount / ul_per_ms)
 
 
 def calculate_ranged_amounts(
     amounts: np.array, range_low: float, range_high: float
 ) -> list[float]:
-    """Calculate a sorted list of amounts within a given range, including the range bounds."""
+    """Calculate a sorted list of amounts within a range, including the range bounds."""
     amounts_vector = amounts.tolist()
     if range_low not in amounts:
         amounts_vector.append(range_low)
@@ -141,8 +141,7 @@ def calculate_ranged_amounts(
     amounts_vector = sorted(amounts_vector)
     startpoint = amounts_vector.index(range_low)
     endpoint = amounts_vector.index(range_high)
-    amounts_vector = amounts_vector[startpoint : endpoint + 1]
-    return amounts_vector
+    return amounts_vector[startpoint : endpoint + 1]
 
 
 def check_com(valvemanager: ValveDataManager, com_port: str) -> str:
@@ -165,5 +164,4 @@ def check_com(valvemanager: ValveDataManager, com_port: str) -> str:
         return "unknown"
     if valvecom == com_port:
         return "yes"
-    else:
-        return "no"
+    return "no"
