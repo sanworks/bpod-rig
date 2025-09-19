@@ -17,7 +17,8 @@ class PendingValve(ValveData):
 
     valve_controller: str = Field(
         default="unknown",
-        description="The controlling hardware of the valve (e.g., 'StateMachine', 'PortArray').",
+        description="The controlling hardware of the valve "
+                    "(e.g., 'StateMachine', 'PortArray').",
     )
 
     def __init__(self, **data):
@@ -43,34 +44,33 @@ class PendingValve(ValveData):
             Action definition for valve that can be fed to
             StateMachine.add_state(**, output_actions=)
         """
-        assert actiontype in ["open", "close"]
+        if actiontype not in ["open", "close"]:
+            raise ValueError("Action type not recognised.")
         if self.valve_controller == "StateMachine":
-            valve_id = int(self.name[5:])
             if actiontype == "open":
                 # matlab code
                 # ValvePhysicalAddress = 2.^(0:7);
                 # ValveAddress = ValvePhysicalAddress(valveID)
-                valve_address = 2 ** (valve_id - 1)
+                # valve_id = int(self.name[5:])
+                # valve_address = 2 ** (valve_id - 1)
                 # return {'ValveState': valve_address}
                 return {self.name: True}
-            elif actiontype == "close":
+
+            if actiontype == "close":
                 raise ValueError("StateMachine valves do not have a close action.")
-            else:
-                raise ValueError("Action type not recognised.")
-        elif self.valve_controller == "PortArray":
+            raise ValueError("Action type not recognised.")
+        if self.valve_controller == "PortArray":
             target_module = self.name[0:3]
             portnumber = self.name[4]
             if actiontype == "open":
                 # TODO: serial message byte parsing hasn't been checked
                 action_serial = ["V", portnumber, 1]
                 return {target_module: action_serial}
-            elif actiontype == "close":
+            if actiontype == "close":
                 action_serial = ["V", portnumber, 0]
                 return {target_module: action_serial}
-            else:
-                raise ValueError("Action type not recognised")
-        else:
-            raise ValueError("Valve controller not recognised.")
+            raise ValueError("Action type not recognised")
+        raise ValueError("Valve controller not recognised.")
 
     @property
     def is_pending(self) -> bool:
@@ -144,7 +144,8 @@ class PendingMeasurementsManager:
         amount : float
             Quantity (mg or mL) released from the duration.
         """
-        assert duration in self.get_pending(valvename)
+        if duration not in self.get_pending(valvename):
+            raise ValueError("Duration not found in existing pending values.")
         self.remove_pending(valvename, duration)
         self._valvemanager.get_valve(valvename).add_measurement(duration, amount)
         logger.debug("Completed measurement for %s %s ms", valvename, duration)
@@ -167,7 +168,7 @@ class PendingMeasurementsManager:
 
         The state machine is constructed using object parameters:
         - n_pulses: number of pulses to deliver.
-        - pulse_interval: Duration (s) between one valve's end of pulse and another's start.
+        - pulse_interval: Duration (s) between one valve's pulse end and next's start.
         - pulse_set_pause: Duration (s) between a set of pulses.
 
         The amount of liquid dispensed from the state machine
@@ -176,7 +177,8 @@ class PendingMeasurementsManager:
         Parameters
         ----------
         test_set : dict | None, optional
-            Names of valves and durations to build state machine for. If not provided, test all valves that have pending durations using their oldest duration.
+            Names of valves and durations to build state machine for. If not provided,
+            test all valves that have pending durations using their oldest duration.
         Returns
         -------
         tuple[StateMachine, dict[str, float]]
@@ -223,7 +225,8 @@ def add_valve_states(
     duration : float
         Duration (ms) of valve open.
     next_valve : PendingValve | float
-        The next valve object in the cycle, or the float for the pause duration (s) between pulse sets.
+        The next valve object in the cycle, or the float for the pause duration (s)
+        between pulse sets.
     interval_delay_duration : float
     """
     last_valve = isinstance(next_valve, float)
@@ -231,7 +234,8 @@ def add_valve_states(
         pulse_set_pause_duration = next_valve
         next_state = "PulseSetPause"
     else:
-        assert isinstance(next_valve, PendingValve)
+        if not isinstance(next_valve, PendingValve):
+            raise ValueError("Next valve must be a PendingValve or float.")
         pulse_set_pause_duration = None
         next_state = f"Pulse{next_valve.name}"
 
@@ -302,7 +306,8 @@ def run_calibration(
     Returns
     -------
     dict[str, float]
-        Dictionary of valve names and the duration (ms) of the pulse added to the state machine.
+        Dictionary of valve names and the duration (ms) of the pulse added to the
+        state machine.
     """
 
     # Build the state machine
@@ -318,7 +323,7 @@ def run_calibration(
     bpodsystem.send_state_machine(fsm)
     logger.debug("Running calibration state machine.")
     # Run the state machine
-    for trial in range(pending_manager.n_pulses):
+    for _ in range(pending_manager.n_pulses):
         bpodsystem.run_state_machine()
 
     return test_set
