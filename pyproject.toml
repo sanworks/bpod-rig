@@ -13,14 +13,19 @@ authors = [
     { name = "Austin Pauley", email = "pauley@psy.fsu.edu" },
     { name = "Florian Rau", email = "bimac@users.noreply.github.com" },
     { name = "Steven Smith", email = "steven@stevenlsmith.com" },
+    { name = "George Stuyt", email = "eorge.stuyt@gmail.com"}
 ]
 requires-python = ">=3.10"
 dependencies = [
     "bpod-core",
     #"bpod-gui"
-    "bpod-core>=0.1.0a2",
+    "bpod-core>=0.1.0a2",   
     "pydantic==2.11.7",
 ]
+
+[dependency-groups]
+dev = [{ include-group = "test" }]
+test = ["pytest>=8.4.2", "pytest-cov>=7.0.0"]
 
 [project.urls]
 Changelog = "https://github.com/sanworks/bpod-rig/blob/main/CHANGELOG.md"
@@ -152,7 +157,3 @@ docstring-code-format = false
 # This only has an effect when the `docstring-code-format` setting is
 # enabled.
 docstring-code-line-length = "dynamic"
-
-[dependency-groups]
-dev = [{ include-group = "test" }]
-test = ["pytest>=8.4.2", "pytest-cov>=7.0.0"]
