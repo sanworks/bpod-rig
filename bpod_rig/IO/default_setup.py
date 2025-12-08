@@ -76,16 +76,17 @@ def create_default_directories(default_path_override: Path = None) -> Path:
     return bpod_folder_path
 
 
-def copy_default_files(bpod_folder_path: Path, machine_id: str, override: bool = False):
+def copy_default_files(bpod_folder_path: Path, override: bool = False):
     """
     Function to copy default settings and calibration .json files from the included
-    examples package into the specified machine_id machine directory.
+    examples package into the calibration and config folders.
 
     Parameters
     ----------
-    bpod_folder_path (pathlib.Path): Path to the Bpod directory
-    machine_id (str): Name of the serial# or USB serial port (e.g., "COM3")
-    override (bool) (Optional): Overwrite any existing files
+    bpod_folder_path : pathlib.Path
+        Path to the Bpod directory
+    override : bool, optional
+        Overwrite any existing files
 
     Returns
     -------
@@ -93,8 +94,8 @@ def copy_default_files(bpod_folder_path: Path, machine_id: str, override: bool =
     """
 
     # Locate target Calibration and Settings directories for this machine
-    calibration_dir = bpod_folder_path.joinpath("Config", f"Machine-{machine_id}", "Calibration")
-    settings_dir = bpod_folder_path.joinpath("Config", f"Machine-{machine_id}", "Settings")
+    calibration_dir = bpod_folder_path.joinpath("Calibration")
+    settings_dir = bpod_folder_path.joinpath("Config")
 
     calibration_example_dir = Path(calibration.__path__[0])
     settings_example_dir = Path(settings.__path__[0])
@@ -110,7 +111,8 @@ def copy_default_files(bpod_folder_path: Path, machine_id: str, override: bool =
                 logger.debug("Copying %s to %s...", cal_file, calibration_dir)
                 shutil.copy2(cal_file, calibration_dir)
             except Exception as e:  # NOQA PERF203
-                logger.error("Error copying %s! Original Exception: %s", cal_file, e)
+                logger.error("Error copying %s!", cal_file)
+                raise e
 
     if len(settings_dir_contents) == 0 or override:
         for setting_file in default_settings_files:
@@ -118,6 +120,5 @@ def copy_default_files(bpod_folder_path: Path, machine_id: str, override: bool =
                 logger.debug("Copying %s to %s...", setting_file, settings_dir)
                 shutil.copy2(setting_file, settings_dir)
             except Exception as e:  # NOQA PERF203
-                logger.error(
-                    "Error copying %s! Original Exception: %s", setting_file, e
-                )
+                logger.error("Error copying %s!", setting_file)
+                raise e
