@@ -17,9 +17,6 @@ authors = [
 ]
 requires-python = ">=3.10"
 dependencies = [
-    "bpod-core",
-    #"bpod-gui"
-    "bpod-core>=0.1.0a2",   
     "pydantic==2.11.7",
 ]
 
