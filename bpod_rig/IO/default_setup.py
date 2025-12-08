@@ -6,13 +6,13 @@ from pathlib import Path
 
 from bpod_rig.examples import calibration, settings
 
-DEFAULT_SUBDIRS = ["Config", "Protocols", "Data"]
+DEFAULT_SUBDIRS = ["Config", "Calibration", "Protocols", "Data", "Logs"]
 DEFAULT_DIR_NAME = "Bpod"
 
 logger = logging.getLogger(__name__)
 
 
-def create_default_directories(machine_id: str, default_path_override: Path = None) -> Path:
+def create_default_directories(default_path_override: Path = None) -> Path:
     """
     Create the default Bpod folder structure for a given machine.
 
@@ -21,9 +21,7 @@ def create_default_directories(machine_id: str, default_path_override: Path = No
 
         Bpod/
             Config/
-                Machine-<machine_id>/
-                    Calibration/
-                    Settings/
+            Calibration/
             Protocols/
             Data/
 
@@ -33,9 +31,6 @@ def create_default_directories(machine_id: str, default_path_override: Path = No
 
     Parameters
     ----------
-    machine_id : str
-        Name of the serial# or USB port for the target Bpod machine (e.g., "COM3", "EMU").
-        Used to create a machine-specific directory inside Config.
     default_path_override : pathlib.Path, optional
         A path to override the default Bpod folder location. If not provided,
         the default location is `~/Documents/Bpod`.
@@ -73,14 +68,6 @@ def create_default_directories(machine_id: str, default_path_override: Path = No
             )
             new_path.mkdir(parents=True, exist_ok=True)
 
-    # Create machine-specific config folder
-    machine_config_dir = bpod_folder_path.joinpath("Config", f"Machine-{machine_id}")
-    machine_config_dir.mkdir(parents=True, exist_ok=True)
-
-    calibration_dir = machine_config_dir.joinpath("Calibration")
-    settings_dir = machine_config_dir.joinpath("Settings")
-    calibration_dir.mkdir(parents=True, exist_ok=True)
-    settings_dir.mkdir(parents=True, exist_ok=True)
 
     if is_new_install:
         logger.info("Bpod user directory initialized to %s", bpod_folder_path)
