@@ -182,9 +182,27 @@ def get_default_path_file() -> Path | None:
         if pointer_file_path.exists():
             default_path_pointer = pointer_file_path.read_text()
             return Path(default_path_pointer)
-        else:
-            return None
+        return None
+        # If the file does not exist, return None
 
     except Exception as e:
         logger.error("Error reading default path pointer file: %s", pointer_file_path)
         raise e
+
+
+def get_bpod_directory_path() -> Path:
+    """Returns the path to the Bpod directory.
+
+    Returns
+    -------
+    Pathlib.Path:
+        Path to the Bpod directory
+
+    """
+    default_path_file = get_default_path_file()
+
+    if default_path_file:
+        return default_path_file
+
+    return Path.home() / "Documents/Bpod"
+    # If the default path isn't saved to disk, return the default
