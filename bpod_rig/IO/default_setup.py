@@ -119,3 +119,73 @@ def copy_default_files(bpod_folder_path: Path, override: bool = False):
             except Exception as e:  # NOQA PERF203
                 logger.error("Error copying %s!", setting_file)
                 raise e
+
+
+def create_default_path_file(user_defined_path: Path, file_save_location: Path = None):
+    """
+    Writes the user-defined default path into a file in the default Bpod folder so it
+    can be retrieved later.
+
+    By default, the Bpod directory is located in the user's 'Documents/Bpod/' directory.
+    If the user chooses to override that directory, a persistent link to that directory
+    is written to a .txt file in the default directory to reference later.
+
+    Parameters
+    ----------
+    user_defined_path : pathlib.Path
+        User-defined default Bpod Path
+    file_save_location : pathlib.Path, optional
+        Path to save the bpod_path.txt pointer file to. If not provided defaults to
+        [USER_HOME_DIR]/Documents/Bpod/
+
+        Used for testing purposes. Should not be used in normal operation.
+
+    Raises:
+        FileNotFoundError
+            If the file_save_location parameter does not exist, this error is raised
+
+    """
+
+    if not file_save_location:
+        file_save_location = Path.home() / "Documents/Bpod/"
+    else:
+        if not file_save_location.exists():
+            logger.error(
+                "File save directory %s does not exist!",
+                file_save_location
+            )
+            raise FileNotFoundError(
+                "File save directory %s does not exist!",
+                file_save_location
+            )
+
+    pointer_file_path = file_save_location / "bpod_path.txt"
+
+    try:
+        pointer_file_path.write_text(str(user_defined_path))
+    except Exception as e:
+        logger.error("Error writing default path pointer file: %s")
+        raise e
+
+def get_default_path_file() -> Path:
+    """
+    Returns the path to the default Bpod directory if the user chose to store it in a
+    directory other than the default 'Documents/Bpod' directory.
+
+    Returns
+    -------
+    Pathlib.Path:
+        Path to the user-defined default Bpod directory
+
+    """
+    pointer_file_path = Path.home() / "Documents/Bpod/bpod_path.txt"
+
+    try:
+        if pointer_file_path.exists():
+            default_path_pointer = pointer_file_path.read_text()
+            return Path(default_path_pointer)
+        else:
+            raise FileNotFoundError("Default path pointer file %s not found!", pointer_file_path)
+    except Exception as e:
+        logger.error("Error reading default path pointer file: %s", pointer_file_path)
+        raise e
