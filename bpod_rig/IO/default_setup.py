@@ -184,8 +184,10 @@ def get_default_path_file() -> Path:
         if pointer_file_path.exists():
             default_path_pointer = pointer_file_path.read_text()
             return Path(default_path_pointer)
-        else:
-            raise FileNotFoundError("Default path pointer file %s not found!", pointer_file_path)
+
+        raise FileNotFoundError(
+            "Default path pointer file %s not found!", pointer_file_path
+        )
     except Exception as e:
         logger.error("Error reading default path pointer file: %s", pointer_file_path)
         raise e
