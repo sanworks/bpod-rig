@@ -13,8 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 def create_default_directories(default_path_override: Path = None) -> Path:
-    """
-    Create the default Bpod folder structure for a given machine.
+    """Create the default Bpod folder structure for a given machine.
 
     By default, the Bpod directory will be created inside the user's Documents
     folder with the following top-level subdirectories:
@@ -75,9 +74,10 @@ def create_default_directories(default_path_override: Path = None) -> Path:
 
 
 def copy_default_files(bpod_folder_path: Path, override: bool = False):
-    """
-    Function to copy default settings and calibration .json files from the included
-    examples package into the calibration and config folders.
+    """Function to copy default files into their respective folders.
+
+    Copies the default calibration and configuration files from the examples module
+    to their respective directories.
 
     Parameters
     ----------
@@ -89,6 +89,7 @@ def copy_default_files(bpod_folder_path: Path, override: bool = False):
     Returns
     -------
     None
+
     """
     # Locate target Calibration and Settings directories for this machine
     calibration_dir = bpod_folder_path.joinpath("Calibration")
@@ -122,9 +123,7 @@ def copy_default_files(bpod_folder_path: Path, override: bool = False):
 
 
 def create_default_path_file(user_defined_path: Path, file_save_location: Path = None):
-    """
-    Writes the user-defined default path into a file in the default Bpod folder so it
-    can be retrieved later.
+    """Writes the user-defined default path into a file.
 
     By default, the Bpod directory is located in the user's 'Documents/Bpod/' directory.
     If the user chooses to override that directory, a persistent link to that directory
@@ -140,23 +139,14 @@ def create_default_path_file(user_defined_path: Path, file_save_location: Path =
 
         Used for testing purposes. Should not be used in normal operation.
 
-    Raises:
-        FileNotFoundError
-            If the file_save_location parameter does not exist, this error is raised
-
     """
-
     if not file_save_location:
         file_save_location = Path.home() / "Documents/Bpod/"
     else:
         if not file_save_location.exists():
-            logger.error(
-                "File save directory %s does not exist!",
-                file_save_location
-            )
+            logger.error("File save directory %s does not exist!", file_save_location)
             raise FileNotFoundError(
-                "File save directory %s does not exist!",
-                file_save_location
+                "File save directory %s does not exist!", file_save_location
             )
 
     pointer_file_path = file_save_location / "bpod_path.txt"
@@ -167,10 +157,13 @@ def create_default_path_file(user_defined_path: Path, file_save_location: Path =
         logger.error("Error writing default path pointer file: %s")
         raise e
 
+
 def get_default_path_file() -> Path:
-    """
-    Returns the path to the default Bpod directory if the user chose to store it in a
-    directory other than the default 'Documents/Bpod' directory.
+    """Returns the path to the default Bpod directory from the default directory.
+
+    If the user chose to save the Bpod directory in a directory other than the default
+    'Documents/Bpod', the user-defined path is saved to 'Documents/Bpod/bpod_path.txt'.
+    This function reads and returns the user-defined path to the Bpod directory.
 
     Returns
     -------
