@@ -158,7 +158,7 @@ def create_default_path_file(user_defined_path: Path, file_save_location: Path =
         raise e
 
 
-def get_default_path_file() -> Path:
+def get_default_path_file() -> Path | None:
     """Returns the path to the default Bpod directory from the default directory.
 
     If the user chose to save the Bpod directory in a directory other than the default
@@ -170,6 +170,11 @@ def get_default_path_file() -> Path:
     Pathlib.Path:
         Path to the user-defined default Bpod directory
 
+    or
+
+    None
+        If bpod_path.txt does not exist, return None
+
     """
     pointer_file_path = Path.home() / "Documents/Bpod/bpod_path.txt"
 
@@ -177,10 +182,9 @@ def get_default_path_file() -> Path:
         if pointer_file_path.exists():
             default_path_pointer = pointer_file_path.read_text()
             return Path(default_path_pointer)
+        else:
+            return None
 
-        raise FileNotFoundError(
-            "Default path pointer file %s not found!", pointer_file_path
-        )
     except Exception as e:
         logger.error("Error reading default path pointer file: %s", pointer_file_path)
         raise e
