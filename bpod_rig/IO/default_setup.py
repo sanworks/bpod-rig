@@ -1,4 +1,4 @@
-"""Module to create the default Bpod user directory and associated subdirs"""
+"""Module to create the default Bpod user directory and associated subdirs."""
 
 import logging
 import shutil
@@ -40,7 +40,6 @@ def create_default_directories(default_path_override: Path = None) -> Path:
     pathlib.Path
         The path to the created Bpod directory.
     """
-
     # Default root is the Documents folder
     default_root_location = Path.home() / "Documents"
 
@@ -52,12 +51,13 @@ def create_default_directories(default_path_override: Path = None) -> Path:
     is_new_install = False
 
     if not bpod_folder_path.exists():
-        logger.debug("Creating default Bpod user directory in %s", default_root_location)
+        logger.debug(
+            "Creating default Bpod user directory in %s", default_root_location
+        )
         bpod_folder_path.mkdir(parents=True, exist_ok=True)
         is_new_install = True
-    else: logger.debug("Bpod user directory found: %s", bpod_folder_path)
-
-
+    else:
+        logger.debug("Bpod user directory found: %s", bpod_folder_path)
 
     # Create top-level subdirectories
     for subdir in DEFAULT_SUBDIRS:
@@ -68,10 +68,8 @@ def create_default_directories(default_path_override: Path = None) -> Path:
             )
             new_path.mkdir(parents=True, exist_ok=True)
 
-
     if is_new_install:
         logger.info("Bpod user directory initialized to %s", bpod_folder_path)
-
 
     return bpod_folder_path
 
@@ -92,7 +90,6 @@ def copy_default_files(bpod_folder_path: Path, override: bool = False):
     -------
     None
     """
-
     # Locate target Calibration and Settings directories for this machine
     calibration_dir = bpod_folder_path.joinpath("Calibration")
     settings_dir = bpod_folder_path.joinpath("Config")
