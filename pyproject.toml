@@ -28,11 +28,13 @@ Homepage = "https://github.com/sanworks/bpod-rig"
 Issues = "https://github.com/sanworks/bpod-rig/issues"
 Repository = "https://github.com/sanworks/bpod-rig.git"
 
-
 [tool.setuptools.packages]
 find = { where = [""], include = ["*", "examples"] }
 # We want to include the examples folder in the wheel incase its needed
 # We need to explicitly include examples as it is a reserved name
+
+[project.scripts]
+bpod = "bpod_rig.__main__:main"
 
 
 [tool.ruff]
