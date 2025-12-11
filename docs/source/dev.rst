@@ -60,3 +60,8 @@ or
 
 
 Once complete there will be a new *.venv* folder containing an isolated Python installation and the desired dependencies
+
+Open PyCharm Project
+********************
+
+WIP
