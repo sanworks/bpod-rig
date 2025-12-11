@@ -2,7 +2,7 @@
 Development Setup
 =================
 
-Here you can find the recommended developemnt setup. The ``bpod-rig`` repository is shipped as a Jetbrains PyCharm project.
+Here you can find the recommended developemnt setup. The ``bpod-rig`` repository is shipped as a JetBrains PyCharm project.
 
 
 Install UV
