@@ -21,7 +21,7 @@ def main():
 
     try:
         system_paths = SystemPaths(base_dir=bpod_directory)
-        bpod_dir_verified = True
+        bpod_dir_verified = utils.verify_bpod_directory(system_paths)
     except ValidationError as ve:
         logger.error("Error initializing system paths: %s", exc_info=ve)
 
@@ -49,8 +49,10 @@ def main():
             logger.info("No valid Bpod directory! Shutting down.")
             return
 
-    # Populate this machine's folders with the default config and calibration files.
-    default_setup.copy_default_files(bpod_directory)
+        # Populate this machine's folders with the default config and calibration files.
+        default_setup.copy_default_files(bpod_directory)
+    else:
+        logging.debug("System paths at %s verified", bpod_directory)
 
     inital_system_config = utils.init_system_configuration(
         bpod_directory
