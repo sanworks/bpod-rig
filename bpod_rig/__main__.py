@@ -17,12 +17,7 @@ def main():
     bpod_dir_verified = False  # Let's put this in a BpodSystem class later
 
     ### Find and verify the Bpod directory ###
-    bpod_directory_path = default_setup.get_bpod_directory_path()
-
-    # TODO: There needs to be an extra check to determine if there has been no
-    # initialization performed. Will implement once I add in the path library
-    # suggested by Steven as it will be a much more robust location to store files
-    # for now we assume verification failure means broken OR never implemented -ACP
+    bpod_directory_path = default_setup.get_bpod_directory()
 
     try:
         system_paths = SystemPaths(base_dir=bpod_directory_path)
@@ -44,10 +39,7 @@ def main():
 
         if response:
             logging.info("Initializing Bpod directory at %s", bpod_directory_path)
-            bpod_directory_path = default_setup.create_default_directories(
-                default_path_override=bpod_directory_path
-            )
-            # TODO: refactor this function to always require a path be given -ACP
+            bpod_directory_path = default_setup.create_default_directories(bpod_directory_path)
             try:
                 system_paths = SystemPaths(base_dir=bpod_directory_path)
                 bpod_dir_verified = True
@@ -57,7 +49,6 @@ def main():
             response = cli_io.yes_no_prompt(
                 f"Would you like to copy the default protocols and calibration files to {bpod_directory_path}"
             )
-
             if response:
                 default_setup.copy_default_files(bpod_directory_path)
 
@@ -68,9 +59,7 @@ def main():
         return
 
 
-
     inital_system_config = utils.init_system_configuration(bpod_directory_path)
-
     result = utils.save_system_configuration(inital_system_config)
 
 
