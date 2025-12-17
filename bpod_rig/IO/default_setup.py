@@ -4,7 +4,9 @@ import logging
 import shutil
 from pathlib import Path
 
+import platformdirs
 from bpod_rig.examples import calibration, settings
+from bpod_rig.IO import cli_io
 
 DEFAULT_SUBDIRS = ["Config", "Calibration", "Protocols", "Data", "Logs"]
 DEFAULT_DIR_NAME = "Bpod"
@@ -128,20 +130,22 @@ def check_system_config_dir() -> Path:
         return None
 
 
+def get_bpod_directory() -> Path:
+    path_from_system = check_system_config_dir()
 
-def get_bpod_directory_path() -> Path:
-    """Returns the path to the Bpod directory.
+    if path_from_system is None:
+        logger.info("Bpod has not been initialized on this system!")
+        response = cli_io.yes_no_prompt(
+            f"Bpod has not been initialized on this system! Would you like to override the default path {DEFAULT_BPOD_PATH}?"
+        )
+        if response:
+            logger.debug("User is going to override the path!")
+            bpod_path = cli_io.prompt_for_path(
+                "Please enter the path to create the Bpod directory"
+            )
+        else:
+            bpod_path=DEFAULT_BPOD_PATH
 
-    Returns
-    -------
-    Pathlib.Path:
-        Path to the Bpod directory
 
-    """
-    default_path_file = get_default_path_file()
 
-    if default_path_file:
-        return default_path_file
 
-    return Path.home() / "Documents/Bpod"
-    # If the default path isn't saved to disk, return the default
