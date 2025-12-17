@@ -9,20 +9,23 @@ from bpod_rig.examples import calibration, settings
 DEFAULT_SUBDIRS = ["Config", "Calibration", "Protocols", "Data", "Logs"]
 DEFAULT_DIR_NAME = "Bpod"
 
+SYSTEM_CONFIG_DIR = platformdirs.user_config_path(DEFAULT_DIR_NAME)
+DEFAULT_BPOD_PATH = platformdirs.user_documents_path() / DEFAULT_DIR_NAME
+
 logger = logging.getLogger(__name__)
 
+def create_default_directories(bpod_directory_path: Path = None) -> Path:
+    """Create the default Bpod folder structure.
 
-def create_default_directories(default_path_override: Path = None) -> Path:
-    """Create the default Bpod folder structure for a given machine.
-
-    By default, the Bpod directory will be created inside the user's Documents
-    folder with the following top-level subdirectories:
+    The Bpod directory will be created inside the given path with the following
+    top-level subdirectories:
 
         Bpod/
             Config/
             Calibration/
             Protocols/
             Data/
+            Logs/
 
     This function only creates the directory structure — it does NOT populate
     default calibration or settings files. To copy default files, call
@@ -30,47 +33,38 @@ def create_default_directories(default_path_override: Path = None) -> Path:
 
     Parameters
     ----------
-    default_path_override : pathlib.Path, optional
-        A path to override the default Bpod folder location. If not provided,
-        the default location is `~/Documents/Bpod`.
+    bpod_directory_path : pathlib.Path
+        The path to initialize the Bpod folder location
 
     Returns
     -------
     pathlib.Path
         The path to the created Bpod directory.
     """
-    # Default root is the Documents folder
-    default_root_location = Path.home() / "Documents"
-
-    if default_path_override:
-        default_root_location = default_path_override
-
-    bpod_folder_path = default_root_location / DEFAULT_DIR_NAME
-
     is_new_install = False
 
-    if not bpod_folder_path.exists():
+    if not bpod_directory_path.exists():
         logger.debug(
-            "Creating default Bpod user directory in %s", default_root_location
+            "Creating default Bpod user directory in %s", bpod_directory_path
         )
-        bpod_folder_path.mkdir(parents=True, exist_ok=True)
+        bpod_directory_path.mkdir(parents=True, exist_ok=True)
         is_new_install = True
     else:
-        logger.debug("Bpod user directory found: %s", bpod_folder_path)
+        logger.debug("Bpod user directory found: %s", bpod_directory_path)
 
     # Create top-level subdirectories
     for subdir in DEFAULT_SUBDIRS:
-        new_path = bpod_folder_path.joinpath(subdir)
+        new_path = bpod_directory_path.joinpath(subdir)
         if not new_path.exists():
             logger.debug(
-                "Creating default subdirectory [%s] in %s", subdir, bpod_folder_path
+                "Creating default subdirectory [%s] in %s", subdir, bpod_directory_path
             )
             new_path.mkdir(parents=True, exist_ok=True)
 
     if is_new_install:
-        logger.info("Bpod user directory initialized to %s", bpod_folder_path)
+        logger.info("Bpod user directory initialized to %s", bpod_directory_path)
 
-    return bpod_folder_path
+    return bpod_directory_path
 
 
 def copy_default_files(bpod_folder_path: Path, override: bool = False):
