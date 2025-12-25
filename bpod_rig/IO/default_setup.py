@@ -5,13 +5,17 @@ import shutil
 from pathlib import Path
 
 import platformdirs
+from pydantic import ValidationError
+
 from bpod_rig.examples import calibration, settings
+from bpod_rig.config import utils
 from bpod_rig.IO import cli_io
 
 DEFAULT_SUBDIRS = ["Config", "Calibration", "Protocols", "Data", "Logs"]
 DEFAULT_DIR_NAME = "Bpod"
 
 SYSTEM_CONFIG_DIR = platformdirs.user_config_path(DEFAULT_DIR_NAME)
+SYSTEM_CONFIG_FILE = SYSTEM_CONFIG_DIR / "system_config.json"
 DEFAULT_BPOD_PATH = platformdirs.user_documents_path() / DEFAULT_DIR_NAME
 
 logger = logging.getLogger(__name__)
@@ -118,16 +122,53 @@ def copy_default_files(bpod_folder_path: Path, override: bool = False):
                 raise e
 
 
-def check_system_config_dir() -> Path:
+def get_bpod_dir_from_system() -> Path | None:
+    """Attempts to get the Bpod directory path from the system configuration file
+
+    Checks to see if the system configuration directory exists, if so, check to see
+    if there is a system configuration file. If there is attempt to read the Bpod
+    directory path from the configuration file.
+
+    Returns
+    -------
+    pathlib.Path
+        Path to the Bpod directory read from the system configuration file
+
+    None
+        If the system configuration directory does not exist, the configuration file
+        does not exist, or there is an error reading from the file, return None
+
+    """
+
     if SYSTEM_CONFIG_DIR.exists():
+        # Check if the system configuration directory exists
         logger.debug("Found system config directory: %s", SYSTEM_CONFIG_DIR)
-        # Is there a path/config file?
+        if SYSTEM_CONFIG_FILE.exists():
+            # Check if the system configuration file exists
+            logger.debug(
+                "system_config.json found! Attempting to read Bpod directory path!"
+            )
+            try:
+                # Attempt to load and read path from system configuration file
+                system_settings = utils.load_system_configuration(SYSTEM_CONFIG_FILE)
+                return system_settings.paths.base_dir
+            except ValidationError as e:
+                logger.error(
+                    "Configuration file at %s failed to validate!",
+                    SYSTEM_CONFIG_FILE,
+                    exc_info=e,
+                )
+            logger.error(
+                "Unable to read Bpod directory path from system configuration file!"
+            )
+        else:
+            logger.warning(
+                "No system_config.json found! Has system been fully initialized?"
+            )
     else:
-        logger.debug("No system config directory found!")
-        logger.info("Bpod has not been initialized on this system!")
-        logger.info(f"Creating system config directory at {SYSTEM_CONFIG_DIR}")
-        SYSTEM_CONFIG_DIR.mkdir(parents=True, exist_ok=True)
-        return None
+        logger.warning("No system config directory found!")
+
+    return None
 
 
 def get_bpod_directory() -> Path:
