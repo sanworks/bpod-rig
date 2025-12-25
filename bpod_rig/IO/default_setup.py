@@ -4,19 +4,15 @@ import logging
 import shutil
 from pathlib import Path
 
-import platformdirs
 from pydantic import ValidationError
 
 from bpod_rig.examples import calibration, settings
 from bpod_rig.config import utils
 from bpod_rig.IO import cli_io
-
-DEFAULT_SUBDIRS = ["Config", "Calibration", "Protocols", "Data", "Logs"]
-DEFAULT_DIR_NAME = "Bpod"
-
-SYSTEM_CONFIG_DIR = platformdirs.user_config_path(DEFAULT_DIR_NAME)
-SYSTEM_CONFIG_FILE = SYSTEM_CONFIG_DIR / "system_config.json"
-DEFAULT_BPOD_PATH = platformdirs.user_documents_path() / DEFAULT_DIR_NAME
+from defaults import (
+    DEFAULT_SUBDIRS, SYSTEM_CONFIG_DIR, SYSTEM_CONFIG_FILE,
+    DEFAULT_BPOD_PATH
+)
 
 logger = logging.getLogger(__name__)
 

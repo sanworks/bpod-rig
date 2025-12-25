@@ -9,11 +9,10 @@ from pydantic import UUID4, Field, PastDate
 
 from bpod_rig.config.base import ModelWithMetadata
 from bpod_rig.config.bpod_settings import BpodPaths
-
-DEFAULT_PROTOCOL_DIR_NAME = "Protocols"
-DEFAULT_DATA_DIR_NAME = "Data"
-DEFAULT_CONFIG_DIR_NAME = "Config"
-DEFAULT_LOG_DIR_NAME = "Logs"
+from defaults import (
+    DEFAULT_PROTOCOL_DIR_NAME, DEFAULT_DATA_DIR_NAME,
+    DEFAULT_CONFIG_DIR_NAME
+)
 
 logger = logging.getLogger(__name__)
 
