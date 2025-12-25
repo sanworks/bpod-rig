@@ -192,22 +192,12 @@ def check_system_is_initialized() -> bool:
             return True
     return False
 
+
 def get_bpod_directory() -> Path:
-    path_from_system = check_system_config_dir()
+    bpod_path = get_bpod_dir_from_system()
 
-    if path_from_system is None:
-        logger.info("Bpod has not been initialized on this system!")
-        response = cli_io.yes_no_prompt(
-            f"Bpod has not been initialized on this system! Would you like to override the default path {DEFAULT_BPOD_PATH}?"
-        )
-        if response:
-            logger.debug("User is going to override the path!")
-            bpod_path = cli_io.prompt_for_path(
-                "Please enter the path to create the Bpod directory"
-            )
-        else:
-            bpod_path=DEFAULT_BPOD_PATH
+    if bpod_path is None:
+        logger.info("Unable to get Bpod path from system configuration!")
+        bpod_path = DEFAULT_BPOD_PATH
 
-
-
-
+    return bpod_path
