@@ -13,17 +13,30 @@ logger = logging.getLogger(__name__)
 
 def main():
     ### Everything below is subject to change and is for testing purposes only
-    logger.info("Initializing bpod-rig!")
+    logger.info("Starting bpod-rig!")
     bpod_dir_verified = False  # Let's put this in a BpodSystem class later
 
-    ### Find and verify the Bpod directory ###
-    bpod_directory_path = default_setup.get_bpod_directory()
+    ### Has Bpod been initialized on this system before? ###
+    system_initialized = default_setup.check_system_is_initialized()
+    if not system_initialized:
+        # Time to do some initialization
+        bpod_directory_path = []
+        response = cli_io.yes_no_prompt(
+            f"Bpod has not been initialized on this system! Would you like to override the default path {DEFAULT_BPOD_PATH}?"
+        )
+        if response:
+            logger.debug("User is going to override the path!")
+            bpod_path = cli_io.prompt_for_path(
+                "Please enter the path to create the Bpod directory"
+            )
+    else:
+        bpod_directory_path = default_setup.get_bpod_directory()
 
     try:
         system_paths = SystemPaths(base_dir=bpod_directory_path)
         bpod_dir_verified = utils.verify_bpod_directory(system_paths)
     except ValidationError as ve:
-        logger.error("Error initializing system paths: %s", exc_info=ve)
+        logger.error("Error validating system paths: %s", exc_info=ve)
 
     if not bpod_dir_verified:
         logger.info(
