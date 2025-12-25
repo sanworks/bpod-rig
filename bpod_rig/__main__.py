@@ -6,6 +6,7 @@ from pydantic import ValidationError
 from bpod_rig.config import utils
 from bpod_rig.config.system_settings import SystemPaths
 from bpod_rig.IO import default_setup, cli_io
+from bpod_rig.defaults import DEFAULT_BPOD_PATH
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -20,7 +21,7 @@ def main():
     system_initialized = default_setup.check_system_is_initialized()
     if not system_initialized:
         # Time to do some initialization
-        bpod_directory_path = []
+        bpod_path = DEFAULT_BPOD_PATH
         response = cli_io.yes_no_prompt(
             f"Bpod has not been initialized on this system! Would you like to override the default path {DEFAULT_BPOD_PATH}?"
         )
@@ -29,6 +30,16 @@ def main():
             bpod_path = cli_io.prompt_for_path(
                 "Please enter the path to create the Bpod directory"
             )
+
+        try:
+            bpod_path.mkdir(parents=True, exist_ok=True)
+        except (IOError, OSError) as e:
+            logger.error(
+                "Unable to create the Bpod directory: %s",
+                bpod_path,
+                exc_info=e
+            )
+
     else:
         bpod_directory_path = default_setup.get_bpod_directory()
 
