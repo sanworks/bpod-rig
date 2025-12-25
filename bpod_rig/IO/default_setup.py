@@ -171,6 +171,27 @@ def get_bpod_dir_from_system() -> Path | None:
     return None
 
 
+def check_system_is_initialized() -> bool:
+    """Checks whether Bpod has been initialized on this system before
+
+    If the system configuration directory does not exist, the system has not been initialized
+    If the system configuration directory exists, but the system_config.json file
+    does not exist, the system likely has only been partially initialized and needs to
+    be reinitialized.
+
+    Returns
+    ------
+    bool
+        True if system is initialized, False otherwise
+    """
+
+    if SYSTEM_CONFIG_DIR.exists():
+        logger.debug("System configuration directory found: %s", SYSTEM_CONFIG_DIR)
+        if SYSTEM_CONFIG_FILE.exists():
+            logger.debug("System configuration file found: %s", SYSTEM_CONFIG_FILE)
+            return True
+    return False
+
 def get_bpod_directory() -> Path:
     path_from_system = check_system_config_dir()
 
