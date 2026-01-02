@@ -6,7 +6,7 @@ from pydantic import ValidationError
 from bpod_rig.config import utils
 from bpod_rig.config.system_settings import SystemPaths
 from bpod_rig.IO import default_setup, cli_io
-from bpod_rig.defaults import DEFAULT_BPOD_PATH
+from bpod_rig.defaults import DEFAULT_BPOD_PATH, SYSTEM_CONFIG_DIR, SYSTEM_CONFIG_FILE
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -22,10 +22,10 @@ def main():
     if not system_initialized:
         # Time to do some initialization
         bpod_path = DEFAULT_BPOD_PATH
-        response = cli_io.yes_no_prompt(
+        override_directory = cli_io.yes_no_prompt(
             f"Bpod has not been initialized on this system! Would you like to override the default path {DEFAULT_BPOD_PATH}?"
         )
-        if response:
+        if override_directory:
             logger.debug("User is going to override the path!")
             bpod_path = cli_io.prompt_for_path(
                 "Please enter the path to create the Bpod directory"
@@ -41,7 +41,8 @@ def main():
             )
 
     else:
-        bpod_directory_path = default_setup.get_bpod_directory()
+        # System has already been initialized
+        bpod_path = default_setup.get_bpod_dir_from_system()
 
     try:
         system_paths = SystemPaths(base_dir=bpod_directory_path)
@@ -54,30 +55,25 @@ def main():
             "The Bpod directory at %s failed to verify!"
             " This could be due to a partially initialized folder structure or "
             "improper file path!",
-            bpod_directory_path,
+            bpod_path,
         )
-        response = cli_io.yes_no_prompt(
-            f"Would you like to (re)initialize {bpod_directory_path} as the base"
+        reinitialize = cli_io.yes_no_prompt(
+            f"Would you like to (re)initialize {bpod_path} as the base"
             f" Bpod directory?"
         )
 
-        if response:
-            logging.info("Initializing Bpod directory at %s", bpod_directory_path)
-            bpod_directory_path = default_setup.create_default_directories(bpod_directory_path)
-            try:
-                system_paths = SystemPaths(base_dir=bpod_directory_path)
-                bpod_dir_verified = True
-            except ValidationError as ve:
-                logger.error("Error initializing system paths: %s", exc_info=ve)
-
-            response = cli_io.yes_no_prompt(
-                f"Would you like to copy the default protocols and calibration files to {bpod_directory_path}"
+        if reinitialize:
+            logging.info("Initializing Bpod directory at %s", bpod_path)
+            bpod_path = default_setup.create_default_directories(bpod_path)
+            bpod_dir_verified = True
+            copy_default = cli_io.yes_no_prompt(
+                f"Would you like to copy the default protocols and calibration files to {bpod_path}"
             )
-            if response:
-                default_setup.copy_default_files(bpod_directory_path)
+            if copy_default:
+                default_setup.copy_default_files(bpod_path)
 
     if bpod_dir_verified:
-        logging.debug("System paths at %s verified", bpod_directory_path)
+        logging.debug("System paths at %s verified", bpod_path)
     else:
         logger.info("No valid Bpod directory! Shutting down.")
         return
