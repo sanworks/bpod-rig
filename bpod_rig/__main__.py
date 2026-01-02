@@ -31,25 +31,38 @@ def main():
                 "Please enter the path to create the Bpod directory"
             )
 
+        # Create Bpod directories if the system was not initialized yet
         try:
-            bpod_path.mkdir(parents=True, exist_ok=True)
+            bpod_path = default_setup.create_default_directories(bpod_path)
         except (IOError, OSError) as e:
             logger.error(
                 "Unable to create the Bpod directory: %s",
                 bpod_path,
                 exc_info=e
             )
+            return
 
+        # Create the system configuration directory
+        try:
+            SYSTEM_CONFIG_DIR.mkdir(exist_ok=True)
+        except (IOError, OSError) as e:
+            logger.error(
+                "Unable to create the system configuration directory: %s",
+                SYSTEM_CONFIG_DIR,
+                exc_info=e
+            )
+            return
     else:
         # System has already been initialized
         bpod_path = default_setup.get_bpod_dir_from_system()
 
-    try:
-        system_paths = SystemPaths(base_dir=bpod_directory_path)
-        bpod_dir_verified = utils.verify_bpod_directory(system_paths)
-    except ValidationError as ve:
-        logger.error("Error validating system paths: %s", exc_info=ve)
+    ## Verify Bpod Folder Structure ##
 
+    # Instantiate SystemPaths object to generate subdirectories
+    system_paths = SystemPaths(base_dir=bpod_path)
+    bpod_dir_verified = utils.verify_bpod_directory(system_paths)
+
+    # Verification Failed
     if not bpod_dir_verified:
         logger.info(
             "The Bpod directory at %s failed to verify!"
@@ -66,6 +79,7 @@ def main():
             logging.info("Initializing Bpod directory at %s", bpod_path)
             bpod_path = default_setup.create_default_directories(bpod_path)
             bpod_dir_verified = True
+
             copy_default = cli_io.yes_no_prompt(
                 f"Would you like to copy the default protocols and calibration files to {bpod_path}"
             )
@@ -79,9 +93,12 @@ def main():
         return
 
 
-    inital_system_config = utils.init_system_configuration(bpod_directory_path)
-    result = utils.save_system_configuration(inital_system_config)
-
+    inital_system_config = utils.init_system_configuration(bpod_path)
+    user_config_path = utils.save_system_configuration(inital_system_config)
+    system_config_path = utils.save_system_configuration(
+        inital_system_config,
+        save_dir_override=SYSTEM_CONFIG_DIR
+    )
 
 if __name__ == "__main__":
     main()
