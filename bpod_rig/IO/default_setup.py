@@ -127,28 +127,11 @@ def get_bpod_dir_from_system() -> Path | None:
     -------
     pathlib.Path
         Path to the Bpod directory read from the system configuration file
-
-    None
-        If there is an error reading from the file, return None
-
     """
 
-    try:
-        # Attempt to load and read path from system configuration file
-        system_settings = utils.load_system_configuration(SYSTEM_CONFIG_FILE)
-        return system_settings.paths.base_dir
-    except ValidationError as e:
-        logger.error(
-            "Configuration file at %s failed to validate!",
-            SYSTEM_CONFIG_FILE,
-            exc_info=e,
-        )
-
-    logger.error(
-        "Unable to read Bpod directory path from system configuration file!"
-    )
-
-    return None
+    # Attempt to load and read path from system configuration file
+    system_settings = utils.load_system_configuration(SYSTEM_CONFIG_FILE)
+    return system_settings.paths.base_dir
 
 
 def check_system_is_initialized() -> bool:
