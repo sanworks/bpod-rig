@@ -4,13 +4,10 @@ import logging
 import shutil
 from pathlib import Path
 
-from pydantic import ValidationError
-
 from bpod_rig.examples import calibration, settings
 from bpod_rig.config import utils
-from defaults import (
+from bpod_rig.defaults import (
     DEFAULT_SUBDIRS, SYSTEM_CONFIG_DIR, SYSTEM_CONFIG_FILE,
-    DEFAULT_BPOD_PATH
 )
 
 logger = logging.getLogger(__name__)
