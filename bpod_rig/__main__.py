@@ -15,46 +15,64 @@ logger = logging.getLogger(__name__)
 def main():
     ### Everything below is subject to change and is for testing purposes only
     logger.info("Starting bpod-rig!")
-    bpod_dir_verified = False  # Let's put this in a BpodSystem class later
+    # Let's put this in a BpodSystem class later
+    bpod_dir_verified = False
+    reinitialize = False
+    system_initialized = False
+    bpod_path = None
 
     ### Has Bpod been initialized on this system before? ###
     system_initialized = default_setup.check_system_is_initialized()
     if not system_initialized:
-        # Time to do some initialization
-        bpod_path = DEFAULT_BPOD_PATH
+        logging.debug(
+            "System is not initialized. Creating system config dir [%s]",
+            SYSTEM_CONFIG_DIR
+        )
+        # Create the system configuration directory
+        try:
+            SYSTEM_CONFIG_DIR.mkdir(exist_ok=True)
+        except (IOError, OSError) as e:
+            logger.error(
+                "Unable to create the system configuration directory: %s Exiting...",
+                SYSTEM_CONFIG_DIR,
+                exc_info=e
+            )
+            return
+    else:
+        logger.debug(
+            "System configuration directory is already initialized."
+            " Attempting to read bpod_path from configuration file"
+        )
+        # System has already been initialized
+        try:
+            bpod_path = default_setup.get_bpod_dir_from_system()
+        except ValidationError as e:
+            logger.error(
+                "Configuration file at %s failed to validate!",
+                SYSTEM_CONFIG_FILE,
+                exc_info=e,
+            )
+            logger.error(
+                "Unable to read Bpod directory path from existing system configuration "
+                "file! Exiting..."
+            )
+            return
+
+    if bpod_path is None:
+        # This is the first time initializing the system; override default path?
         override_directory = cli_io.yes_no_prompt(
-            f"Bpod has not been initialized on this system! Would you like to override the default path {DEFAULT_BPOD_PATH}?"
+            f"Bpod has not been initialized on this system! "
+            f"Would you like to override the default path {DEFAULT_BPOD_PATH}?"
         )
         if override_directory:
             logger.debug("User is going to override the path!")
             bpod_path = cli_io.prompt_for_path(
                 "Please enter the path to create the Bpod directory"
             )
+        else:
+            bpod_path = DEFAULT_BPOD_PATH
 
-        # Create Bpod directories if the system was not initialized yet
-        try:
-            bpod_path = default_setup.create_default_directories(bpod_path)
-        except (IOError, OSError) as e:
-            logger.error(
-                "Unable to create the Bpod directory: %s",
-                bpod_path,
-                exc_info=e
-            )
-            return
-
-        # Create the system configuration directory
-        try:
-            SYSTEM_CONFIG_DIR.mkdir(exist_ok=True)
-        except (IOError, OSError) as e:
-            logger.error(
-                "Unable to create the system configuration directory: %s",
-                SYSTEM_CONFIG_DIR,
-                exc_info=e
-            )
-            return
-    else:
-        # System has already been initialized
-        bpod_path = default_setup.get_bpod_dir_from_system()
+    logger.info("Bpod path set to: %s", bpod_path)
 
     ## Verify Bpod Folder Structure ##
 
@@ -75,21 +93,21 @@ def main():
             f" Bpod directory?"
         )
 
-        if reinitialize:
-            logging.info("Initializing Bpod directory at %s", bpod_path)
-            bpod_path = default_setup.create_default_directories(bpod_path)
-            bpod_dir_verified = True
+    if reinitialize or not system_initialized:
+        logging.info("Initializing Bpod directory at %s", bpod_path)
+        bpod_path = default_setup.create_default_directories(bpod_path)
+        bpod_dir_verified = True
 
-            copy_default = cli_io.yes_no_prompt(
-                f"Would you like to copy the default protocols and calibration files to {bpod_path}"
-            )
-            if copy_default:
-                default_setup.copy_default_files(bpod_path)
+        copy_default = cli_io.yes_no_prompt(
+            f"Would you like to copy the default protocols and calibration files to {bpod_path}"
+        )
+        if copy_default:
+            default_setup.copy_default_files(bpod_path)
 
     if bpod_dir_verified:
         logging.debug("System paths at %s verified", bpod_path)
     else:
-        logger.info("No valid Bpod directory! Shutting down.")
+        logger.error("No valid Bpod directory! Shutting down.")
         return
 
 
