@@ -8,22 +8,17 @@ from bpod_rig.IO import default_setup
 
 
 class TestCreateDefaultDirectories:
-    pass
-
-
-class TestCreateDefaultDirectories:
     @pytest.fixture(autouse=True)
     def setup_and_teardown(self):
         """Setup and teardown."""
         self.temp_dir = tempfile.TemporaryDirectory()
         self.temp_path = Path(self.temp_dir.name)
         self.bpod_path = self.temp_path / "Bpod"
-        self.machine_id = "COM3"
 
         yield  # test runs here
 
         self.temp_dir.cleanup()
 
     def test_folder_creation(self):
-        default_setup.create_default_directories("EMU", self.bpod_path)
+        default_setup.create_default_directories(self.bpod_path)
         assert self.bpod_path.exists()
