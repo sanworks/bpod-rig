@@ -4,7 +4,7 @@ import pathlib
 import pytest
 from pydantic import ValidationError
 
-from bpod_rig.config.base import SettingsMetadata
+from bpod_rig.config.base import SettingsMetadata, ModelWithMetadata
 from bpod_rig.config.system_settings import SystemPaths
 from bpod_rig.config.bpod_settings import BpodPaths
 
@@ -81,7 +81,13 @@ class TestSystemPathsModel:
 
         sp = SystemPaths(base_dir=paths["bpod_dir"], username="valid_username")
 
+        # Does username get forwarded properly to the SettingsMatadata object
         assert sp.metadata.username == "valid_username"
+
+        # Does the SettingsMetadata object get properly forwarded
+        md = SettingsMetadata()
+        sp2 = SystemPaths(base_dir=paths["bpod_dir"], metadata=md, username="beepbop")
+        assert sp2.metadata.username != "beepbop"
 
     def test_not_paths(self):
         """Tests that non-path inputs for directories raise validation errors."""
