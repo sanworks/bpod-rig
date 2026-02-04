@@ -44,19 +44,19 @@ Create Virtual Environment
 
 .. code-block:: shell-session
 
-    $ uv sync --extra dev
+    $ uv sync --group dev
 
 3. (Optional) If it is desired to install the dependencies for building the documentation, use the following command instead
 
 .. code-block:: shell-session
 
-    $ uv sync --extra dev --extra docs
+    $ uv sync --group dev --group docs
 
 or
 
 .. code-block:: shell-session
 
-    $ uv sync --all-extras
+    $ uv sync --all-groups
 
 
 Once complete there will be a new *.venv* folder containing an isolated Python installation and the desired dependencies
