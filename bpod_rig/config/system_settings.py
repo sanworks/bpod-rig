@@ -169,28 +169,34 @@ class SystemSettings(ModelWithMetadata):
         ),
     ] = None
 
-    def set_modification_time(self, date_time: datetime.datetime) -> bool:
-        """
-        Update all metadata save_time fields.
 
-        Parameters
-        ----------
-        date_time : datetime.datetime
-            Date and time to update metadata save_time fields to.
+    def update_modification_time(self) -> bool:
+        """
+        Override update_modification_time to also update the modified_datetime metadata
+        field of SystemSettings subfields
 
         Returns
         -------
-        bool
-            If successful, return True, else return False.
+        bool:
+            True if all times were updated, False otherwise
         """
-        try:
-            self.metadata.modified_datetime = date_time
-            self.paths.metadata.modified_datetime = date_time
-            if self.bpod_dirs:
-                for bpod_dir in self.bpod_dirs:
-                    bpod_dir.metadata.modified_datetime = date_time
-        except Exception as e:
-            logger.error("Error setting save_time fields!", exc_info=e)
+
+        all_success = True
+
+        all_success &= super().update_modification_time()
+        # Update the SystemSettings save time
+
+        if self.bpod_dirs:
+            for bpod_dir in self.bpod_dirs:
+                all_success &= bpod_dir.update_modification_time()
+        # Update the save time for each bpod_dir
+
+        if self.paths:
+            all_success &= self.paths.update_modification_time()
+        # Update the save time for the system paths
+
+        if not all_success:
             return False
 
         return True
+

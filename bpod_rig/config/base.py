@@ -1,6 +1,7 @@
 """Base classes for configuration classes."""
 
 import datetime
+import logging
 from typing import Annotated, Any, Optional
 
 from pydantic import (
@@ -12,6 +13,7 @@ from pydantic import (
     model_validator,
 )
 
+logger = logging.getLogger(__name__)
 
 class SettingsMetadata(BaseModel):
     model_config = ConfigDict()
@@ -37,7 +39,7 @@ class SettingsMetadata(BaseModel):
         str,
         Field(
             min_length=1,
-            max_length=128, 
+            max_length=128,
             title="Username of settings creator",
             description="Username of the creator of this settings model.",
         ),
@@ -98,6 +100,27 @@ class ModelWithMetadata(BaseModel):
             # otherwise, forward the "username" field to SettingsMetadata and return it
             data["metadata"] = SettingsMetadata(username=data["username"])
         return data
+
+
+    def update_modification_time(self) -> bool:
+        """
+        Update metadata modified_datetime field.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        bool
+            If successful, return True, else return False.
+        """
+        try:
+            self.metadata.modified_datetime = datetime.datetime.now()
+        except Exception as e:
+            logger.error("Error setting save_time field for %s!", self,  exc_info=e)
+            return False
+        return True
 
 
 class ModuleBase(ModelWithMetadata):
