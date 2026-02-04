@@ -5,6 +5,7 @@ from pathlib import Path
 from pydantic_core import from_json
 
 from bpod_rig.config.system_settings import SystemPaths, SystemSettings
+from bpod_rig.defaults import SYSTEM_CONFIG_DIR
 from bpod_rig.IO import json_handler
 
 logger = logging.getLogger(__name__)
@@ -37,13 +38,46 @@ def verify_bpod_directory(system_paths: SystemPaths) -> bool:
     return dir_verified
 
 
+def save_system_paths(
+    system_paths: SystemPaths, save_dir_override: Path | None
+) -> None:
+    """
+    Save the system paths to the system configuration directory as json-formatted text
+
+    Simultaneously will update the save_time field
+
+    Parameters
+    ----------
+    system_paths : SystemPaths
+        SystemPaths instance to serialize and write to disk
+    save_dir_override : Path | None
+        Optional Path to override the default save directory. Default SYSTEM_CONFIG_DIR
+        used if not provided
+
+    Returns
+    -------
+    None
+    """
+
+    logger.debug("Saving system paths as JSON!")
+    system_paths.update_modification_time()
+
+    if save_dir_override is not None:
+        save_dir = save_dir_override
+    else:
+        save_dir = SYSTEM_CONFIG_DIR
+
+    system_paths_json = system_paths.model_dump_json(indent=2)
+    json_handler.write_json(system_paths_json, save_dir, "paths")
+
+
 def save_system_configuration(
     system_settings: SystemSettings, save_dir_override: Path | None = None
 ) -> Path:
     """
     Save system_configuration instance to disk as json-formatted text.
 
-    Simultaneously will update the modified_datetime field of the models to datetime.now()
+    Simultaneously will update the save_time field
 
     Parameters
     ----------
@@ -59,8 +93,7 @@ def save_system_configuration(
         Path to the saved file is returned
     """
     logger.debug("Saving system configuration as JSON!")
-    modified_datetime = datetime.datetime.now()
-    system_settings.set_modification_time(modified_datetime)
+    system_settings.update_modification_time()
 
     if save_dir_override is None:
         if system_settings.paths.base_config_dir is None:
