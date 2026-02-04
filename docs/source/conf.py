@@ -30,6 +30,7 @@ extensions = [
     'sphinx_copybutton',
     'sphinx_autodoc_typehints',
     'sphinx-jsonschema',
+    'sphinx_rtd_dark_mode'
 ]
 source_suffix = ['.rst', '.md']
 
