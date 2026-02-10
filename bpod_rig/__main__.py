@@ -5,7 +5,7 @@ from pydantic import ValidationError
 
 from bpod_rig.config import utils
 from bpod_rig.config.system_settings import SystemPaths
-from bpod_rig.IO import default_setup, cli_io
+from bpod_rig.IO import startup, cli_io
 from bpod_rig.defaults import DEFAULT_BPOD_PATH, SYSTEM_CONFIG_DIR, SYSTEM_CONFIG_FILE
 
 logging.basicConfig(level=logging.DEBUG)
@@ -22,7 +22,7 @@ def main():
     bpod_path = None
 
     ### Has Bpod been initialized on this system before? ###
-    system_initialized = default_setup.check_system_is_initialized()
+    system_initialized = startup.check_system_is_initialized()
     if not system_initialized:
         logging.debug(
             "System is not initialized. Creating system config dir [%s]",
@@ -45,7 +45,7 @@ def main():
         )
         # System has already been initialized
         try:
-            bpod_path = default_setup.get_bpod_dir_from_system()
+            bpod_path = startup.get_bpod_dir_from_system()
         except ValidationError as e:
             logger.error(
                 "Configuration file at %s failed to validate!",
@@ -95,14 +95,14 @@ def main():
 
     if reinitialize or not system_initialized:
         logging.info("Initializing Bpod directory at %s", bpod_path)
-        bpod_path = default_setup.create_default_directories(bpod_path)
+        bpod_path = startup.create_default_directories(bpod_path)
         bpod_dir_verified = True
 
         copy_default = cli_io.yes_no_prompt(
             f"Would you like to copy the default protocols and calibration files to {bpod_path}"
         )
         if copy_default:
-            default_setup.copy_default_files(bpod_path)
+            startup.copy_default_files(bpod_path)
 
     if bpod_dir_verified:
         logging.debug("System paths at %s verified", bpod_path)

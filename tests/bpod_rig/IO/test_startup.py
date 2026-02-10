@@ -4,7 +4,7 @@ import tempfile
 import pytest
 
 
-from bpod_rig.IO import default_setup
+from bpod_rig.IO import startup
 
 
 class TestCreateDefaultDirectories:
@@ -20,5 +20,5 @@ class TestCreateDefaultDirectories:
         self.temp_dir.cleanup()
 
     def test_folder_creation(self):
-        default_setup.create_default_directories(self.bpod_path)
+        startup.create_default_directories(self.bpod_path)
         assert self.bpod_path.exists()
