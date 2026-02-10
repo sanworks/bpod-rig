@@ -4,8 +4,8 @@ import pathlib
 import pytest
 from pydantic import ValidationError
 
-from bpod_rig.config.base import SettingsMetadata, ModelWithMetadata
-from bpod_rig.config.system_settings import SystemPaths
+from bpod_rig.config.base import SettingsMetadata
+from bpod_rig.config.system_settings import SystemPaths, SystemSettings
 from bpod_rig.config.bpod_settings import BpodPaths
 
 
@@ -138,3 +138,29 @@ class TestBpodPathsModel:
         assert bp.parent_dir == paths["base_dir"]
         assert bp.calibration_dir == paths["calibration_dir"]
         assert bp.settings_dir == paths["config_dir"]
+
+
+class TestSystemSettingsModel:
+    @pytest.fixture
+    def paths(self, tmp_path):
+        """Fixture to provide a common set of path objects for tests."""
+        working_dir = tmp_path
+        bpod_dir = working_dir.joinpath("Bpod")
+        system_paths = SystemPaths(base_dir=bpod_dir)
+        return {
+            "system_paths": system_paths
+        }
+
+
+    def test_default(self, paths):
+        """Tests that the default system settings are constructed correctly."""
+        paths = paths["system_paths"]
+        settings = SystemSettings(paths=paths)
+
+        assert settings.current_version == "0.0.0"
+        assert settings.last_update_check is None
+        assert settings.phone_home_id is None
+        assert settings.phone_home_opt_in == False
+        assert settings.debug == False
+        assert settings.paths == paths
+        assert settings.bpod_dirs is None
