@@ -171,7 +171,8 @@ class SystemSettings(ModelWithMetadata):
 
 
     def update_modification_time(self) -> bool:
-        """
+        """Update time the SystemSettings object was modified.
+
         Override update_modification_time to also update the modified_datetime metadata
         field of SystemSettings subfields
 
@@ -180,7 +181,6 @@ class SystemSettings(ModelWithMetadata):
         bool:
             True if all times were updated, False otherwise
         """
-
         all_success = True
 
         all_success &= super().update_modification_time()
