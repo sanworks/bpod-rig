@@ -195,8 +195,4 @@ class SystemSettings(ModelWithMetadata):
             all_success &= self.paths.update_modification_time()
         # Update the save time for the system paths
 
-        if not all_success:
-            return False
-
-        return True
-
+        return all_success
