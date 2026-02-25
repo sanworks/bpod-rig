@@ -30,7 +30,7 @@ def main():
         )
         # Create the system configuration directory
         try:
-            SYSTEM_CONFIG_DIR.mkdir(exist_ok=True)
+            SYSTEM_CONFIG_DIR.mkdir(exist_ok=True, parents=True)
         except (IOError, OSError) as e:
             logger.error(
                 "Unable to create the system configuration directory: %s Exiting...",

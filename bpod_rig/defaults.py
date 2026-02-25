@@ -10,7 +10,7 @@ DEFAULT_CONFIG_DIR_NAME = "Config"
 DEFAULT_LOG_DIR_NAME = "Logs"
 
 # Defaults or unchanging paths
-SYSTEM_CONFIG_DIR = platformdirs.user_config_path(DEFAULT_DIR_NAME)
+SYSTEM_CONFIG_DIR = platformdirs.user_config_path(DEFAULT_DIR_NAME, "sanworks")
 SYSTEM_CONFIG_FILE = SYSTEM_CONFIG_DIR / "config.json"
 DEFAULT_BPOD_PATH = platformdirs.user_documents_path() / DEFAULT_DIR_NAME
 
