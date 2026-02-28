@@ -170,7 +170,7 @@ class SystemSettings(ModelWithMetadata):
     ] = None
 
 
-    def update_modification_time(self) -> bool:
+    def update_modification_time(self):
         """Update time the SystemSettings object was modified.
 
         Override update_modification_time to also update the modified_datetime metadata
@@ -178,21 +178,18 @@ class SystemSettings(ModelWithMetadata):
 
         Returns
         -------
-        bool:
-            True if all times were updated, False otherwise
+        None
         """
-        all_success = True
 
-        all_success &= super().update_modification_time()
+        super().update_modification_time()
         # Update the SystemSettings save time
 
         if self.bpod_dirs:
             for bpod_dir in self.bpod_dirs:
-                all_success &= bpod_dir.update_modification_time()
+                bpod_dir.update_modification_time()
         # Update the save time for each bpod_dir
 
         if self.paths:
-            all_success &= self.paths.update_modification_time()
+            self.paths.update_modification_time()
         # Update the save time for the system paths
 
-        return all_success
