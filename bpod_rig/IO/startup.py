@@ -13,7 +13,7 @@ from bpod_rig.defaults import (
 logger = logging.getLogger(__name__)
 
 
-def create_default_directories(bpod_directory_path: Path = None) -> Path:
+def create_default_directories(bpod_directory_path: Path) -> Path:
     """Create the default Bpod folder structure.
 
     The Bpod directory will be created inside the given path with the following
@@ -57,6 +57,10 @@ def create_default_directories(bpod_directory_path: Path = None) -> Path:
                 "Creating default subdirectory [%s] in %s", subdir, bpod_directory_path
             )
             new_path.mkdir(parents=True, exist_ok=True)
+        else:
+            logger.debug(
+                "Subdirectory [%s] already exists", subdir
+            )
 
     if is_new_install:
         logger.info("Bpod user directory initialized to %s", bpod_directory_path)
