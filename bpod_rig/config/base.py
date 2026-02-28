@@ -102,7 +102,7 @@ class ModelWithMetadata(BaseModel):
         return data
 
 
-    def update_modification_time(self) -> bool:
+    def update_modification_time(self):
         """
         Update metadata modified_datetime field.
 
@@ -112,15 +112,11 @@ class ModelWithMetadata(BaseModel):
 
         Returns
         -------
-        bool
-            If successful, return True, else return False.
+        None
         """
-        try:
-            self.metadata.modified_datetime = datetime.datetime.now()
-        except Exception as e:
-            logger.error("Error setting save_time field for %s!", self,  exc_info=e)
-            return False
-        return True
+        time = datetime.datetime.now()
+        logger.debug("Setting modification time for [%s] to %s", self, time)
+        self.metadata.modified_datetime = time
 
 
 class ModuleBase(ModelWithMetadata):
