@@ -2,6 +2,7 @@
 
 import datetime
 import logging
+import pathlib
 from typing import Annotated, Any, Optional
 
 from pydantic import (
@@ -12,6 +13,8 @@ from pydantic import (
     field_validator,
     model_validator,
 )
+
+from bpod_rig.IO import json_handler
 
 logger = logging.getLogger(__name__)
 
@@ -117,6 +120,24 @@ class ModelWithMetadata(BaseModel):
         time = datetime.datetime.now()
         logger.debug("Setting modification time for [%s] to %s", self, time)
         self.metadata.modified_datetime = time
+
+
+    def save_model(self, save_directory: pathlib.Path, filename: str):
+        """Dump model to JSON and save it to disk
+
+        Parameters
+        ----------
+        save_directory : pathlib.Path
+            Directory to save the JSON file to
+        filename : str
+            Name of saved file without the .json suffix
+
+        Returns
+        -------
+            None
+        """
+        model_as_json = self.model_dump_json(indent=2)
+        return json_handler.write_json(model_as_json, save_directory, filename)
 
 
 class ModuleBase(ModelWithMetadata):
