@@ -37,7 +37,7 @@ class TestSave:
         """Tests that the configuration is saved to the default path correctly."""
         ss, config_dir, full_file_path, _ = temp_config
         config_dir.mkdir(exist_ok=True)
-        save_path = utils.save_system_configuration(ss)
+        save_path = ss.save_system_configuration()
 
         assert save_path == full_file_path
         assert full_file_path.exists()
@@ -49,8 +49,8 @@ class TestSave:
         """Tests that the configuration can be saved to a non-default directory."""
         ss, config_dir, _, bpod_dir = temp_config
         config_dir.mkdir(exist_ok=True)
-        save_path = utils.save_system_configuration(
-            ss, save_dir_override=ss.paths.base_dir
+        save_path = ss.save_system_configuration(
+            save_dir_override=ss.paths.base_dir
         )
 
         alt_file_path = bpod_dir.joinpath("config.json")
@@ -66,14 +66,14 @@ class TestSave:
         ss, _, _, _ = temp_config
         # Note: We don't create the config_dir here
         with pytest.raises(FileNotFoundError):
-            _ = utils.save_system_configuration(ss)
+            _ = ss.save_system_configuration()
 
     def test_invalid_override_path(self, temp_config):
         """Tests that saving errors if the override directory does not exist."""
         ss, _, _, bpod_dir = temp_config
         invalid_dir = bpod_dir.joinpath("InvalidDir")
         with pytest.raises(FileNotFoundError):
-            _ = utils.save_system_configuration(ss, save_dir_override=invalid_dir)
+            _ = ss.save_system_configuration(save_dir_override=invalid_dir)
 
 
 class TestLoad:

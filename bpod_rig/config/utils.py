@@ -71,42 +71,6 @@ def save_system_paths(
     json_handler.write_json(system_paths_json, save_dir, "paths")
 
 
-def save_system_configuration(
-    system_settings: SystemSettings, save_dir_override: Path | None = None
-) -> Path:
-    """
-    Save system_configuration instance to disk as json-formatted text.
-
-    Simultaneously will update the save_time field
-
-    Parameters
-    ----------
-    system_settings : SystemSettings
-        SystemSettings instance to serialize and write to disk
-    save_dir_override : Path, optional
-        Optional Path to override the default save directory. If not provided,
-        system_settings.paths.base_config_dir will be used.
-
-    Returns
-    -------
-        Path
-        Path to the saved file is returned
-    """
-    logger.debug("Saving system configuration as JSON!")
-    system_settings.update_modification_time()
-
-    if save_dir_override is None:
-        if system_settings.paths.base_config_dir is None:
-            raise ValueError("system_settings.paths.base_config_dir is None.")
-        save_dir = system_settings.paths.base_config_dir
-    else:
-        save_dir = save_dir_override
-
-    system_settings_json = system_settings.model_dump_json(indent=2)
-
-    return json_handler.write_json(system_settings_json, save_dir, "config")
-
-
 def load_system_configuration(config_file_path: Path) -> SystemSettings | None:
     """
     Load valid JSON from disk and validate it against the SystemSettings schema.

@@ -112,9 +112,8 @@ def main():
 
 
     inital_system_config = utils.init_system_configuration(bpod_path)
-    user_config_path = utils.save_system_configuration(inital_system_config)
-    system_config_path = utils.save_system_configuration(
-        inital_system_config,
+    user_config_path = inital_system_config.save_system_configuration()
+    system_config_path = inital_system_config.save_system_configuration(
         save_dir_override=SYSTEM_CONFIG_DIR
     )
 
