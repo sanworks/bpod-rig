@@ -89,6 +89,7 @@ select = [
     "COM",
     "C4",
     "FA",
+    "I",
     "ICN",
     "INP",
     "PIE",
@@ -102,6 +103,7 @@ select = [
     "PERF",
     "UP007", # use pipes for type union instead of Union
 ]
+
 ignore = [
     "COM812",  # Missing trailing comma
     "D100",    # Missing docstring in public module
@@ -118,6 +120,7 @@ ignore = [
     "RET504",  # Unnecessary assignment to variable (e.g., `return x` instead of `x = ...; return x`)
     "S101",    # Use of assert
 ]
+
 # Allow fix for all enabled rules (when `--fix`) is provided.
 fixable = []
 unfixable = []
