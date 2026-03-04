@@ -43,7 +43,7 @@ def system_path_factory(data: dict, addition: str) -> Path | None:
     return data["base_dir"].joinpath(addition)
 
 
-class SystemPaths(ModelWithMetadata):
+class BpodDir(ModelWithMetadata):
     base_dir: Annotated[
         Path,
         Field(
@@ -153,7 +153,7 @@ class SystemSettings(ModelWithMetadata):
     ] = False
 
     paths: Annotated[
-        SystemPaths,
+        BpodDir,
         Field(
             title="System Paths Model",
             description="Model containing validated bpod system paths",

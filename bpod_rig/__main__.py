@@ -4,7 +4,7 @@ import logging
 from pydantic import ValidationError
 
 from bpod_rig.config import utils
-from bpod_rig.config.system_settings import SystemPaths
+from bpod_rig.config.system_settings import BpodDir
 from bpod_rig.IO import startup, cli_io
 from bpod_rig.defaults import DEFAULT_BPOD_PATH, SYSTEM_CONFIG_DIR, SYSTEM_CONFIG_FILE
 
@@ -77,7 +77,7 @@ def main():
     ## Verify Bpod Folder Structure ##
 
     # Instantiate SystemPaths object to generate subdirectories
-    system_paths = SystemPaths(base_dir=bpod_path)
+    system_paths = BpodDir(base_dir=bpod_path)
     bpod_dir_verified = utils.verify_bpod_directory(system_paths)
 
     # Verification Failed

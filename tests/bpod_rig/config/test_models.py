@@ -5,7 +5,7 @@ import pytest
 from pydantic import ValidationError
 
 from bpod_rig.config.base import SettingsMetadata
-from bpod_rig.config.system_settings import SystemPaths, SystemSettings
+from bpod_rig.config.system_settings import BpodDir, SystemSettings
 from bpod_rig.config.bpod_settings import BpodPaths
 
 
@@ -67,7 +67,7 @@ class TestSystemPathsModel:
 
     def test_default_factory(self, paths):
         """Tests that the default directory paths are constructed correctly."""
-        sp = SystemPaths(base_dir=paths["bpod_dir"])
+        sp = BpodDir(base_dir=paths["bpod_dir"])
         assert sp.data_dir == paths["data_dir"]
         assert sp.base_config_dir == paths["config_dir"]
         assert sp.protocol_dir == paths["protocol_dir"]
@@ -79,22 +79,22 @@ class TestSystemPathsModel:
         paths["protocol_dir"].mkdir(exist_ok=True)
         paths["config_dir"].mkdir(exist_ok=True)
 
-        sp = SystemPaths(base_dir=paths["bpod_dir"], username="valid_username")
+        sp = BpodDir(base_dir=paths["bpod_dir"], username="valid_username")
 
         # Does username get forwarded properly to the SettingsMatadata object
         assert sp.metadata.username == "valid_username"
 
         # Does the SettingsMetadata object get properly forwarded
         md = SettingsMetadata()
-        sp2 = SystemPaths(base_dir=paths["bpod_dir"], metadata=md, username="beepbop")
+        sp2 = BpodDir(base_dir=paths["bpod_dir"], metadata=md, username="beepbop")
         assert sp2.metadata.username != "beepbop"
 
     def test_not_paths(self):
         """Tests that non-path inputs for directories raise validation errors."""
         with pytest.raises(ValidationError):
-            SystemPaths(base_dir=1234321)
+            BpodDir(base_dir=1234321)
 
-        sp = SystemPaths(base_dir="/this/is/a/path")
+        sp = BpodDir(base_dir="/this/is/a/path")
         assert isinstance(sp.base_dir, pathlib.Path)
 
 
@@ -146,7 +146,7 @@ class TestSystemSettingsModel:
         """Fixture to provide a common set of path objects for tests."""
         working_dir = tmp_path
         bpod_dir = working_dir.joinpath("Bpod")
-        system_paths = SystemPaths(base_dir=bpod_dir)
+        system_paths = BpodDir(base_dir=bpod_dir)
         return {
             "system_paths": system_paths
         }

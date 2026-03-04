@@ -4,7 +4,7 @@ from pathlib import Path
 
 from pydantic_core import from_json
 
-from bpod_rig.config.system_settings import SystemPaths, SystemSettings
+from bpod_rig.config.system_settings import BpodDir, SystemSettings
 from bpod_rig.defaults import SYSTEM_CONFIG_DIR
 from bpod_rig.IO import json_handler
 
@@ -12,17 +12,17 @@ logger = logging.getLogger(__name__)
 
 
 def init_system_configuration(bpod_dir: Path) -> SystemSettings:
-    system_paths = SystemPaths(
+    system_paths = BpodDir(
         base_dir=bpod_dir,
     )
 
     system_settings = SystemSettings(paths=system_paths)
     return system_settings
 
-def verify_bpod_directory(system_paths: SystemPaths) -> bool:
+def verify_bpod_directory(system_paths: BpodDir) -> bool:
 
     dir_verified = True
-    sp_fields = SystemPaths.model_fields
+    sp_fields = BpodDir.model_fields
     sp_fields = [field for field in sp_fields if field != "metadata"]
     sp_as_dict = system_paths.model_dump()
 
@@ -39,7 +39,7 @@ def verify_bpod_directory(system_paths: SystemPaths) -> bool:
 
 
 def save_system_paths(
-    system_paths: SystemPaths, save_dir_override: Path | None
+    system_paths: BpodDir, save_dir_override: Path | None
 ) -> None:
     """
     Save the system paths to the system configuration directory as json-formatted text
@@ -48,7 +48,7 @@ def save_system_paths(
 
     Parameters
     ----------
-    system_paths : SystemPaths
+    system_paths : BpodDir
         SystemPaths instance to serialize and write to disk
     save_dir_override : Path | None
         Optional Path to override the default save directory. Default SYSTEM_CONFIG_DIR

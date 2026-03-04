@@ -5,7 +5,7 @@ from pathlib import Path
 from pydantic_core import ValidationError
 import pytest
 
-from bpod_rig.config.system_settings import SystemSettings, SystemPaths
+from bpod_rig.config.system_settings import SystemSettings, BpodDir
 from bpod_rig.config import utils
 
 JSON_STRING = '{"first_key":{"second_key": "1234"}}'
@@ -21,7 +21,7 @@ def temp_config():
     # --- Setup ---
     bpod_dir = Path(tempfile.mkdtemp())
     config_dir = bpod_dir.joinpath("Config")
-    sp = SystemPaths(base_dir=bpod_dir)
+    sp = BpodDir(base_dir=bpod_dir)
     ss = SystemSettings(paths=sp)
     full_file_path = ss.paths.base_config_dir.joinpath("config.json")
 
