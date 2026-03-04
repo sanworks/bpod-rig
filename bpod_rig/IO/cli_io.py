@@ -9,23 +9,19 @@ def yes_no_prompt(prompt: str) -> bool:
     try:
         return click.confirm(prompt, default=None)
     except click.Abort:
-        logger.debug("User aborted before answering: %s", prompt)
+        logger.debug("User aborted before answering! Assuming answer is No/False")
         return False
 
-def prompt_for_path(prompt: str) -> Path:
-    validated = False
-    path = []
-
-    while not validated:
-        unverified_path = click.prompt(prompt)
-        response = yes_no_prompt(f"Is {unverified_path} the correct path?")
-        if response:
-            try:
-                path = Path(unverified_path)
-                validated = True
-            except Exception as e:
-                logger.error("Invalid path: %s", exc_info=e)
-                click.echo("Invalid path entered, please try again.", err=True)
-
-    return path
-
+def prompt_for_path(prompt: str) -> Path | None:
+    try:
+        return click.prompt(prompt,
+                            type=click.Path(
+                                exists=True,
+                                file_okay=False,
+                                dir_okay=True,
+                                path_type=Path
+                            )
+                        )
+    except click.Abort:
+        logger.debug("User aborted before answering! Assuming user changed their mind")
+        return None
