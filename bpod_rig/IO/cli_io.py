@@ -6,14 +6,10 @@ import click
 logger = logging.getLogger(__name__)
 
 def yes_no_prompt(prompt: str) -> bool:
-    response = ''
-
-    while response not in ['y', 'n', 'Y', 'N']:
-        response = click.prompt(prompt, prompt_suffix=' [y/N] ')
-
-    if response in ['y', 'Y']:
-        return True
-    else:
+    try:
+        return click.confirm(prompt, default=None)
+    except click.Abort:
+        logger.debug("User aborted before answering: %s", prompt)
         return False
 
 def prompt_for_path(prompt: str) -> Path:
