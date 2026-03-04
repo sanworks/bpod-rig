@@ -25,6 +25,7 @@ def main():
     ### Has Bpod been initialized on this system before? ###
     system_initialized = startup.check_system_is_initialized()
     if not system_initialized:
+        logging.info("Initializing Bpod Rig...")
         logging.debug(
             "System is not initialized. Creating system config dir [%s]",
             SYSTEM_CONFIG_DIR
@@ -58,6 +59,7 @@ def main():
 
     if bpod_path is None:
         # This is the first time initializing the system; override default path?
+        logger.info("Creating Bpod directory...")
         override_directory = cli_io.yes_no_prompt(
             f"Bpod has not been initialized on this system! "
             f"Would you like to override the default path {DEFAULT_BPOD_PATH}?"
