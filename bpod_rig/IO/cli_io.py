@@ -4,7 +4,8 @@ from pathlib import Path
 import click
 
 logger = logging.getLogger(__name__)
-
+@click.command()
+@click.argument('prompt')
 def yes_no_prompt(prompt: str) -> bool:
     try:
         return click.confirm(prompt, default=None)
@@ -12,6 +13,8 @@ def yes_no_prompt(prompt: str) -> bool:
         logger.debug("User aborted before answering! Assuming answer is No/False")
         return False
 
+@click.command()
+@click.argument('prompt')
 def prompt_for_path(prompt: str) -> Path | None:
     try:
         return click.prompt(prompt,
