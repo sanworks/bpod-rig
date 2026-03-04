@@ -1,10 +1,12 @@
+import logging
 import tempfile
 from pathlib import Path
 
 import pytest
 from click.testing import CliRunner
-
+from unittest.mock import patch
 from bpod_rig.IO.cli_io import yes_no_prompt, prompt_for_path
+
 
 class TestCliIO:
     @pytest.fixture(autouse=True)
@@ -22,7 +24,7 @@ class TestCliIO:
 
         self.temp_dir.cleanup()
 
-    def test_yes_no_prompt(self):
+    def test_yes_no_prompt(self, caplog):
         y1 = self.runner.invoke(
             yes_no_prompt, ["Testing..."], input="Y", standalone_mode=False
         )
@@ -51,4 +53,21 @@ class TestCliIO:
         assert n2.exit_code == 0
         assert "Testing..." in n2.output
 
-    
+        garbage = self.runner.invoke(
+            yes_no_prompt, ["Testing..."], input="asdfasdf", standalone_mode=False
+        )
+        assert "invalid" in garbage.output
+
+        with patch("bpod_rig.IO.cli_io.yes_no_prompt", side_effect=KeyboardInterrupt):
+            # patch to force a KeyboardInterrupt
+            with caplog.at_level(logging.DEBUG):
+                # Capture the logging to make sure 'aborted' is output
+                early = self.runner.invoke(
+                    yes_no_prompt,
+                    ["Testing..."],
+                    input="",
+                    standalone_mode=False,
+                )
+
+                assert early.return_value == False
+                assert "aborted" in caplog.text
