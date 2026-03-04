@@ -23,7 +23,8 @@ def prompt_for_path(prompt: str) -> Path | None:
                                 file_okay=False,
                                 dir_okay=True,
                                 path_type=Path
-                            )
+                            ),
+                            default=None
                         )
     except click.Abort:
         logger.debug("User aborted before answering! Assuming user changed their mind")
