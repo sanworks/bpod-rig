@@ -49,15 +49,12 @@ def main():
             bpod_path = startup.get_bpod_dir_from_system()
         except ValidationError as e:
             logger.error(
-                "Configuration file at %s failed to validate!",
+                "Configuration file at %s failed to validate! "
+                "Cannot read the Bpod Directory from existing configuration!",
                 SYSTEM_CONFIG_FILE,
                 exc_info=e,
             )
-            logger.error(
-                "Unable to read Bpod directory path from existing system configuration "
-                "file! Exiting..."
-            )
-            return
+            return -1
 
     if bpod_path is None:
         # This is the first time initializing the system; override default path?
