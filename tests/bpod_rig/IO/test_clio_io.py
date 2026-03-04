@@ -23,22 +23,32 @@ class TestCliIO:
         self.temp_dir.cleanup()
 
     def test_yes_no_prompt(self):
-        y1 = self.runner.invoke(yes_no_prompt, ["Testing..."], input='Y', standalone_mode=False)
+        y1 = self.runner.invoke(
+            yes_no_prompt, ["Testing..."], input="Y", standalone_mode=False
+        )
         assert y1.return_value == True
         assert y1.exit_code == 0
         assert "Testing..." in y1.output
 
-        y2 = self.runner.invoke(yes_no_prompt, ["Testing..."], input='y', standalone_mode=False)
+        y2 = self.runner.invoke(
+            yes_no_prompt, ["Testing..."], input="y", standalone_mode=False
+        )
         assert y1.return_value == True
         assert y2.exit_code == 0
         assert "Testing..." in y2.output
 
-        n1 = self.runner.invoke(yes_no_prompt, ["Testing..."], input='N', standalone_mode=False)
+        n1 = self.runner.invoke(
+            yes_no_prompt, ["Testing..."], input="N", standalone_mode=False
+        )
         assert n1.return_value == False
         assert n1.exit_code == 0
         assert "Testing..." in n1.output
 
-        n2 = self.runner.invoke(yes_no_prompt, ["Testing..."], input='n', standalone_mode=False)
+        n2 = self.runner.invoke(
+            yes_no_prompt, ["Testing..."], input="n", standalone_mode=False
+        )
         assert n2.return_value == False
         assert n2.exit_code == 0
         assert "Testing..." in n2.output
+
+    
