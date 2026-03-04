@@ -67,7 +67,9 @@ def main():
             bpod_path = cli_io.prompt_for_path(
                 "Please enter the path to create the Bpod directory"
             )
-        else:
+        if not override_directory or bpod_path is None:
+            # If the user changes their mind or does not want to overwrite the default
+            # directory
             bpod_path = DEFAULT_BPOD_PATH
 
     logger.info("Bpod path set to: %s", bpod_path)
