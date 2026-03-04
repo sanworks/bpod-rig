@@ -38,7 +38,7 @@ def main():
                 SYSTEM_CONFIG_DIR,
                 exc_info=e
             )
-            return
+            return -1
     else:
         logger.debug(
             "System configuration directory is already initialized."
