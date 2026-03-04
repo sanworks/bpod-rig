@@ -17,11 +17,14 @@ class TestCliIO:
         self.exists_path = self.temp_path / "exists"
         self.exists_path.mkdir(parents=True)
         self.dne_path = self.temp_path / "dne"
-
+        self.temp_file = self.temp_path.joinpath('test.txt')
+        self.temp_file.write_text("Test")
+        # For some reason tempfile.NamedTemporaryFile does not work here
         self.runner = CliRunner()
 
         yield  # test runs here
 
+        self.temp_file.unlink()
         self.temp_dir.cleanup()
 
     def test_yes_no_prompt(self, caplog):
@@ -70,4 +73,54 @@ class TestCliIO:
                 )
 
                 assert early.return_value == False
+                assert "aborted" in caplog.text
+
+
+    def test_prompt_for_path(self, caplog):
+
+        exists = self.runner.invoke(
+            prompt_for_path,
+            ["Testing..."],
+            input=f"{self.exists_path}",
+            standalone_mode=False
+        )
+        assert exists.exit_code == 0
+        assert "Testing..." in exists.output
+        assert exists.return_value == self.exists_path
+        assert isinstance(exists.return_value, Path)
+
+        dne = self.runner.invoke(
+            prompt_for_path,
+            ["Testing..."],
+            input=f"{self.dne_path}",
+            standalone_mode=False
+        )
+
+        assert dne.exit_code == 0
+        assert "Testing..." in dne.output
+        assert "does not exist" in dne.output
+
+        dne = self.runner.invoke(
+            prompt_for_path,
+            ["Testing..."],
+            input=f"{self.temp_file}",
+            standalone_mode=False
+        )
+
+        assert dne.exit_code == 0
+        assert "Testing..." in dne.output
+        assert "is a file" in dne.output
+
+        with patch("bpod_rig.IO.cli_io.prompt_for_path", side_effect=KeyboardInterrupt):
+            # patch to force a KeyboardInterrupt
+            with caplog.at_level(logging.DEBUG):
+                # Capture the logging to make sure 'aborted' is output
+                early = self.runner.invoke(
+                    prompt_for_path,
+                    ["Testing..."],
+                    input="",
+                    standalone_mode=False,
+                )
+
+                assert early.return_value is None
                 assert "aborted" in caplog.text
