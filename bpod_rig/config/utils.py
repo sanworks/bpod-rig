@@ -1,4 +1,3 @@
-import datetime
 import logging
 from pathlib import Path
 
@@ -18,24 +17,6 @@ def init_system_configuration(bpod_dir: Path) -> SystemSettings:
 
     system_settings = SystemSettings(paths=system_paths)
     return system_settings
-
-def verify_bpod_directory(system_paths: BpodDir) -> bool:
-
-    dir_verified = True
-    sp_fields = BpodDir.model_fields
-    sp_fields = [field for field in sp_fields if field != "metadata"]
-    sp_as_dict = system_paths.model_dump()
-
-    for field in sp_fields:
-        field_path = sp_as_dict[field]
-        if field_path is None:
-            continue
-            # Skip None values that are not implemented yet
-        if not field_path.exists():
-            logger.error("Bpod subdirectory %s does not exist", field_path)
-            dir_verified = False
-
-    return dir_verified
 
 
 def save_system_paths(

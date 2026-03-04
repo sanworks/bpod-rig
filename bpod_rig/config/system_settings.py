@@ -107,6 +107,24 @@ class BpodDir(ModelWithMetadata):
     ] = None
 
 
+    def verify(self) -> bool:
+        dir_verified = True
+        sp_fields = BpodDir.model_fields
+        sp_fields = [field for field in sp_fields if field != "metadata"]
+        sp_as_dict = self.model_dump()
+
+        for field in sp_fields:
+            field_path = sp_as_dict[field]
+            if field_path is None:
+                continue
+                # Skip None values that are not implemented yet
+            if not field_path.exists():
+                logger.error("Bpod subdirectory %s does not exist", field_path)
+                dir_verified = False
+
+        return dir_verified
+
+
 class SystemSettings(ModelWithMetadata):
     current_version: Annotated[
         str,
@@ -224,6 +242,5 @@ class SystemSettings(ModelWithMetadata):
         logger.debug("Save directory for SystemSettings set to %s: ", save_dir)
         self.save_model(save_dir, 'config')
         return save_dir.joinpath('config.json')
-
 
 
