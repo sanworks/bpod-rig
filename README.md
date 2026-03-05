@@ -9,3 +9,6 @@ Python software suite for Bpod, built around int-brain-lab's bpod-core
 3) Run `uv sync` to automatically create a virtual environment from the included `uv.lock` file
 	- `bpod-rig` will be automatically installed in _editable_ mode
 4) Open the cloned repository as a Pycharm project
+
+
+Install Just: https://github.com/casey/just, a cross-platform Make-like tool. This isn't essential, but it does give you easy access to `just test` and `just format` which will ensure consistent formatting and type checking across the project.
