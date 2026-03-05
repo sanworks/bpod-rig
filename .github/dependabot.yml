@@ -6,3 +6,4 @@ updates:
       interval: "daily"
     allow:
       - dependency-name: "bpod-core"
+    target-branch: "dev"
