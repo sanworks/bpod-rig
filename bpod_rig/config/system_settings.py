@@ -6,7 +6,9 @@ from pathlib import Path
 from typing import Annotated, Optional
 
 from pydantic import UUID4, Field, PastDate
+from pydantic_core import from_json
 
+from bpod_rig.IO import json_handler
 from bpod_rig.config.base import ModelWithMetadata
 from bpod_rig.config.bpod_settings import BpodPaths
 from bpod_rig.defaults import (
@@ -244,3 +246,28 @@ class SystemSettings(ModelWithMetadata):
         return save_dir.joinpath('config.json')
 
 
+def load_system_configuration(config_file_path: Path) -> SystemSettings:
+    """
+    Load JSON from disk and validate it against the SystemSettings schema.
+
+    If valid JSON is read from disk, parsed, and validated, an initialized
+    SystemSettings object is returned.
+
+    Parameters
+    ----------
+    config_file_path : pathlib.Path
+        Path to the JSON file to load and validate
+
+    Returns
+    -------
+    SystemSettings
+        An instance of the SystemSettings model created from
+        the provided configuration file is returned
+
+
+    """
+    logger.debug("Attempting to read, parse, and validate: %s", config_file_path)
+
+    file_content_json = json_handler.read_json(config_file_path)
+    json_object = from_json(file_content_json, allow_partial=False)
+    return SystemSettings.model_validate(json_object)

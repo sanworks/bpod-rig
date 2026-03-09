@@ -7,7 +7,6 @@ from bpod_rig.config import utils
 from bpod_rig.config.system_settings import BpodDir
 from bpod_rig.IO import startup, cli_io
 from bpod_rig.defaults import DEFAULT_BPOD_PATH, SYSTEM_CONFIG_DIR, SYSTEM_CONFIG_FILE
-from config import system_settings
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)

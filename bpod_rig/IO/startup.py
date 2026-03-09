@@ -5,7 +5,7 @@ import shutil
 from pathlib import Path
 
 from bpod_rig.examples import calibration, settings
-from bpod_rig.config import utils
+from bpod_rig.config import system_settings
 from bpod_rig.defaults import (
     DEFAULT_SUBDIRS, SYSTEM_CONFIG_DIR, SYSTEM_CONFIG_FILE,
 )
@@ -131,8 +131,8 @@ def get_bpod_dir_from_system() -> Path | None:
     """
 
     # Attempt to load and read path from system configuration file
-    system_settings = utils.load_system_configuration(SYSTEM_CONFIG_FILE)
-    return system_settings.paths.base_dir
+    sys_settings = system_settings.load_system_configuration(SYSTEM_CONFIG_FILE)
+    return sys_settings.paths.base_dir
 
 
 def check_system_is_initialized() -> bool:
