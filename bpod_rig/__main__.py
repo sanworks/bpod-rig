@@ -109,7 +109,7 @@ def main():
         logging.debug("System paths at %s verified", bpod_path)
     else:
         logger.error("No valid Bpod directory! Shutting down.")
-        return
+        return -1
 
 
     initial_system_config = utils.init_system_configuration(bpod_path)
@@ -117,6 +117,8 @@ def main():
     system_config_path = initial_system_config.save_system_configuration(
         save_dir_override=SYSTEM_CONFIG_DIR
     )
+
+    return 0
 
 if __name__ == "__main__":
     main()

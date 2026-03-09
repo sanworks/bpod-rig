@@ -13,7 +13,7 @@ from bpod_rig.config.base import ModelWithMetadata
 from bpod_rig.config.bpod_settings import BpodPaths
 from bpod_rig.defaults import (
     DEFAULT_PROTOCOL_DIR_NAME, DEFAULT_DATA_DIR_NAME,
-    DEFAULT_CONFIG_DIR_NAME
+    DEFAULT_CONFIG_DIR_NAME, SYSTEM_CONFIG_DIR
 )
 
 logger = logging.getLogger(__name__)
@@ -125,6 +125,36 @@ class BpodDir(ModelWithMetadata):
                 dir_verified = False
 
         return dir_verified
+
+    def save_system_paths(
+        self, save_dir_override: Path | None
+    ) -> None:
+        """
+        Save the system paths to the system configuration directory as json-formatted text
+
+        Simultaneously will update the save_time field
+
+        Parameters
+        ----------
+        save_dir_override : Path | None
+            Optional Path to override the default save directory. Default SYSTEM_CONFIG_DIR
+            used if not provided
+
+        Returns
+        -------
+        None
+        """
+
+        logger.debug("Saving system paths as JSON!")
+        self.update_modification_time()
+
+        if save_dir_override is not None:
+            save_dir = save_dir_override
+        else:
+            save_dir = SYSTEM_CONFIG_DIR
+
+        system_paths_json = self.model_dump_json(indent=2)
+        json_handler.write_json(system_paths_json, save_dir, "paths")
 
 
 class SystemSettings(ModelWithMetadata):
