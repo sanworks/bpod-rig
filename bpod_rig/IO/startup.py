@@ -1,10 +1,9 @@
 """Module to create the default Bpod user directory and associated subdirs."""
 
 import logging
-import shutil
 from pathlib import Path
 
-from bpod_rig.examples import calibration, settings
+from bpod_rig.examples.copy import copy_examples
 from bpod_rig.config import system_settings
 from bpod_rig.defaults import (
     DEFAULT_SUBDIRS, SYSTEM_CONFIG_DIR, SYSTEM_CONFIG_FILE,
@@ -90,31 +89,8 @@ def copy_default_files(bpod_folder_path: Path, override: bool = False):
     calibration_dir = bpod_folder_path.joinpath("Calibration")
     settings_dir = bpod_folder_path.joinpath("Config")
 
-    calibration_example_dir = Path(calibration.__path__[0])
-    settings_example_dir = Path(settings.__path__[0])
-    default_calibration_files = calibration_example_dir.glob("*.json")
-    default_settings_files = settings_example_dir.glob("*.json")
-
-    calibration_dir_contents = list(calibration_dir.iterdir())
-    settings_dir_contents = list(settings_dir.iterdir())
-
-    if len(calibration_dir_contents) == 0 or override:
-        for cal_file in default_calibration_files:
-            try:
-                logger.debug("Copying %s to %s...", cal_file, calibration_dir)
-                shutil.copy2(cal_file, calibration_dir)
-            except Exception as e:  # NOQA PERF203
-                logger.error("Error copying %s!", cal_file)
-                raise e
-
-    if len(settings_dir_contents) == 0 or override:
-        for setting_file in default_settings_files:
-            try:
-                logger.debug("Copying %s to %s...", setting_file, settings_dir)
-                shutil.copy2(setting_file, settings_dir)
-            except Exception as e:  # NOQA PERF203
-                logger.error("Error copying %s!", setting_file)
-                raise e
+    copy_examples("calibration", calibration_dir, override_contents=override)
+    copy_examples("settings", settings_dir, override_contents=override)
 
 
 def get_bpod_dir_from_system() -> Path | None:
