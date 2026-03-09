@@ -11,7 +11,7 @@ def copy_examples(source_key: str, destination: pathlib.Path, override_contents:
 
     if source_key not in source_modules:
         raise ValueError(f"{source_key} is not a valid example source! \n"
-                         f"Valid example sources are: {", ".join(examples.__all__)}"
+                         f"Valid example sources are: {", ".join(source_modules)}"
                          )
 
     if not destination.exists():
@@ -20,8 +20,8 @@ def copy_examples(source_key: str, destination: pathlib.Path, override_contents:
     logger.info("Copying %s files to %s", source_key, destination)
 
     destination_dir_contents = list(destination.iterdir())
-
-    source_file_dir = pathlib.Path(source_modules[source_key].__path__[0])
+    # Since we verified source_Key is in __all__, this folder must exist
+    source_file_dir = pathlib.Path(examples.__path__[0]) / source_key
     source_items = source_file_dir.iterdir()
 
     if len(destination_dir_contents) == 0 or override_contents:
