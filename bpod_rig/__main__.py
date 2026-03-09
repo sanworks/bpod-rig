@@ -63,14 +63,19 @@ def main():
             f"Bpod has not been initialized on this system! "
             f"Would you like to override the default path {DEFAULT_BPOD_PATH}?"
         )
+        if override_directory is None:
+            logger.info("User aborted when overriding default path! Exiting...")
+            return -1
         if override_directory:
             logger.debug("User is going to override the path!")
             bpod_path = cli_io.prompt_for_path(
                 "Please enter the path to create the Bpod directory"
             )
-        if not override_directory or bpod_path is None:
-            # If the user changes their mind or does not want to overwrite the default
-            # directory
+            if bpod_path is None:
+                logger.info("User aborted when overriding default path! Exiting...")
+                return -1
+        else:
+            # If the user does not want to overwrite the default directory
             bpod_path = DEFAULT_BPOD_PATH
 
     logger.info("Bpod path set to: %s", bpod_path)

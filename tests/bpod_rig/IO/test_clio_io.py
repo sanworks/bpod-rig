@@ -72,7 +72,7 @@ class TestCliIO:
                     standalone_mode=False,
                 )
 
-                assert early.return_value == False
+                assert early.return_value is None
                 assert "aborted" in caplog.text
 
 
