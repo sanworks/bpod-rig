@@ -54,7 +54,7 @@ def main():
                 SYSTEM_CONFIG_FILE,
                 exc_info=e,
             )
-            return -1
+            raise
 
     if bpod_path is None:
         # This is the first time initializing the system; override default path?
@@ -109,7 +109,7 @@ def main():
         logging.debug("System paths at %s verified", bpod_path)
     else:
         logger.error("No valid Bpod directory! Shutting down.")
-        return -1
+        raise
 
 
     initial_system_config = utils.init_system_configuration(bpod_path)
