@@ -25,10 +25,10 @@ def copy_examples(source_key: str, destination: pathlib.Path, override_contents:
     source_items = source_file_dir.iterdir()
 
     if len(destination_dir_contents) == 0 or override_contents:
-        for cal_file in source_items:
+        for file in source_items:
             try:
-                logger.debug("Attempting to copy %s to %s...", cal_file, destination)
-                shutil.copy2(cal_file, destination)
+                logger.debug("Attempting to copy %s to %s...", file, destination)
+                shutil.copy2(file, destination)
             except Exception as e:  # NOQA PERF203
-                logger.error("Error copying %s!", cal_file)
+                logger.error("Error copying %s!", file)
                 raise e
