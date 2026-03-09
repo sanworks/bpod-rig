@@ -77,7 +77,7 @@ def main():
 
     ## Verify Bpod Folder Structure ##
 
-    # Instantiate SystemPaths object to generate subdirectories
+    # Instantiate BpodDir object to generate subdirectories
     system_paths = BpodDir(base_dir=bpod_path)
     bpod_dir_verified = system_paths.verify()
 
