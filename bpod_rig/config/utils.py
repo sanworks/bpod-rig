@@ -52,14 +52,12 @@ def save_system_paths(
     json_handler.write_json(system_paths_json, save_dir, "paths")
 
 
-def load_system_configuration(config_file_path: Path) -> SystemSettings | None:
+def load_system_configuration(config_file_path: Path) -> SystemSettings:
     """
-    Load valid JSON from disk and validate it against the SystemSettings schema.
+    Load JSON from disk and validate it against the SystemSettings schema.
 
     If valid JSON is read from disk, parsed, and validated, an initialized
     SystemSettings object is returned.
-
-    Otherwise, any errors are logged and None is returned
 
     Parameters
     ----------
@@ -68,10 +66,10 @@ def load_system_configuration(config_file_path: Path) -> SystemSettings | None:
 
     Returns
     -------
-    SystemSettings or None
-        If there are no errors, an instance of the SystemSettings model created from
+    SystemSettings
+        An instance of the SystemSettings model created from
         the provided configuration file is returned
-        Otherwise, if there are any errors reading, parsing, or validating the JSON file
+
 
     """
     logger.debug("Attempting to read, parse, and validate: %s", config_file_path)
