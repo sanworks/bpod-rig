@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 from click.testing import CliRunner
 from unittest.mock import patch
-from bpod_rig.IO.cli_io import yes_no_prompt, prompt_for_path
+from bpod_rig.IO.cli_io import yes_no_prompt_cli_runner, prompt_for_path_cli_runner
 
 
 class TestCliIO:
@@ -29,44 +29,44 @@ class TestCliIO:
 
     def test_yes_no_prompt(self, caplog):
         y1 = self.runner.invoke(
-            yes_no_prompt, ["Testing..."], input="Y", standalone_mode=False
+            yes_no_prompt_cli_runner, ["Testing..."], input="Y", standalone_mode=False
         )
         assert y1.return_value == True
         assert y1.exit_code == 0
         assert "Testing..." in y1.output
 
         y2 = self.runner.invoke(
-            yes_no_prompt, ["Testing..."], input="y", standalone_mode=False
+            yes_no_prompt_cli_runner, ["Testing..."], input="y", standalone_mode=False
         )
         assert y1.return_value == True
         assert y2.exit_code == 0
         assert "Testing..." in y2.output
 
         n1 = self.runner.invoke(
-            yes_no_prompt, ["Testing..."], input="N", standalone_mode=False
+            yes_no_prompt_cli_runner, ["Testing..."], input="N", standalone_mode=False
         )
         assert n1.return_value == False
         assert n1.exit_code == 0
         assert "Testing..." in n1.output
 
         n2 = self.runner.invoke(
-            yes_no_prompt, ["Testing..."], input="n", standalone_mode=False
+            yes_no_prompt_cli_runner, ["Testing..."], input="n", standalone_mode=False
         )
         assert n2.return_value == False
         assert n2.exit_code == 0
         assert "Testing..." in n2.output
 
         garbage = self.runner.invoke(
-            yes_no_prompt, ["Testing..."], input="asdfasdf", standalone_mode=False
+            yes_no_prompt_cli_runner, ["Testing..."], input="asdfasdf", standalone_mode=False
         )
         assert "invalid" in garbage.output
 
-        with patch("bpod_rig.IO.cli_io.yes_no_prompt", side_effect=KeyboardInterrupt):
+        with patch("bpod_rig.IO.cli_io.yes_no_prompt_cli_runner", side_effect=KeyboardInterrupt):
             # patch to force a KeyboardInterrupt
             with caplog.at_level(logging.DEBUG):
                 # Capture the logging to make sure 'aborted' is output
                 early = self.runner.invoke(
-                    yes_no_prompt,
+                    yes_no_prompt_cli_runner,
                     ["Testing..."],
                     input="",
                     standalone_mode=False,
@@ -79,7 +79,7 @@ class TestCliIO:
     def test_prompt_for_path(self, caplog):
 
         exists = self.runner.invoke(
-            prompt_for_path,
+            prompt_for_path_cli_runner,
             ["Testing..."],
             input=f"{self.exists_path}",
             standalone_mode=False
@@ -90,7 +90,7 @@ class TestCliIO:
         assert isinstance(exists.return_value, Path)
 
         dne = self.runner.invoke(
-            prompt_for_path,
+            prompt_for_path_cli_runner,
             ["Testing..."],
             input=f"{self.dne_path}",
             standalone_mode=False
@@ -101,7 +101,7 @@ class TestCliIO:
         assert "does not exist" in dne.output
 
         dne = self.runner.invoke(
-            prompt_for_path,
+            prompt_for_path_cli_runner,
             ["Testing..."],
             input=f"{self.temp_file}",
             standalone_mode=False
@@ -111,12 +111,12 @@ class TestCliIO:
         assert "Testing..." in dne.output
         assert "is a file" in dne.output
 
-        with patch("bpod_rig.IO.cli_io.prompt_for_path", side_effect=KeyboardInterrupt):
+        with patch("bpod_rig.IO.cli_io.prompt_for_path_cli_runner", side_effect=KeyboardInterrupt):
             # patch to force a KeyboardInterrupt
             with caplog.at_level(logging.DEBUG):
                 # Capture the logging to make sure 'aborted' is output
                 early = self.runner.invoke(
-                    prompt_for_path,
+                    prompt_for_path_cli_runner,
                     ["Testing..."],
                     input="",
                     standalone_mode=False,
