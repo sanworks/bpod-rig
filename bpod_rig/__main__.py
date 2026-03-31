@@ -84,22 +84,26 @@ def main():
 
     # Instantiate BpodDir object to generate subdirectories
     system_paths = BpodDir(base_dir=bpod_path)
-    bpod_dir_verified = system_paths.verify()
+    if system_initialized:
+        # Lets only verify the directory if Bpod has already been initialized on this system
+        bpod_dir_verified = system_paths.verify()
 
-    # Verification Failed
-    if not bpod_dir_verified:
-        logger.info(
-            "The Bpod directory at %s failed to verify!"
-            " This could be due to a partially initialized folder structure or "
-            "improper file path!",
-            bpod_path,
-        )
-        reinitialize = cli_io.yes_no_prompt(
-            f"Would you like to (re)initialize {bpod_path} as the base"
-            f" Bpod directory?"
-        )
+        # Verification Failed
+        if not bpod_dir_verified:
+            logger.info(
+                "The Bpod directory at %s failed to verify!"
+                " This could be due to a partially initialized folder structure or "
+                "improper file path!",
+                bpod_path,
+            )
+            reinitialize = cli_io.yes_no_prompt(
+                f"Would you like to (re)initialize {bpod_path} as the base"
+                f" Bpod directory?"
+            )
 
     if reinitialize or not system_initialized:
+        # We will (re) create the Bpod directories if the system isn't initialized
+        # or something went wrong and we need to reinitialize
         logging.info("Initializing Bpod directory at %s", bpod_path)
         bpod_path = startup.create_default_directories(bpod_path)
         bpod_dir_verified = True
