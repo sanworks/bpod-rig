@@ -16,7 +16,6 @@ class TestCliIO:
         self.temp_path = Path(self.temp_dir.name)
         self.exists_path = self.temp_path / "exists"
         self.exists_path.mkdir(parents=True)
-        self.dne_path = self.temp_path / "dne"
         self.temp_file = self.temp_path.joinpath('test.txt')
         self.temp_file.write_text("Test")
         # For some reason tempfile.NamedTemporaryFile does not work here
@@ -89,16 +88,6 @@ class TestCliIO:
         assert exists.return_value == self.exists_path
         assert isinstance(exists.return_value, Path)
 
-        dne = self.runner.invoke(
-            prompt_for_path_cli_runner,
-            ["Testing..."],
-            input=f"{self.dne_path}",
-            standalone_mode=False
-        )
-
-        assert dne.exit_code == 0
-        assert "Testing..." in dne.output
-        assert "does not exist" in dne.output
 
         dne = self.runner.invoke(
             prompt_for_path_cli_runner,
