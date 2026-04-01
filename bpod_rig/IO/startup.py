@@ -6,7 +6,9 @@ from pathlib import Path
 from bpod_rig.examples.copy import copy_examples
 from bpod_rig.config import system_settings
 from bpod_rig.defaults import (
-    DEFAULT_SUBDIRS, SYSTEM_CONFIG_DIR, SYSTEM_CONFIG_FILE,
+    DEFAULT_SUBDIRS,
+    SYSTEM_CONFIG_DIR,
+    SYSTEM_CONFIG_FILE,
 )
 
 logger = logging.getLogger(__name__)
@@ -57,9 +59,7 @@ def create_default_directories(bpod_directory_path: Path) -> Path:
             )
             new_path.mkdir(parents=True, exist_ok=True)
         else:
-            logger.debug(
-                "Subdirectory [%s] already exists", subdir
-            )
+            logger.debug("Subdirectory [%s] already exists", subdir)
 
     if is_new_install:
         logger.info("Bpod user directory initialized to %s", bpod_directory_path)
@@ -94,7 +94,7 @@ def copy_default_files(bpod_folder_path: Path, override: bool = False):
 
 
 def get_bpod_dir_from_system() -> Path | None:
-    """Attempts to get the Bpod directory path from the system configuration file
+    """Attempts to get the Bpod directory path from the system configuration file.
 
     Checks to see if the system configuration directory exists, if so, check to see
     if there is a system configuration file. If there is attempt to read the Bpod
@@ -105,30 +105,28 @@ def get_bpod_dir_from_system() -> Path | None:
     pathlib.Path
         Path to the Bpod directory read from the system configuration file
     """
-
     # Attempt to load and read path from system configuration file
     sys_settings = system_settings.load_system_configuration(SYSTEM_CONFIG_FILE)
     return sys_settings.paths.base_dir
 
 
 def check_system_is_initialized() -> bool:
-    """Checks whether Bpod has been initialized on this system before
+    """Checks whether Bpod has been initialized on this system before.
 
-    If the system configuration directory does not exist, the system has not been initialized
+    If the system configuration directory does not exist, the system has
+    not been initialized
     If the system configuration directory exists, but the system_config.json file
     does not exist, the system likely has only been partially initialized and needs to
     be reinitialized.
 
     Returns
-    ------
+    -------
     bool
         True if system is initialized, False otherwise
     """
-
     if SYSTEM_CONFIG_DIR.exists():
         logger.debug("System configuration directory found: %s", SYSTEM_CONFIG_DIR)
         if SYSTEM_CONFIG_FILE.exists():
             logger.debug("System configuration file found: %s", SYSTEM_CONFIG_FILE)
             return True
     return False
-

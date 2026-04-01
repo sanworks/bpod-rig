@@ -1,1 +1,1 @@
-"""Placeholder module for saving module configurations"""
+"""Placeholder module for saving module configurations."""

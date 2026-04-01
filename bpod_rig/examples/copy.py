@@ -6,13 +6,18 @@ from bpod_rig import examples
 
 logger = logging.getLogger(__name__)
 
-def copy_examples(source_key: str, destination: pathlib.Path, override_contents: bool = False):
+
+def copy_examples(
+    source_key: str, destination: pathlib.Path, override_contents: bool = False
+):
     source_modules = examples.__all__
 
     if source_key not in source_modules:
-        raise ValueError(f"{source_key} is not a valid example source! \n"
-                         f"Valid example sources are: {{", ".join(source_modules)}}"
-                         )
+        raise ValueError(
+            f"{source_key} is not a valid example source! \n"
+            f"Valid example sources are: {{",
+            ".join(source_modules)}}",
+        )
 
     if not destination.exists():
         raise FileNotFoundError(f"{destination} does not exist!")

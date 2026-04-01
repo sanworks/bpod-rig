@@ -1,14 +1,14 @@
-"""Module implementing the Pydantic models for any Bpod-specific settings"""
+"""Module implementing the Pydantic models for any Bpod-specific settings."""
 
-from pathlib import Path
-from typing import Annotated, Optional
-from pydantic import Field
 from bpod_rig.config.base import ModelWithMetadata
+from pathlib import Path
+from pydantic import Field
+from typing import Annotated, Optional
 
 
 def subdir_path_factory(data: dict, addition: str):
-    """
-    Function to dynamically create BpodPaths subpaths at validation time.
+    """Function to dynamically create BpodPaths subpaths at validation time.
+
     Function creates a path in the below form:
 
     {Parent_Dir}/Machine-{Bpod_ID}/[addition]
@@ -24,7 +24,6 @@ def subdir_path_factory(data: dict, addition: str):
     -------
     (pathlib.Path): combined path in above form
     """
-
     if data["unique_bpod_dir"] is None:
         return None
 
@@ -32,8 +31,8 @@ def subdir_path_factory(data: dict, addition: str):
 
 
 def unique_dir_path_factory(data: dict):
-    """
-    Function to dynamically create current directory path at validation time.
+    """Function to dynamically create current directory path at validation time.
+
     Function creates a path in the below form:
 
     {Parent_Dir}/Machine-{Bpod_ID}
@@ -42,13 +41,13 @@ def unique_dir_path_factory(data: dict):
 
     Parameters
     ----------
-    data (dict): Dictionary containing all previously validated fields
+    data : dict
+        Dictionary containing all previously validated fields
 
     Returns
     -------
-    (pathlib.Path): combined path in above form
+        pathlib.Path : combined path in above form
     """
-
     if "bpod_id" not in data or "parent_dir" not in data:
         return None
 

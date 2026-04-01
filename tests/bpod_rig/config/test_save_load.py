@@ -5,7 +5,11 @@ from pathlib import Path
 import pytest
 from pydantic_core import ValidationError
 
-from bpod_rig.config.system_settings import SystemSettings, BpodDir, load_system_configuration
+from bpod_rig.config.system_settings import (
+    SystemSettings,
+    BpodDir,
+    load_system_configuration,
+)
 
 JSON_STRING = '{"first_key":{"second_key": "1234"}}'
 
@@ -48,9 +52,7 @@ class TestSave:
         """Tests that the configuration can be saved to a non-default directory."""
         ss, config_dir, _, bpod_dir = temp_config
         config_dir.mkdir(exist_ok=True)
-        save_path = ss.save_system_configuration(
-            save_dir_override=ss.paths.base_dir
-        )
+        save_path = ss.save_system_configuration(save_dir_override=ss.paths.base_dir)
 
         alt_file_path = bpod_dir.joinpath("config.json")
 
@@ -77,7 +79,9 @@ class TestSave:
 
 class TestLoad:
     def test_load(self, temp_config):
-        """Tests that a valid configuration file can be loaded into a SystemSettings object."""
+        """Tests that a valid configuration file can be loaded
+        into a SystemSettings object.
+        """
         ss, config_dir, full_file_path, _ = temp_config
         config_dir.mkdir(exist_ok=True)
 
@@ -99,7 +103,10 @@ class TestLoad:
             _ = load_system_configuration(full_file_path)
 
     def test_invalid_schema(self, temp_config):
-        """Tests that loading returns None when the JSON does not match the pydantic model schema."""
+        """
+        Tests that loading returns None when the JSON does not match the pydantic
+        model schema.
+        """
         _, config_dir, full_file_path, _ = temp_config
         config_dir.mkdir(exist_ok=True)
 

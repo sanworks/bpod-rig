@@ -1,6 +1,5 @@
 """Module implementing the Pydantic models for any system settings."""
 
-import datetime
 import logging
 from pathlib import Path
 from typing import Annotated, Optional
@@ -12,8 +11,10 @@ from bpod_rig.IO import json_handler
 from bpod_rig.config.base import ModelWithMetadata
 from bpod_rig.config.bpod_settings import BpodPaths
 from bpod_rig.defaults import (
-    DEFAULT_PROTOCOL_DIR_NAME, DEFAULT_DATA_DIR_NAME,
-    DEFAULT_CONFIG_DIR_NAME, SYSTEM_CONFIG_DIR
+    DEFAULT_PROTOCOL_DIR_NAME,
+    DEFAULT_DATA_DIR_NAME,
+    DEFAULT_CONFIG_DIR_NAME,
+    SYSTEM_CONFIG_DIR,
 )
 
 logger = logging.getLogger(__name__)
@@ -108,7 +109,6 @@ class BpodDir(ModelWithMetadata):
         ),
     ] = None
 
-
     def verify(self) -> bool:
         dir_verified = True
         sp_fields = BpodDir.model_fields
@@ -126,25 +126,23 @@ class BpodDir(ModelWithMetadata):
 
         return dir_verified
 
-    def save_system_paths(
-        self, save_dir_override: Path | None
-    ) -> None:
+    def save_system_paths(self, save_dir_override: Path | None) -> None:
         """
-        Save the system paths to the system configuration directory as json-formatted text
+        Save the system paths to the system configuration directory as
+        json-formatted text.
 
         Simultaneously will update the save_time field
 
         Parameters
         ----------
         save_dir_override : Path | None
-            Optional Path to override the default save directory. Default SYSTEM_CONFIG_DIR
-            used if not provided
+            Optional Path to override the default save directory.
+            Default SYSTEM_CONFIG_DIR used if not provided
 
         Returns
         -------
         None
         """
-
         logger.debug("Saving system paths as JSON!")
         self.update_modification_time()
 
@@ -219,7 +217,6 @@ class SystemSettings(ModelWithMetadata):
         ),
     ] = None
 
-
     def update_modification_time(self):
         """Update time the SystemSettings object was modified.
 
@@ -230,7 +227,6 @@ class SystemSettings(ModelWithMetadata):
         -------
         None
         """
-
         super().update_modification_time()
         # Update the SystemSettings save time
 
@@ -243,11 +239,7 @@ class SystemSettings(ModelWithMetadata):
             self.paths.update_modification_time()
         # Update the save time for the system paths
 
-
-    def save_system_configuration(
-        self,
-        save_dir_override: Path | None = None
-    ) -> Path:
+    def save_system_configuration(self, save_dir_override: Path | None = None) -> Path:
         """
         Save SystemSettings instance to disk as json-formatted text.
 
@@ -272,8 +264,8 @@ class SystemSettings(ModelWithMetadata):
         else:
             save_dir = save_dir_override
         logger.debug("Save directory for SystemSettings set to %s: ", save_dir)
-        self.save_model(save_dir, 'config')
-        return save_dir.joinpath('config.json')
+        self.save_model(save_dir, "config")
+        return save_dir.joinpath("config.json")
 
 
 def load_system_configuration(config_file_path: Path) -> SystemSettings:

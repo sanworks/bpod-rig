@@ -1,1 +1,1 @@
-"""Package providing configuration functionality for bpod-rig"""
+"""Package providing configuration functionality for bpod-rig."""

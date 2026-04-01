@@ -1,10 +1,9 @@
 import pathlib
+import pytest
 import shutil
 import tempfile
+from bpod_rig.examples import calibration, copy, settings
 
-import pytest
-
-from bpod_rig.examples import copy, calibration, settings
 
 @pytest.fixture()
 def temp_dirs():
@@ -14,6 +13,7 @@ def temp_dirs():
 
     shutil.rmtree(temp_dest_dir, ignore_errors=True)
 
+
 class TestCopyExamples:
     def test_copy(self, temp_dirs):
         calibration_dir = temp_dirs.joinpath("calibration")
@@ -21,9 +21,8 @@ class TestCopyExamples:
         calibration_dir.mkdir()
         settings_dir.mkdir()
 
-
-        copy.copy_examples('calibration', calibration_dir)
-        copy.copy_examples('settings', settings_dir)
+        copy.copy_examples("calibration", calibration_dir)
+        copy.copy_examples("settings", settings_dir)
 
         # This will not be robust if we also start copying directories,
         # but for just files it will work for now
@@ -41,14 +40,14 @@ class TestCopyExamples:
 
     def test_invalid_key(self):
         with pytest.raises(ValueError):
-            copy.copy_examples('invalid_key', pathlib.Path())
+            copy.copy_examples("invalid_key", pathlib.Path())
 
     def test_invalid_path(self, temp_dirs):
         with pytest.raises(FileNotFoundError):
-            copy.copy_examples('calibration', temp_dirs.joinpath("~~(__^·>"))
+            copy.copy_examples("calibration", temp_dirs.joinpath("~~(__^·>"))
             # The directory ~~(__^·> (mouse) does not exist!
 
-            
+
 def get_names_in_path(path: pathlib.Path | str) -> list[str]:
     if isinstance(path, str):
         path = pathlib.Path(path)

@@ -1,4 +1,5 @@
-"""Module to hold a bunch of default values that are references in multiple places"""
+"""Module to hold a bunch of default values that are references in multiple places."""
+
 import platformdirs
 
 # Default Names
@@ -13,4 +14,3 @@ DEFAULT_LOG_DIR_NAME = "Logs"
 SYSTEM_CONFIG_DIR = platformdirs.user_config_path(DEFAULT_DIR_NAME, "sanworks")
 SYSTEM_CONFIG_FILE = SYSTEM_CONFIG_DIR / "config.json"
 DEFAULT_BPOD_PATH = platformdirs.user_documents_path() / DEFAULT_DIR_NAME
-

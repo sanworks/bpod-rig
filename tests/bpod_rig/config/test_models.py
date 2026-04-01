@@ -147,10 +147,7 @@ class TestSystemSettingsModel:
         working_dir = tmp_path
         bpod_dir = working_dir.joinpath("Bpod")
         system_paths = BpodDir(base_dir=bpod_dir)
-        return {
-            "system_paths": system_paths
-        }
-
+        return {"system_paths": system_paths}
 
     def test_default(self, paths):
         """Tests that the default system settings are constructed correctly."""
@@ -160,7 +157,7 @@ class TestSystemSettingsModel:
         assert settings.current_version == "0.0.0"
         assert settings.last_update_check is None
         assert settings.phone_home_id is None
-        assert settings.phone_home_opt_in == False
-        assert settings.debug == False
+        assert not settings.phone_home_opt_in
+        assert not settings.debug
         assert settings.paths == paths
         assert settings.bpod_dirs is None

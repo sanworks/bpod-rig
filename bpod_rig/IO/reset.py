@@ -8,6 +8,7 @@ from bpod_rig.IO import cli_io
 
 logger = logging.getLogger(__name__)
 
+
 def reset_all(directories: Iterable[Path | str], force=False) -> bool:
     """Function to hard reset all Bpod directories on this machine.
 
@@ -32,10 +33,15 @@ def reset_all(directories: Iterable[Path | str], force=False) -> bool:
             True if directories were deleted
     """
     if not force:
-        confirmation = cli_io.yes_no_prompt("Are you sure you want to delete ALL Bpod-"
-                                          "related directories on this machine?")
+        confirmation = cli_io.yes_no_prompt(
+            "Are you sure you want to delete ALL Bpod-"
+            "related directories on this machine?"
+        )
         if confirmation:
-            confirmation &= cli_io.yes_no_prompt("Final warning: Are you SURE you want to delete all Bpod-related directories?")
+            confirmation &= cli_io.yes_no_prompt(
+                "Final warning: Are you SURE you want to delete all "
+                "Bpod-related directories?"
+            )
 
         if not confirmation:
             return False
@@ -43,7 +49,7 @@ def reset_all(directories: Iterable[Path | str], force=False) -> bool:
     for directory in directories:
         if not isinstance(directory, Path):
             directory = Path(directory)
-        if directory.exists() and 'bpod' in directory.name.lower():
+        if directory.exists() and "bpod" in directory.name.lower():
             # A small sanity check so this does not just start deleting stuff
             logger.debug("Deleting: %s", directory)
             shutil.rmtree(str(directory))

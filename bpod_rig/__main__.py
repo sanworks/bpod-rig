@@ -1,12 +1,11 @@
 """main entry point for bpod-rig."""
 
 import logging
-from pydantic import ValidationError
-
 from bpod_rig.config import utils
 from bpod_rig.config.system_settings import BpodDir
-from bpod_rig.IO import startup, cli_io
 from bpod_rig.defaults import DEFAULT_BPOD_PATH, SYSTEM_CONFIG_DIR, SYSTEM_CONFIG_FILE
+from bpod_rig.IO import startup, cli_io
+from pydantic import ValidationError
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -27,7 +26,7 @@ def main():
         logging.info("Initializing Bpod Rig...")
         logging.debug(
             "System is not initialized. Creating system config dir [%s]",
-            SYSTEM_CONFIG_DIR
+            SYSTEM_CONFIG_DIR,
         )
         # Create the system configuration directory
         try:
@@ -36,7 +35,7 @@ def main():
             logger.error(
                 "Unable to create the system configuration directory: %s Exiting...",
                 SYSTEM_CONFIG_DIR,
-                exc_info=e
+                exc_info=e,
             )
             return -1
     else:
@@ -85,7 +84,8 @@ def main():
     # Instantiate BpodDir object to generate subdirectories
     system_paths = BpodDir(base_dir=bpod_path)
     if system_initialized:
-        # Lets only verify the directory if Bpod has already been initialized on this system
+        # Let's only verify the directory if Bpod has already been
+        # initialized on this system
         bpod_dir_verified = system_paths.verify()
 
         # Verification Failed
@@ -109,7 +109,8 @@ def main():
         bpod_dir_verified = True
 
         copy_default = cli_io.yes_no_prompt(
-            f"Would you like to copy the default protocols and calibration files to {bpod_path}"
+            f"Would you like to copy the default protocols"
+            f" and calibration files to {bpod_path}"
         )
         if copy_default:
             startup.copy_default_files(bpod_path)
@@ -120,14 +121,14 @@ def main():
         logger.error("No valid Bpod directory! Shutting down.")
         raise
 
-
     initial_system_config = utils.init_system_configuration(bpod_path)
-    user_config_path = initial_system_config.save_system_configuration()
-    system_config_path = initial_system_config.save_system_configuration(
+    user_config_path = initial_system_config.save_system_configuration()  # noqa: F841
+    system_config_path = initial_system_config.save_system_configuration(  # noqa: F841
         save_dir_override=SYSTEM_CONFIG_DIR
     )
 
     return 0
+
 
 if __name__ == "__main__":
     main()

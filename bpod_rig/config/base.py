@@ -18,6 +18,7 @@ from bpod_rig.IO import json_handler
 
 logger = logging.getLogger(__name__)
 
+
 class SettingsMetadata(BaseModel):
     model_config = ConfigDict()
 
@@ -61,7 +62,9 @@ class SettingsMetadata(BaseModel):
     @classmethod
     def validate_nonfuture_datetime(cls, value: datetime.datetime) -> datetime.datetime:
         if value is not None and value > datetime.datetime.now():
-            raise ValueError(f"Provided modified_datetime {value} cannot be in the future!")
+            raise ValueError(
+                f"Provided modified_datetime {value} cannot be in the future!"
+            )
         return value
 
 
@@ -104,7 +107,6 @@ class ModelWithMetadata(BaseModel):
             data["metadata"] = SettingsMetadata(username=data["username"])
         return data
 
-
     def update_modification_time(self):
         """
         Update metadata modified_datetime field.
@@ -121,9 +123,8 @@ class ModelWithMetadata(BaseModel):
         logger.debug("Setting modification time for [%s] to %s", self, time)
         self.metadata.modified_datetime = time
 
-
     def save_model(self, save_directory: pathlib.Path, filename: str):
-        """Dump model to JSON and save it to disk
+        """Dump model to JSON and save it to disk.
 
         Parameters
         ----------
