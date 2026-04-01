@@ -24,7 +24,7 @@ def prompt_for_path(prompt: str) -> Path | None:
     try:
         return click.prompt(prompt,
                             type=click.Path(
-                                exists=True,
+                                exists=False,
                                 file_okay=False,
                                 dir_okay=True,
                                 path_type=Path
