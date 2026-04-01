@@ -1,12 +1,14 @@
 # Module to delete all Bpod directories
+import logging
 import shutil
 from pathlib import Path
 from typing import Iterable
 
 from bpod_rig.IO import cli_io
 
+logger = logging.getLogger(__name__)
 
-def reset_all(directories: Iterable[Path], force=False) -> bool:
+def reset_all(directories: Iterable[Path | str], force=False) -> bool:
     """Function to hard reset all Bpod directories on this machine.
 
     USE AT OWN RISK!
@@ -17,7 +19,7 @@ def reset_all(directories: Iterable[Path], force=False) -> bool:
 
     Parameters
     ----------
-    directories : Iterable[Path]
+    directories : Iterable[Path | str]
         Iterable of Bpod-related directories to delete
     force : bool, optional
         User will be prompted to confirm if set to false
@@ -39,6 +41,11 @@ def reset_all(directories: Iterable[Path], force=False) -> bool:
             return False
 
     for directory in directories:
-        shutil.rmtree(str(directory))
+        if not isinstance(directory, Path):
+            directory = Path(directory)
+        if directory.exists() and 'bpod' in directory.name.lower():
+            # A small sanity check so this does not just start deleting stuff
+            logger.debug("Deleting: %s", directory)
+            shutil.rmtree(str(directory))
 
     return True
