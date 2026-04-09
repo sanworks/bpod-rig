@@ -1,6 +1,8 @@
 """Base classes for configuration classes."""
 
 import datetime
+import logging
+import pathlib
 from typing import Annotated, Any, Optional
 
 from pydantic import (
@@ -11,6 +13,10 @@ from pydantic import (
     field_validator,
     model_validator,
 )
+
+from bpod_rig.IO import json_handler
+
+logger = logging.getLogger(__name__)
 
 
 class SettingsMetadata(BaseModel):
@@ -37,7 +43,7 @@ class SettingsMetadata(BaseModel):
         str,
         Field(
             min_length=1,
-            max_length=128, 
+            max_length=128,
             title="Username of settings creator",
             description="Username of the creator of this settings model.",
         ),
@@ -56,7 +62,9 @@ class SettingsMetadata(BaseModel):
     @classmethod
     def validate_nonfuture_datetime(cls, value: datetime.datetime) -> datetime.datetime:
         if value is not None and value > datetime.datetime.now():
-            raise ValueError(f"Provided modified_datetime {value} cannot be in the future!")
+            raise ValueError(
+                f"Provided modified_datetime {value} cannot be in the future!"
+            )
         return value
 
 
@@ -98,6 +106,39 @@ class ModelWithMetadata(BaseModel):
             # otherwise, forward the "username" field to SettingsMetadata and return it
             data["metadata"] = SettingsMetadata(username=data["username"])
         return data
+
+    def update_modification_time(self):
+        """
+        Update metadata modified_datetime field.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None
+        """
+        time = datetime.datetime.now()
+        logger.debug("Setting modification time for [%s] to %s", self, time)
+        self.metadata.modified_datetime = time
+
+    def save_model(self, save_directory: pathlib.Path, filename: str):
+        """Dump model to JSON and save it to disk.
+
+        Parameters
+        ----------
+        save_directory : pathlib.Path
+            Directory to save the JSON file to
+        filename : str
+            Name of saved file without the .json suffix
+
+        Returns
+        -------
+            None
+        """
+        model_as_json = self.model_dump_json(indent=2)
+        return json_handler.write_json(model_as_json, save_directory, filename)
 
 
 class ModuleBase(ModelWithMetadata):

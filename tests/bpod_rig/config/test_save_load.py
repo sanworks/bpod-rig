@@ -2,11 +2,14 @@ import shutil
 import tempfile
 from pathlib import Path
 
-from pydantic_core import ValidationError
 import pytest
+from pydantic_core import ValidationError
 
-from bpod_rig.config.system_settings import SystemSettings, SystemPaths
-from bpod_rig.config import utils
+from bpod_rig.config.system_settings import (
+    SystemSettings,
+    BpodDir,
+    load_system_configuration,
+)
 
 JSON_STRING = '{"first_key":{"second_key": "1234"}}'
 
@@ -21,7 +24,7 @@ def temp_config():
     # --- Setup ---
     bpod_dir = Path(tempfile.mkdtemp())
     config_dir = bpod_dir.joinpath("Config")
-    sp = SystemPaths(base_dir=bpod_dir)
+    sp = BpodDir(base_dir=bpod_dir)
     ss = SystemSettings(paths=sp)
     full_file_path = ss.paths.base_config_dir.joinpath("config.json")
 
@@ -37,7 +40,7 @@ class TestSave:
         """Tests that the configuration is saved to the default path correctly."""
         ss, config_dir, full_file_path, _ = temp_config
         config_dir.mkdir(exist_ok=True)
-        save_path = utils.save_system_configuration(ss)
+        save_path = ss.save_system_configuration()
 
         assert save_path == full_file_path
         assert full_file_path.exists()
@@ -49,9 +52,7 @@ class TestSave:
         """Tests that the configuration can be saved to a non-default directory."""
         ss, config_dir, _, bpod_dir = temp_config
         config_dir.mkdir(exist_ok=True)
-        save_path = utils.save_system_configuration(
-            ss, save_dir_override=ss.paths.base_dir
-        )
+        save_path = ss.save_system_configuration(save_dir_override=ss.paths.base_dir)
 
         alt_file_path = bpod_dir.joinpath("config.json")
 
@@ -66,26 +67,28 @@ class TestSave:
         ss, _, _, _ = temp_config
         # Note: We don't create the config_dir here
         with pytest.raises(FileNotFoundError):
-            _ = utils.save_system_configuration(ss)
+            _ = ss.save_system_configuration()
 
     def test_invalid_override_path(self, temp_config):
         """Tests that saving errors if the override directory does not exist."""
         ss, _, _, bpod_dir = temp_config
         invalid_dir = bpod_dir.joinpath("InvalidDir")
         with pytest.raises(FileNotFoundError):
-            _ = utils.save_system_configuration(ss, save_dir_override=invalid_dir)
+            _ = ss.save_system_configuration(save_dir_override=invalid_dir)
 
 
 class TestLoad:
     def test_load(self, temp_config):
-        """Tests that a valid configuration file can be loaded into a SystemSettings object."""
+        """Tests that a valid configuration file can be loaded
+        into a SystemSettings object.
+        """
         ss, config_dir, full_file_path, _ = temp_config
         config_dir.mkdir(exist_ok=True)
 
         with open(full_file_path, "w") as fs:
             fs.write(ss.model_dump_json(indent=2))
 
-        loaded_system_settings = utils.load_system_configuration(full_file_path)
+        loaded_system_settings = load_system_configuration(full_file_path)
         assert loaded_system_settings == ss
 
     def test_bad_json(self, temp_config):
@@ -97,14 +100,17 @@ class TestLoad:
             fs.write(ss.model_dump_json(indent=2)[:-1])  # Write incomplete JSON
 
         with pytest.raises(ValueError):
-            _ = utils.load_system_configuration(full_file_path)
+            _ = load_system_configuration(full_file_path)
 
     def test_invalid_schema(self, temp_config):
-        """Tests that loading returns None when the JSON does not match the pydantic model schema."""
+        """
+        Tests that loading returns None when the JSON does not match the pydantic
+        model schema.
+        """
         _, config_dir, full_file_path, _ = temp_config
         config_dir.mkdir(exist_ok=True)
 
         with open(full_file_path, "w") as fs:
             fs.write(JSON_STRING)
         with pytest.raises(ValidationError):
-            _ = utils.load_system_configuration(full_file_path)
+            _ = load_system_configuration(full_file_path)

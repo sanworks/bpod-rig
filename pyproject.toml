@@ -13,12 +13,13 @@ authors = [
     { name = "Austin Pauley", email = "pauley@psy.fsu.edu" },
     { name = "Florian Rau", email = "bimac@users.noreply.github.com" },
     { name = "Steven Smith", email = "steven@stevenlsmith.com" },
+    { name = "George Stuyt", email = "george.stuyt@gmail.com"}
 ]
 requires-python = ">=3.10"
 dependencies = [
-    "bpod-core",
-    #"bpod-gui"
     "bpod-core==0.1.0a8",
+    "click>=8.3.1",
+    "platformdirs>=4.5.1",
     "pydantic==2.11.7",
 ]
 
@@ -29,11 +30,13 @@ Homepage = "https://github.com/sanworks/bpod-rig"
 Issues = "https://github.com/sanworks/bpod-rig/issues"
 Repository = "https://github.com/sanworks/bpod-rig.git"
 
-
 [tool.setuptools.packages]
 find = { where = [""], include = ["*", "examples"] }
 # We want to include the examples folder in the wheel incase its needed
 # We need to explicitly include examples as it is a reserved name
+
+[project.scripts]
+bpod = "bpod_rig.__main__:main"
 
 
 [tool.ruff]
