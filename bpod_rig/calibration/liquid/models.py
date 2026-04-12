@@ -113,6 +113,10 @@ class ValveData(BaseModel):
             else:
                 raise ValueError("Duration value not found in durations list.")
         elif method == "index":
+            if not isinstance(value, int):
+                raise ValueError(
+                    "Value must be an integer index when method is 'index'."
+                )
             if 0 <= value < len(self.amounts):
                 del self.amounts[value]
                 del self.durations[value]
