@@ -317,12 +317,8 @@ def run_calibration(
 
         logger.info("Running liquid calibration:")
         logger.info("\t%s pulses.", pending_manager.n_pulses)
-        logger.info(
-            "\t%s between each pulse.", pending_manager.pulse_interval
-        )
-        logger.info(
-            "\t%s between each pulse set.", pending_manager.pulse_set_pause
-        )
+        logger.info("\t%s between each pulse.", pending_manager.pulse_interval)
+        logger.info("\t%s between each pulse set.", pending_manager.pulse_set_pause)
         for valvename in test_set:
             logger.info("- %s: duration %s ms", valvename, test_set[valvename])
 
@@ -331,5 +327,7 @@ def run_calibration(
     # Run the state machine
     for _ in range(pending_manager.n_pulses):
         bpodsystem.run_state_machine()
+    if verbose:
+        logger.info("Calibration state machine completed.")
 
     return test_set
