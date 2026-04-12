@@ -311,12 +311,20 @@ def run_calibration(
     # Build the state machine
     fsm, test_set = pending_manager.build_statemachine()
     if verbose:
-        print("Running liquid calibration:")
-        print(f"\t{pending_manager.n_pulses} pulses.")
-        print(f"\t{pending_manager.pulse_interval} between each pulse.")
-        print(f"\t{pending_manager.pulse_set_pause} between each pulse set.")
+        root_logger = logging.getLogger()
+        if not root_logger.hasHandlers():
+            logging.basicConfig(level=logging.INFO)
+
+        logger.info("Running liquid calibration:")
+        logger.info("\t%s pulses.", pending_manager.n_pulses)
+        logger.info(
+            "\t%s between each pulse.", pending_manager.pulse_interval
+        )
+        logger.info(
+            "\t%s between each pulse set.", pending_manager.pulse_set_pause
+        )
         for valvename in test_set:
-            print(f"- {valvename}: duration {test_set[valvename]} ms")
+            logger.info("- %s: duration %s ms", valvename, test_set[valvename])
 
     bpodsystem.send_state_machine(fsm)
     logger.debug("Running calibration state machine.")
