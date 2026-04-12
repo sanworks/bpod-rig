@@ -13,11 +13,14 @@ authors = [
     { name = "Austin Pauley", email = "pauley@psy.fsu.edu" },
     { name = "Florian Rau", email = "bimac@users.noreply.github.com" },
     { name = "Steven Smith", email = "steven@stevenlsmith.com" },
+    { name = "George Stuyt", email = "george.stuyt@gmail.com"}
 ]
 requires-python = ">=3.10"
 dependencies = [
-    "bpod-core>=0.1.0a6",
-    "pydantic>=2.11.7",
+    "bpod-core==0.1.0a9",
+    "click>=8.3.1",
+    "platformdirs>=4.5.1",
+    "pydantic==2.11.7",
 ]
 
 [project.urls]
@@ -27,11 +30,13 @@ Homepage = "https://github.com/sanworks/bpod-rig"
 Issues = "https://github.com/sanworks/bpod-rig/issues"
 Repository = "https://github.com/sanworks/bpod-rig.git"
 
-
 [tool.setuptools.packages]
 find = { where = [""], include = ["*", "examples"] }
 # We want to include the examples folder in the wheel incase its needed
 # We need to explicitly include examples as it is a reserved name
+
+[project.scripts]
+bpod = "bpod_rig.__main__:main"
 
 
 [tool.ruff]
@@ -87,6 +92,7 @@ select = [
     "COM",
     "C4",
     "FA",
+    "I",
     "ICN",
     "INP",
     "PIE",
@@ -100,6 +106,7 @@ select = [
     "PERF",
     "UP007", # use pipes for type union instead of Union
 ]
+
 ignore = [
     "COM812",  # Missing trailing comma
     "D100",    # Missing docstring in public module
@@ -108,12 +115,15 @@ ignore = [
     "D103",    # Missing docstring in public function
     "D104",    # Missing docstring in public package
     "D105",    # Missing docstring in magic method
+    "D205",    # 1 blank line required between summary line and description
     "D401",    # First line of docstring should be in imperative mood
     "PLR0912", # Too many branches
     "PLR0915", # Too many statements
     "PLR2004", # Magic value used in comparison, consider replacing with a constant variable
+    "RET504",  # Unnecessary assignment to variable (e.g., `return x` instead of `x = ...; return x`)
     "S101",    # Use of assert
 ]
+
 # Allow fix for all enabled rules (when `--fix`) is provided.
 fixable = []
 unfixable = []
@@ -153,4 +163,9 @@ docstring-code-line-length = "dynamic"
 
 [dependency-groups]
 dev = [{ include-group = "test" }]
-test = ["pytest>=8.4.2", "pytest-cov>=7.0.0"]
+test = [
+    "pytest>=8.4.2",
+    "pytest-cov>=7.0.0",
+    "ruff>=0.15.4",
+    "pyright>=1.1.408",
+]

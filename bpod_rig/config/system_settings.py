@@ -1,19 +1,21 @@
 """Module implementing the Pydantic models for any system settings."""
 
-import datetime
 import logging
 from pathlib import Path
 from typing import Annotated, Optional
 
 from pydantic import UUID4, Field, PastDate
+from pydantic_core import from_json
 
+from bpod_rig.IO import json_handler
 from bpod_rig.config.base import ModelWithMetadata
 from bpod_rig.config.bpod_settings import BpodPaths
-
-DEFAULT_PROTOCOL_DIR_NAME = "Protocols"
-DEFAULT_DATA_DIR_NAME = "Data"
-DEFAULT_CONFIG_DIR_NAME = "Config"
-DEFAULT_LOG_DIR_NAME = "Logs"
+from bpod_rig.defaults import (
+    DEFAULT_PROTOCOL_DIR_NAME,
+    DEFAULT_DATA_DIR_NAME,
+    DEFAULT_CONFIG_DIR_NAME,
+    SYSTEM_CONFIG_DIR,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +46,7 @@ def system_path_factory(data: dict, addition: str) -> Path | None:
     return data["base_dir"].joinpath(addition)
 
 
-class SystemPaths(ModelWithMetadata):
+class BpodDir(ModelWithMetadata):
     base_dir: Annotated[
         Path,
         Field(
@@ -107,6 +109,51 @@ class SystemPaths(ModelWithMetadata):
         ),
     ] = None
 
+    def verify(self) -> bool:
+        dir_verified = True
+        sp_fields = BpodDir.model_fields
+        sp_fields = [field for field in sp_fields if field != "metadata"]
+        sp_as_dict = self.model_dump()
+
+        for field in sp_fields:
+            field_path = sp_as_dict[field]
+            if field_path is None:
+                continue
+                # Skip None values that are not implemented yet
+            if not field_path.exists():
+                logger.error("Bpod subdirectory %s does not exist", field_path)
+                dir_verified = False
+
+        return dir_verified
+
+    def save_system_paths(self, save_dir_override: Path | None) -> None:
+        """
+        Save the system paths to the system configuration directory as
+        json-formatted text.
+
+        Simultaneously will update the save_time field
+
+        Parameters
+        ----------
+        save_dir_override : Path | None
+            Optional Path to override the default save directory.
+            Default SYSTEM_CONFIG_DIR used if not provided
+
+        Returns
+        -------
+        None
+        """
+        logger.debug("Saving system paths as JSON!")
+        self.update_modification_time()
+
+        if save_dir_override is not None:
+            save_dir = save_dir_override
+        else:
+            save_dir = SYSTEM_CONFIG_DIR
+
+        system_paths_json = self.model_dump_json(indent=2)
+        json_handler.write_json(system_paths_json, save_dir, "paths")
+
 
 class SystemSettings(ModelWithMetadata):
     current_version: Annotated[
@@ -154,7 +201,7 @@ class SystemSettings(ModelWithMetadata):
     ] = False
 
     paths: Annotated[
-        SystemPaths,
+        BpodDir,
         Field(
             title="System Paths Model",
             description="Model containing validated bpod system paths",
@@ -170,28 +217,79 @@ class SystemSettings(ModelWithMetadata):
         ),
     ] = None
 
-    def set_modification_time(self, date_time: datetime.datetime) -> bool:
-        """
-        Update all metadata save_time fields.
+    def update_modification_time(self):
+        """Update time the SystemSettings object was modified.
 
-        Parameters
-        ----------
-        date_time : datetime.datetime
-            Date and time to update metadata save_time fields to.
+        Override update_modification_time to also update the modified_datetime metadata
+        field of SystemSettings subfields
 
         Returns
         -------
-        bool
-            If successful, return True, else return False.
+        None
         """
-        try:
-            self.metadata.modified_datetime = date_time
-            self.paths.metadata.modified_datetime = date_time
-            if self.bpod_dirs:
-                for bpod_dir in self.bpod_dirs:
-                    bpod_dir.metadata.modified_datetime = date_time
-        except Exception as e:
-            logger.error("Error setting save_time fields!", exc_info=e)
-            return False
+        super().update_modification_time()
+        # Update the SystemSettings save time
 
-        return True
+        if self.bpod_dirs:
+            for bpod_dir in self.bpod_dirs:
+                bpod_dir.update_modification_time()
+        # Update the save time for each bpod_dir
+
+        if self.paths:
+            self.paths.update_modification_time()
+        # Update the save time for the system paths
+
+    def save_system_configuration(self, save_dir_override: Path | None = None) -> Path:
+        """
+        Save SystemSettings instance to disk as json-formatted text.
+
+        Simultaneously will update the save_time field
+
+        Parameters
+        ----------
+        save_dir_override : Path, optional
+            Optional Path to override the default save directory. If not provided,
+            system_settings.paths.base_config_dir will be used.
+
+        Returns
+        -------
+            Path
+                Path to the saved file is returned
+        """
+        logger.info("Saving system configuration as JSON!")
+        self.update_modification_time()
+
+        if save_dir_override is None:
+            save_dir = self.paths.base_config_dir
+        else:
+            save_dir = save_dir_override
+        logger.debug("Save directory for SystemSettings set to %s: ", save_dir)
+        self.save_model(save_dir, "config")
+        return save_dir.joinpath("config.json")
+
+
+def load_system_configuration(config_file_path: Path) -> SystemSettings:
+    """
+    Load JSON from disk and validate it against the SystemSettings schema.
+
+    If valid JSON is read from disk, parsed, and validated, an initialized
+    SystemSettings object is returned.
+
+    Parameters
+    ----------
+    config_file_path : pathlib.Path
+        Path to the JSON file to load and validate
+
+    Returns
+    -------
+    SystemSettings
+        An instance of the SystemSettings model created from
+        the provided configuration file is returned
+
+
+    """
+    logger.debug("Attempting to read, parse, and validate: %s", config_file_path)
+
+    file_content_json = json_handler.read_json(config_file_path)
+    json_object = from_json(file_content_json, allow_partial=False)
+    return SystemSettings.model_validate(json_object)
