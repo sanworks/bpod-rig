@@ -174,7 +174,7 @@ class ValveDataManager(BaseModel):
         default_factory=ValveManagerMetaData,
         description="Metadata regarding the set of valves.",
     )
-    valve_datas: list[ValveData] = Field(
+    valves: list[ValveData] = Field(
         alias="ValveDatas", default=[], description="Array of valve data objects."
     )
 
@@ -197,7 +197,7 @@ class ValveDataManager(BaseModel):
             # check if there are two valves with same name, raise error if so
             if sum(name == valvename for name in self.valve_names) > 1:
                 raise KeyError(f"Multiple valves with name '{valvename}' found.")
-            return next(valve for valve in self.valve_datas if valve.name == valvename)
+            return next(valve for valve in self.valves if valve.name == valvename)
 
         raise KeyError(f"Valve '{valvename}' not found in valve manager.")
 
@@ -205,18 +205,18 @@ class ValveDataManager(BaseModel):
         """Create a new valve with the given name."""
         if valvename in self.valve_names:
             raise KeyError(f"Valve '{valvename}' already exists.")
-        self.valve_datas.append(ValveData(ValveName=valvename))
+        self.valves.append(ValveData(ValveName=valvename))
         logger.debug(f"Created new valve: {valvename}")
 
     @property
     def n_valves(self) -> int:
         """The number of valves in the manager."""
-        return len(self.valve_datas)
+        return len(self.valves)
 
     @property
     def valve_names(self) -> list[str]:
         """List of valve names."""
-        return [valve.name for valve in self.valve_datas]
+        return [valve.name for valve in self.valves]
 
     def to_json(self, machineid: str | None = None) -> str:
         """Convert the ValveDataManager to JSON string.
