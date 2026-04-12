@@ -30,7 +30,7 @@ class PendingValve(ValveData):
         else:
             raise ValueError("Valve name not recognised for controller assignment.")
 
-    def action(self, actiontype: str) -> dict[str, str | list[str | int] | bool]:
+    def action(self, actiontype: str) -> dict[str, bool]:
         """Define the output action for this valve.
 
         Parameters
@@ -62,14 +62,10 @@ class PendingValve(ValveData):
         if self.valve_controller == "PortArray":
             target_module = self.name[0:3]
             portnumber = self.name[4]
-            if actiontype == "open":
-                # TODO: serial message byte parsing hasn't been checked
-                action_serial = ["V", portnumber, 1]
-                return {target_module: action_serial}
-            if actiontype == "close":
-                action_serial = ["V", portnumber, 0]
-                return {target_module: action_serial}
-            raise ValueError("Action type not recognised")
+            # TODO: serial message byte parsing hasn't been checked
+            action_value = 1 if actiontype == "open" else 0
+            action_serial = ["V", portnumber, action_value]
+            return {target_module: action_serial}  # type: ignore
         raise ValueError("Valve controller not recognised.")
 
     @property
