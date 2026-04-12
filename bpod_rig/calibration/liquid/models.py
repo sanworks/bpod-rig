@@ -16,7 +16,12 @@ class ValveData(BaseModel):
     duration.
     """
 
-    name: str = Field(alias="ValveName", description="Name of valve (1-indexed)")
+    name: str = Field(
+        alias="ValveName",
+        description="Name of valve (1-indexed)."
+        " Prefix is used to assign controlling hardware"
+        " (e.g., 'PA' for Port Array, 'Valve' for State Machine).",
+    )
     lastdatemodified: datetime.datetime | str = Field(
         serialization_alias="LastDateModified",
         validation_alias="LastDateModified",

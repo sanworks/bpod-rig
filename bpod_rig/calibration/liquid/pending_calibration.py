@@ -10,6 +10,12 @@ logger = logging.getLogger(__name__)
 
 
 class PendingValve(ValveData):
+    """Data model for a valve that is pending calibration measurements.
+
+    Valve names are recognised based on a prefix  to assign the controlling hardware
+    (e.g., "PA" for Port Array, "Valve" for State Machine).
+    """
+
     pending_durations: list[float] = Field(
         default=[],
         description="List of durations that are pending calibration measurements.",
