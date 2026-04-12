@@ -236,7 +236,9 @@ def add_valve_states(
     else:
         if not isinstance(next_valve, PendingValve):
             raise ValueError("Next valve must be a PendingValve or float.")
-        pulse_set_pause_duration = None
+        pulse_set_pause_duration = (
+            0  # this value is never used but type checker complains without it
+        )
         next_state = f"Pulse{next_valve.name}"
 
     # Add valve openings to the state machine
