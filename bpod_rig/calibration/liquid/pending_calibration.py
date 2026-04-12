@@ -18,7 +18,7 @@ class PendingValve(ValveData):
     valve_controller: str = Field(
         default="unknown",
         description="The controlling hardware of the valve "
-                    "(e.g., 'StateMachine', 'PortArray').",
+        "(e.g., 'StateMachine', 'PortArray').",
     )
 
     def __init__(self, **data):
@@ -31,7 +31,7 @@ class PendingValve(ValveData):
             raise ValueError("Valve name not recognised for controller assignment.")
 
     def action(self, actiontype: str) -> dict[str, str | list[str | int] | bool]:
-        """Define the output action for this valve
+        """Define the output action for this valve.
 
         Parameters
         ----------
@@ -98,7 +98,7 @@ class PendingMeasurementsManager:
     def __init__(self, valvemanager: ValveDataManager):
         self._valvemanager = valvemanager
         self.valves = [
-            PendingValve(ValveName=valve.name) for valve in valvemanager.valve_datas
+            PendingValve(ValveName=valve.name) for valve in valvemanager.valves
         ]
 
     def get_valve(self, valvename: str) -> PendingValve:
@@ -179,6 +179,7 @@ class PendingMeasurementsManager:
         test_set : dict | None, optional
             Names of valves and durations to build state machine for. If not provided,
             test all valves that have pending durations using their oldest duration.
+
         Returns
         -------
         tuple[StateMachine, dict[str, float]]
@@ -311,7 +312,6 @@ def run_calibration(
         Dictionary of valve names and the duration (ms) of the pulse added to the
         state machine.
     """
-
     # Build the state machine
     fsm, test_set = pending_manager.build_statemachine()
     if verbose:
