@@ -3,9 +3,9 @@
 import datetime
 from pathlib import Path
 
-from bpod_rig.examples import calibration as example_folder
 from bpod_rig.calibration.liquid.models import ValveDataManager
 from bpod_rig.calibration.liquid.utils import create_empty_valve_data_manager
+from bpod_rig.examples import calibration as example_folder
 
 
 def add_dummy_measurements(valvemanager: ValveDataManager) -> None:

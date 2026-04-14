@@ -1,7 +1,9 @@
 import pathlib
-import pytest
 import shutil
 import tempfile
+
+import pytest
+
 from bpod_rig.examples import calibration, copy, settings
 
 

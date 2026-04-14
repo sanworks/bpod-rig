@@ -4,7 +4,7 @@ import datetime
 import logging
 
 import numpy as np
-from pydantic import BaseModel, Field, ConfigDict, field_serializer
+from pydantic import BaseModel, ConfigDict, Field, field_serializer
 
 logger = logging.getLogger(__name__)
 

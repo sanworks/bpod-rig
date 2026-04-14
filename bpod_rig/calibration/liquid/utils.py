@@ -2,6 +2,7 @@
 
 import datetime
 import logging
+
 import numpy as np
 
 from bpod_rig.calibration.liquid.models import ValveData, ValveDataManager
