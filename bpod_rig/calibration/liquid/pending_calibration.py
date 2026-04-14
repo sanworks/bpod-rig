@@ -1,11 +1,11 @@
 import logging
 from typing import Any
 
-from bpod_rig.calibration.liquid.models import ValveDataManager, ValveData
 import bpod_core.bpod
 from bpod_core.fsm import StateMachine
 from pydantic import Field
 
+from bpod_rig.calibration.liquid.models import ValveData, ValveDataManager
 
 logger = logging.getLogger(__name__)
 

@@ -7,15 +7,15 @@ from typing import Annotated, Optional
 from pydantic import UUID4, Field, PastDate
 from pydantic_core import from_json
 
-from bpod_rig.IO import json_handler
 from bpod_rig.config.base import ModelWithMetadata
 from bpod_rig.config.bpod_settings import BpodPaths
 from bpod_rig.defaults import (
-    DEFAULT_PROTOCOL_DIR_NAME,
-    DEFAULT_DATA_DIR_NAME,
     DEFAULT_CONFIG_DIR_NAME,
+    DEFAULT_DATA_DIR_NAME,
+    DEFAULT_PROTOCOL_DIR_NAME,
     SYSTEM_CONFIG_DIR,
 )
+from bpod_rig.IO import json_handler
 
 logger = logging.getLogger(__name__)
 

@@ -1,9 +1,7 @@
 import pytest
-
 from bpod_core.fsm import StateMachine
 
-from bpod_rig.calibration.liquid import pending_calibration
-from bpod_rig.calibration.liquid import utils, populate_examples
+from bpod_rig.calibration.liquid import pending_calibration, populate_examples, utils
 
 
 class TestPendingValve:

@@ -6,8 +6,8 @@ import pytest
 from pydantic_core import ValidationError
 
 from bpod_rig.config.system_settings import (
-    SystemSettings,
     BpodDir,
+    SystemSettings,
     load_system_configuration,
 )
 

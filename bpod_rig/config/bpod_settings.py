@@ -1,9 +1,11 @@
 """Module implementing the Pydantic models for any Bpod-specific settings."""
 
-from bpod_rig.config.base import ModelWithMetadata
 from pathlib import Path
-from pydantic import Field
 from typing import Annotated, Optional
+
+from pydantic import Field
+
+from bpod_rig.config.base import ModelWithMetadata
 
 
 def subdir_path_factory(data: dict, addition: str):

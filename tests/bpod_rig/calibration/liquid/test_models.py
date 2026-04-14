@@ -1,7 +1,8 @@
-import pytest
 import urllib.request
 
-from bpod_rig.calibration.liquid import utils, populate_examples
+import pytest
+
+from bpod_rig.calibration.liquid import populate_examples, utils
 from bpod_rig.calibration.liquid.models import ValveData, ValveDataManager
 
 
