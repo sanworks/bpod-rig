@@ -287,7 +287,7 @@ def add_valve_states(
         fsm.add_state(
             name="PulseSetPause",
             timer=pulse_set_pause_duration,
-            transitions={"Tup": "exit"},
+            transitions={"Tup": ">exit"},
             actions={},
             comment="Pause when the entire set of valves is completed.",
         )
