@@ -1,10 +1,11 @@
 import logging
-
-import bpod_core.bpod
-from pydantic import Field
-from bpod_core.fsm import StateMachine
+from typing import Any
 
 from bpod_rig.calibration.liquid.models import ValveDataManager, ValveData
+import bpod_core.bpod
+from bpod_core.fsm import StateMachine
+from pydantic import Field
+
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +37,7 @@ class PendingValve(ValveData):
         else:
             raise ValueError("Valve name not recognised for controller assignment.")
 
-    def action(self, actiontype: str) -> dict[str, bool]:
+    def action(self, actiontype: str) -> dict[str, Any]:  # TODO: narrow type
         """Define the output action for this valve.
 
         Parameters
