@@ -109,8 +109,8 @@ def calculate_largest_gap_midpoint(sorted_values: list[float]) -> float:
 
 
 def linearly_suggest_duration(
-    amount: float | np.typing.ArrayLike,
-    duration: float | np.typing.ArrayLike,
+    amount: float,
+    duration: float,
     range_low: float,
     range_high: float,
 ) -> float:
@@ -129,7 +129,7 @@ def linearly_suggest_duration(
 
 
 def calculate_ranged_amounts(
-    amounts: np.array, range_low: float, range_high: float
+    amounts: np.ndarray, range_low: float, range_high: float
 ) -> list[float]:
     """Calculate a sorted list of amounts within a range, including the range bounds."""
     amounts_vector = amounts.tolist()
