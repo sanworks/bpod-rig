@@ -24,7 +24,7 @@ def temp_config():
     # --- Setup ---
     bpod_dir = Path(tempfile.mkdtemp())
     config_dir = bpod_dir.joinpath("Config")
-    sp = BpodDir(base_dir=bpod_dir)
+    sp = BpodDir.create(base_dir=bpod_dir)
     ss = SystemSettings(paths=sp)
     full_file_path = ss.paths.base_config_dir.joinpath("config.json")
 

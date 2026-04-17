@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 
 
 def init_system_configuration(bpod_dir: Path) -> SystemSettings:
-    system_paths = BpodDir(
+    system_paths = BpodDir.create(
         base_dir=bpod_dir,
     )
 

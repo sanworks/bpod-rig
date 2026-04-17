@@ -7,7 +7,7 @@ from typing import Annotated, Optional
 from pydantic import UUID4, Field, PastDate
 from pydantic_core import from_json
 
-from bpod_rig.config.base import ModelWithMetadata
+from bpod_rig.config.base import ModelWithMetadata, SettingsMetadata
 from bpod_rig.config.bpod_settings import BpodPaths
 from bpod_rig.defaults import (
     DEFAULT_CONFIG_DIR_NAME,
@@ -47,6 +47,12 @@ def system_path_factory(data: dict, addition: str) -> Path | None:
 
 
 class BpodDir(ModelWithMetadata):
+    """Bpod directory structure with required subdirectories.
+
+    Use the `create()` class method to construct instances with automatic
+    subdirectory path generation from the base directory.
+    """
+
     base_dir: Annotated[
         Path,
         Field(
@@ -62,52 +68,102 @@ class BpodDir(ModelWithMetadata):
     ]
 
     protocol_dir: Annotated[
-        Optional[Path],
+        Path,
         Field(
             title="Bpod Protocol Directory",
             description="Local directory where Bpod protocols are stored."
             " The Protocol explorer will list all valid protocols found"
             " in this directory.",
-            default_factory=lambda data: system_path_factory(
-                data, DEFAULT_PROTOCOL_DIR_NAME
-            ),
         ),
-    ] = None
+    ]
 
     data_dir: Annotated[
-        Optional[Path],
+        Path,
         Field(
             title="Bpod Data Directory",
             description="Local directory where data from protocol runs are stored.",
-            default_factory=lambda data: system_path_factory(
-                data, DEFAULT_DATA_DIR_NAME
-            ),
         ),
-    ] = None
+    ]
 
     base_config_dir: Annotated[
-        Optional[Path],
+        Path,
         Field(
             title="Bpod Configuration Directory",
             description="Local directory where Bpod configuration files are stored.",
-            default_factory=lambda data: system_path_factory(
-                data, DEFAULT_CONFIG_DIR_NAME
-            ),
         ),
-    ] = None
+    ]
 
     log_dir: Annotated[
         Optional[Path],
         Field(
             title="Bpod Log Directory",
             description="Local directory where Bpod logs are stored.",
-            # default_factory=lambda data: system_path_factory(
-            #     data,
-            #     DEFAULT_LOG_DIR_NAME
-            # ),
             # TODO: Add log folder to initial configuration; until then this is optional
         ),
     ] = None
+
+    @classmethod
+    def create(
+        cls,
+        base_dir: Path | str,
+        *,
+        protocol_dir: Path | str | None = None,
+        data_dir: Path | str | None = None,
+        base_config_dir: Path | str | None = None,
+        log_dir: Path | str | None = None,
+        username: str | None = None,
+        metadata: "SettingsMetadata | None" = None,
+    ) -> "BpodDir":
+        """Factory method to create BpodDir with automatic subdirectory paths.
+
+        This is the recommended way to create BpodDir instances. It automatically
+        generates subdirectory paths based on the base_dir if not explicitly provided.
+
+        Parameters
+        ----------
+        base_dir : Path | str
+            Base Bpod directory
+        protocol_dir : Path | str | None, optional
+            Override for protocol directory (default: base_dir/Protocols)
+        data_dir : Path | str | None, optional
+            Override for data directory (default: base_dir/Data)
+        base_config_dir : Path | str | None, optional
+            Override for config directory (default: base_dir/Config)
+        log_dir : Path | str | None, optional
+            Optional log directory
+        username : str | None, optional
+            Username for metadata
+        metadata : SettingsMetadata | None, optional
+            Pre-constructed metadata object
+
+        Returns
+        -------
+        BpodDir
+            Fully initialized BpodDir instance with all subdirectory paths populated
+
+        Examples
+        --------
+        >>> bpod_dir = BpodDir.create(base_dir="/home/user/Bpod")
+        >>> bpod_dir.protocol_dir
+        PosixPath('/home/user/Bpod/Protocols')
+        """
+        base_dir = Path(base_dir)
+        protocol_dir = Path(protocol_dir or base_dir / DEFAULT_PROTOCOL_DIR_NAME)
+        data_dir = Path(data_dir or base_dir / DEFAULT_DATA_DIR_NAME)
+        base_config_dir = Path(base_config_dir or base_dir / DEFAULT_CONFIG_DIR_NAME)
+        log_dir = Path(log_dir) if log_dir else None
+
+        metadata_object = metadata or SettingsMetadata()
+        metadata_object.username = username or metadata_object.username
+
+        return cls(
+            base_dir=base_dir,
+            protocol_dir=protocol_dir,
+            data_dir=data_dir,
+            base_config_dir=base_config_dir,
+            log_dir=log_dir,
+            metadata=metadata_object,
+        )
 
     def verify(self) -> bool:
         dir_verified = True

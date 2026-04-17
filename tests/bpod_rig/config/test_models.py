@@ -1,5 +1,5 @@
 import datetime
-import pathlib
+from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
@@ -67,7 +67,7 @@ class TestSystemPathsModel:
 
     def test_default_factory(self, paths):
         """Tests that the default directory paths are constructed correctly."""
-        sp = BpodDir(base_dir=paths["bpod_dir"])
+        sp = BpodDir.create(base_dir=paths["bpod_dir"])
         assert sp.data_dir == paths["data_dir"]
         assert sp.base_config_dir == paths["config_dir"]
         assert sp.protocol_dir == paths["protocol_dir"]
@@ -79,28 +79,30 @@ class TestSystemPathsModel:
         paths["protocol_dir"].mkdir(exist_ok=True)
         paths["config_dir"].mkdir(exist_ok=True)
 
-        sp = BpodDir(base_dir=paths["bpod_dir"], username="valid_username")
+        sp = BpodDir.create(base_dir=paths["bpod_dir"], username="valid_username")
 
-        # Does username get forwarded properly to the SettingsMatadata object
+        # Does username get forwarded properly to the SettingsMetadata object
         assert sp.metadata.username == "valid_username"
 
         # Does the SettingsMetadata object get properly forwarded
         md = SettingsMetadata()
-        sp2 = BpodDir(base_dir=paths["bpod_dir"], metadata=md, username="beepbop")
+        sp2 = BpodDir.create(
+            base_dir=paths["bpod_dir"], metadata=md, username="beepbop"
+        )
         assert sp2.metadata.username != "beepbop"
 
     def test_not_paths(self):
         """Tests that non-path inputs for directories raise validation errors."""
-        with pytest.raises(ValidationError):
-            BpodDir(base_dir=1234321)
+        with pytest.raises(TypeError):
+            BpodDir.create(base_dir=1234321) # type: ignore
 
-        sp = BpodDir(base_dir="/this/is/a/path")
-        assert isinstance(sp.base_dir, pathlib.Path)
+        sp = BpodDir.create(base_dir="/this/is/a/path")
+        assert isinstance(sp.base_dir, Path)
 
 
 class TestBpodPathsModel:
     @pytest.fixture
-    def paths(self, tmp_path):
+    def paths(self, tmp_path: Path):
         """Fixture to provide a common set of Bpod-specific path objects."""
         working_dir = tmp_path
         base_dir = working_dir.joinpath("Bpods")
@@ -117,23 +119,23 @@ class TestBpodPathsModel:
     def test_id_validation(self, paths):
         """Tests validation for the bpod_id field."""
         # No ID, fails validation
-        with pytest.raises(ValidationError):
-            BpodPaths(parent_dir=paths["bpod_dir"])
+        with pytest.raises(TypeError):
+            BpodPaths.create(parent_dir=paths["bpod_dir"])
 
         # ID is wrong type
         with pytest.raises(ValidationError):
-            BpodPaths(bpod_id=1234, parent_dir=paths["bpod_dir"])
+            BpodPaths.create(bpod_id=1234, parent_dir=paths["bpod_dir"])
 
         # No parent_dir
-        with pytest.raises(ValidationError):
-            BpodPaths(bpod_id=paths["bpod_id"])
+        with pytest.raises(TypeError):
+            BpodPaths.create(bpod_id=paths["bpod_id"])
 
-        bp = BpodPaths(bpod_id=paths["bpod_id"], parent_dir=paths["base_dir"])
+        bp = BpodPaths.create(bpod_id=paths["bpod_id"], parent_dir=paths["base_dir"])
         assert bp.bpod_id == paths["bpod_id"]
 
     def test_default_factory(self, paths):
         """Tests that the Bpod-specific paths are constructed correctly."""
-        bp = BpodPaths(bpod_id=paths["bpod_id"], parent_dir=paths["base_dir"])
+        bp = BpodPaths.create(bpod_id=paths["bpod_id"], parent_dir=paths["base_dir"])
         assert bp.unique_bpod_dir == paths["bpod_dir"]
         assert bp.parent_dir == paths["base_dir"]
         assert bp.calibration_dir == paths["calibration_dir"]
@@ -146,7 +148,7 @@ class TestSystemSettingsModel:
         """Fixture to provide a common set of path objects for tests."""
         working_dir = tmp_path
         bpod_dir = working_dir.joinpath("Bpod")
-        system_paths = BpodDir(base_dir=bpod_dir)
+        system_paths = BpodDir.create(base_dir=bpod_dir)
         return {"system_paths": system_paths}
 
     def test_default(self, paths):
