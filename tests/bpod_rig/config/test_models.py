@@ -94,7 +94,7 @@ class TestSystemPathsModel:
     def test_not_paths(self):
         """Tests that non-path inputs for directories raise validation errors."""
         with pytest.raises(TypeError):
-            BpodDir.create(base_dir=1234321) # type: ignore
+            BpodDir.create(base_dir=1234321)  # type: ignore
 
         sp = BpodDir.create(base_dir="/this/is/a/path")
         assert isinstance(sp.base_dir, Path)

@@ -168,9 +168,13 @@ class BpodPaths(ModelWithMetadata):
         PosixPath('/home/user/Bpods/Machine-1234')
         """
         parent_dir = Path(parent_dir)
-        unique_bpod_dir = Path(unique_bpod_dir or parent_dir / f"Machine-{bpod_id}")
-        settings_dir = Path(settings_dir or unique_bpod_dir / "Settings")
-        calibration_dir = Path(calibration_dir or unique_bpod_dir / "Calibration")
+        unique_bpod_dir = Path(
+            unique_bpod_dir or parent_dir.joinpath(f"Machine-{bpod_id}")
+        )
+        settings_dir = Path(settings_dir or unique_bpod_dir.joinpath("Settings"))
+        calibration_dir = Path(
+            calibration_dir or unique_bpod_dir.joinpath("Calibration")
+        )
 
         return cls(
             bpod_id=bpod_id,

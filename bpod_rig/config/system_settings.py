@@ -153,16 +153,13 @@ class BpodDir(ModelWithMetadata):
         base_config_dir = Path(base_config_dir or base_dir / DEFAULT_CONFIG_DIR_NAME)
         log_dir = Path(log_dir) if log_dir else None
 
-        metadata_object = metadata or SettingsMetadata()
-        metadata_object.username = username or metadata_object.username
-
         return cls(
             base_dir=base_dir,
             protocol_dir=protocol_dir,
             data_dir=data_dir,
             base_config_dir=base_config_dir,
             log_dir=log_dir,
-            metadata=metadata_object,
+            metadata=metadata or SettingsMetadata(username=username or None),
         )
 
     def verify(self) -> bool:
