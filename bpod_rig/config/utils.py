@@ -11,5 +11,5 @@ def init_system_configuration(bpod_dir: Path) -> SystemSettings:
         base_dir=bpod_dir,
     )
 
-    system_settings = SystemSettings(paths=system_paths)
+    system_settings = SystemSettings.create(paths=system_paths)
     return system_settings

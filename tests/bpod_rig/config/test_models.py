@@ -120,15 +120,15 @@ class TestBpodPathsModel:
         """Tests validation for the bpod_id field."""
         # No ID, fails validation
         with pytest.raises(TypeError):
-            BpodPaths.create(parent_dir=paths["bpod_dir"])
+            BpodPaths.create(parent_dir=paths["bpod_dir"])  # type: ignore
 
         # ID is wrong type
         with pytest.raises(ValidationError):
-            BpodPaths.create(bpod_id=1234, parent_dir=paths["bpod_dir"])
+            BpodPaths.create(bpod_id=1234, parent_dir=paths["bpod_dir"])  # type: ignore
 
         # No parent_dir
         with pytest.raises(TypeError):
-            BpodPaths.create(bpod_id=paths["bpod_id"])
+            BpodPaths.create(bpod_id=paths["bpod_id"])  # type: ignore
 
         bp = BpodPaths.create(bpod_id=paths["bpod_id"], parent_dir=paths["base_dir"])
         assert bp.bpod_id == paths["bpod_id"]
@@ -154,7 +154,7 @@ class TestSystemSettingsModel:
     def test_default(self, paths):
         """Tests that the default system settings are constructed correctly."""
         paths = paths["system_paths"]
-        settings = SystemSettings(paths=paths)
+        settings = SystemSettings.create(paths=paths)
 
         assert settings.current_version == "0.0.0"
         assert settings.last_update_check is None

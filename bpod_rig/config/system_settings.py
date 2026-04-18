@@ -270,6 +270,60 @@ class SystemSettings(ModelWithMetadata):
         ),
     ] = None
 
+    @classmethod
+    def create(
+        cls,
+        paths: BpodDir,
+        *,
+        current_version: str = "0.0.0",
+        phone_home_opt_in: bool = False,
+        debug: bool = False,
+        bpod_dirs: Optional[list[BpodPaths]] = None,
+        username: str | None = None,
+        metadata: "SettingsMetadata | None" = None,
+    ) -> "SystemSettings":
+        """Factory method to create SystemSettings with automatic metadata handling.
+
+        This is the recommended way to create SystemSettings instances.
+
+        Parameters
+        ----------
+        paths : BpodDir
+            System paths configuration
+        current_version : str, optional
+            Currently installed version (default: "0.0.0")
+        phone_home_opt_in : bool, optional
+            Whether user opted into telemetry (default: False)
+        debug : bool, optional
+            Enable debug output (default: False)
+        bpod_dirs : Optional[list[BpodPaths]], optional
+            List of Bpod-specific paths (default: None)
+        username : str | None, optional
+            Username for metadata
+        metadata : SettingsMetadata | None, optional
+            Pre-constructed metadata object
+
+        Returns
+        -------
+        SystemSettings
+            Fully initialized SystemSettings instance
+
+        Examples
+        --------
+        >>> bpod_dir = BpodDir.create(base_dir="/home/user/Bpod")
+        >>> settings = SystemSettings.create(paths=bpod_dir, username="TestUser")
+        >>> settings.metadata.username
+        'TestUser'
+        """
+        return cls(
+            paths=paths,
+            current_version=current_version,
+            phone_home_opt_in=phone_home_opt_in,
+            debug=debug,
+            bpod_dirs=bpod_dirs,
+            metadata=metadata or SettingsMetadata(username=username),
+        )
+
     def update_modification_time(self):
         """Update time the SystemSettings object was modified.
 
