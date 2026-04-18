@@ -34,8 +34,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-            uv run ruff check .
-            uv run pyright .
             uv sync --locked --all-extras
             uv run ruff check .
             uv run pyright .
