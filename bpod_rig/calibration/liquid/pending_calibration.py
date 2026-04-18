@@ -328,12 +328,10 @@ def run_calibration(
         logger.info("\t%s between each pulse set.", pending_manager.pulse_set_pause)
         for valvename in test_set:
             logger.info("- %s: duration %s ms", valvename, test_set[valvename])
-
-    bpodsystem.send_state_machine(fsm)
     logger.debug("Running calibration state machine.")
     # Run the state machine
     for _ in range(pending_manager.n_pulses):
-        bpodsystem.run_state_machine()
+        bpodsystem.run(fsm)
     if verbose:
         logger.info("Calibration state machine completed.")
 
