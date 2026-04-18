@@ -20,32 +20,6 @@ from bpod_rig.IO import json_handler
 logger = logging.getLogger(__name__)
 
 
-def system_path_factory(data: dict, addition: str) -> Path | None:
-    """
-    Function to dynamically create SystemPath subpaths at validation time.
-
-    Function creates a path in the below form:
-        {base_dir}/[addition]
-    Path components in {} are retrieved from the dictionary of pre-validated data.
-
-    Parameters
-    ----------
-    data : dict
-        Dictionary containing all previously validated fields
-    addition : str
-        Addition to join to the end of the path.
-
-    Returns
-    -------
-    pathlib.Path
-        Combined path in above form.
-    """
-    if "base_dir" not in data:
-        return None
-
-    return data["base_dir"].joinpath(addition)
-
-
 class BpodDir(ModelWithMetadata):
     """Bpod directory structure with required subdirectories.
 
@@ -215,7 +189,7 @@ class SystemSettings(ModelWithMetadata):
             title="Current bpod-rig version",
             description="Currently installed version of the bpod-rig repository",
         ),
-    ] = "0.0.0"
+    ]
 
     last_update_check: Annotated[
         Optional[PastDate],
@@ -242,16 +216,15 @@ class SystemSettings(ModelWithMetadata):
             description="Whether or not the user has opted"
             " in to the phone-home telemetry.",
         ),
-    ] = False
+    ]
 
     debug: Annotated[
         bool,
         Field(
-            False,
             title="Debug Enabled",
             description="Set to True to enable debug information output.",
         ),
-    ] = False
+    ]
 
     paths: Annotated[
         BpodDir,
