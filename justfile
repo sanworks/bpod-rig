@@ -13,8 +13,8 @@ test ARGS=".":
     uv run pytest {{ ARGS }}
 
 # Run all tests including tests requiring hardware
-test-hardware serial_number="None":
-    uv run pytest --runhardware --serial-number {{ serial_number }}
+test-hardware serial_number="None" port="None":
+    uv run pytest --runhardware --serial-number {{ serial_number }} --port {{ port }}
 
 # Automatically format files
 format:

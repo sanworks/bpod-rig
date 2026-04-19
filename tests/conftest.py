@@ -8,6 +8,9 @@ def pytest_addoption(parser):
     parser.addoption(
         "--serial-number", action="store", default=None, help="Bpod rig serial number"
     )
+    parser.addoption(
+        "--port", action="store", default=None, help="Bpod rig port"
+    )
 
 
 def pytest_configure(config):
@@ -28,11 +31,14 @@ def bpod_rig(request: pytest.FixtureRequest):
     """
     Fixture for providing a Bpod rig instance for tests.
     """
-    serial_number = request.config.getoption("--serial-number")
+    serial_number: str | None = request.config.getoption("--serial-number")
     if serial_number == "None":
         serial_number = None
+    port: str | None = request.config.getoption("--port")
+    if port == "None":
+        port = None
     from bpod_core.bpod import Bpod
 
-    rig = Bpod(serial_number=serial_number)
+    rig = Bpod(serial_number=serial_number, port=port)
     yield rig
     rig.close()
