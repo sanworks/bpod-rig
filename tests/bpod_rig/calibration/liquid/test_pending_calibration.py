@@ -95,5 +95,6 @@ class TestPendingCalibrationProtocol:
         pending_manager = pending_calibration.PendingMeasurementsManager(valve_manager)
         pending_manager.add_pending("Valve1", 5.0)
         pending_manager.add_pending("Valve2", 7.0)
+        pending_manager.n_pulses = 2
         fsm, _ = pending_manager.build_statemachine()
         bpod_rig.run(fsm)
