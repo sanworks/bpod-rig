@@ -9,8 +9,8 @@ check:
     uv run pyright .
 
 # Run tests
-test:
-    uv run pytest
+test ARGS=".":
+    uv run pytest {{ ARGS }}
 
 # Automatically format files
 format:
