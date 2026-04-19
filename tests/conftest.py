@@ -70,6 +70,7 @@ def pytest_sessionstart(session: pytest.Session):
     if session.config.getoption("--runhardware"):
         try:
             bpod_instance = create_bpod_instance(session)
+            # Print some useful information about the connected rig
             print("Connected to Bpod rig.")
             print(f"\tSerial Number: {bpod_instance.serial_number}")
             print(f"\tPort: {bpod_instance.port}")
