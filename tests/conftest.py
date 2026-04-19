@@ -7,6 +7,7 @@ To run hardware tests:
 To run hardware tests with specific rig:
 >>> uv run pytest --runhardware --port COM3
 """
+
 import pytest
 from bpod_core.bpod import Bpod
 
@@ -18,9 +19,7 @@ def pytest_addoption(parser: pytest.Parser):
     parser.addoption(
         "--serial-number", action="store", default=None, help="Bpod rig serial number"
     )
-    parser.addoption(
-        "--port", action="store", default=None, help="Bpod rig port"
-    )
+    parser.addoption("--port", action="store", default=None, help="Bpod rig port")
 
 
 def pytest_configure(config: pytest.Config):
@@ -28,9 +27,7 @@ def pytest_configure(config: pytest.Config):
 
 
 def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]):
-    """
-    Pytest hook to modify collected test items.
-    """
+    """Pytest hook to modify collected test items."""
     if config.getoption("--runhardware"):
         # --runhardware given in cli: do not skip hardware tests
         return
@@ -39,17 +36,29 @@ def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item
         if "hardware" in item.keywords:
             item.add_marker(skip_hardware)
 
+
 @pytest.fixture(scope="session")
-def bpod_rig(request: pytest.FixtureRequest):
-    """
-    Fixture for providing a Bpod rig instance for tests.
-    """
+def bpod_rig(request: pytest.FixtureRequest) -> Bpod:
+    """Fixture for providing a Bpod rig instance for tests."""
     serial_number: str | None = request.config.getoption("--serial-number")
-    serial_number = serial_number if serial_number is not "None" else None
-
+    serial_number = None if serial_number == "None" else serial_number
     port: str | None = request.config.getoption("--port")
-    port = port if port is not "None" else None
+    port = None if port == "None" else port
+    return Bpod(serial_number=None, port=port)
 
-    rig = Bpod(serial_number=serial_number, port=port)
-    yield rig
-    rig.close()
+
+@pytest.hookimpl()
+def pytest_sessionstart(session: pytest.Session):
+    """Pytest hook that runs before any tests are run."""
+    # https://docs.pytest.org/en/stable/reference/reference.html#pytest.hookspec.pytest_sessionstart
+    # Attempt to connect to the Bpod rig if --runhardware
+    # option is given, and exit the tests if connection fails
+    if session.config.getoption("--runhardware"):
+        try:
+            bpod_instance = bpod_rig._fixture_function(session)
+            print("Connected to Bpod rig.")
+            print(f"\tSerial Number: {bpod_instance.serial_number}")
+            print(f"\tPort: {bpod_instance.port}")
+            print(f"\tFirmware Version: {bpod_instance.firmware_version}")
+        except Exception as _:
+            pytest.exit("Connection to Bpod rig unsuccessful!")
