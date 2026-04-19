@@ -1,4 +1,5 @@
 import pytest
+from bpod_core.bpod import Bpod
 from bpod_core.fsm import StateMachine
 
 from bpod_rig.calibration.liquid import pending_calibration, populate_examples, utils
@@ -86,4 +87,13 @@ class TestPendingMeasurementsManager:
         n_states = 2 + 2 + 1
         assert len(statemachine.states) == n_states
 
-    # TODO: test build, send, and run of state machine with emulator bpod
+
+@pytest.mark.hardware
+class TestPendingCalibrationProtocol:
+    def test_protocol_run(self, bpod_rig: Bpod):
+        valve_manager = utils.create_empty_valve_data_manager()
+        pending_manager = pending_calibration.PendingMeasurementsManager(valve_manager)
+        pending_manager.add_pending("Valve1", 5.0)
+        pending_manager.add_pending("Valve2", 7.0)
+        fsm, _ = pending_manager.build_statemachine()
+        bpod_rig.run(fsm)
