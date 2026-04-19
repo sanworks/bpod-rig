@@ -8,6 +8,8 @@ To run hardware tests with specific rig:
 >>> uv run pytest --runhardware --port COM3
 """
 
+from typing import Generator
+
 import pytest
 from bpod_core.bpod import Bpod
 
@@ -37,14 +39,26 @@ def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item
             item.add_marker(skip_hardware)
 
 
-@pytest.fixture(scope="session")
-def bpod_rig(request: pytest.FixtureRequest) -> Bpod:
-    """Fixture for providing a Bpod rig instance for tests."""
+def create_bpod_instance(request: pytest.FixtureRequest | pytest.Session) -> Bpod:
+    """Helper function to create a Bpod instance based on pytest options."""
     serial_number: str | None = request.config.getoption("--serial-number")
     serial_number = None if serial_number == "None" else serial_number
     port: str | None = request.config.getoption("--port")
     port = None if port == "None" else port
-    return Bpod(serial_number=None, port=port)
+
+    return Bpod(serial_number=serial_number, port=port)
+
+
+@pytest.fixture(scope="session")
+def bpod_rig(request: pytest.FixtureRequest) -> Generator[Bpod, None, None]:
+    """Fixture for providing a Bpod rig instance for tests."""
+    bpod_instance = create_bpod_instance(
+        request
+    )  # Test connection and exit if unsuccessful
+    yield bpod_instance
+
+    # Cleanup: close the connection when fixture scope ends
+    bpod_instance.close()
 
 
 @pytest.hookimpl()
@@ -55,10 +69,11 @@ def pytest_sessionstart(session: pytest.Session):
     # option is given, and exit the tests if connection fails
     if session.config.getoption("--runhardware"):
         try:
-            bpod_instance = bpod_rig._fixture_function(session)
+            bpod_instance = create_bpod_instance(session)
             print("Connected to Bpod rig.")
             print(f"\tSerial Number: {bpod_instance.serial_number}")
             print(f"\tPort: {bpod_instance.port}")
-            print(f"\tFirmware Version: {bpod_instance.firmware_version}")
+            print(f"\tFirmware Version: {bpod_instance.version}")
+            bpod_instance.close()
         except Exception as _:
             pytest.exit("Connection to Bpod rig unsuccessful!")
