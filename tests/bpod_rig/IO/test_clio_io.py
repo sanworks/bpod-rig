@@ -1,11 +1,12 @@
 import logging
 import tempfile
 from pathlib import Path
+from unittest.mock import patch
 
 import pytest
 from click.testing import CliRunner
-from unittest.mock import patch
-from bpod_rig.IO.cli_io import yes_no_prompt_cli_runner, prompt_for_path_cli_runner
+
+from bpod_rig.IO.cli_io import prompt_for_path_cli_runner, yes_no_prompt_cli_runner
 
 
 class TestCliIO:

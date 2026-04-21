@@ -1,11 +1,11 @@
 import logging
 from typing import Any
 
-from bpod_rig.calibration.liquid.models import ValveDataManager, ValveData
 import bpod_core.bpod
 from bpod_core.fsm import StateMachine
 from pydantic import Field
 
+from bpod_rig.calibration.liquid.models import ValveData, ValveDataManager
 
 logger = logging.getLogger(__name__)
 
@@ -328,12 +328,10 @@ def run_calibration(
         logger.info("\t%s between each pulse set.", pending_manager.pulse_set_pause)
         for valvename in test_set:
             logger.info("- %s: duration %s ms", valvename, test_set[valvename])
-
-    bpodsystem.send_state_machine(fsm)
     logger.debug("Running calibration state machine.")
     # Run the state machine
     for _ in range(pending_manager.n_pulses):
-        bpodsystem.run_state_machine()
+        bpodsystem.run(fsm)
     if verbose:
         logger.info("Calibration state machine completed.")
 

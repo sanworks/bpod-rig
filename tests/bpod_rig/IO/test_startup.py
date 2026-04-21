@@ -1,8 +1,7 @@
-from pathlib import Path
 import tempfile
+from pathlib import Path
 
 import pytest
-
 
 from bpod_rig.IO import startup
 

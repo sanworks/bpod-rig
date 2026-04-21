@@ -40,7 +40,7 @@ class SettingsMetadata(BaseModel):
     ] = None
 
     username: Annotated[
-        str,
+        Optional[str],
         Field(
             min_length=1,
             max_length=128,
@@ -73,8 +73,8 @@ class ModelWithMetadata(BaseModel):
 
     metadata: Annotated[
         SettingsMetadata,
-        Field(title="Model metadata", default_factory=lambda: SettingsMetadata()),
-    ] = None
+        Field(title="Model metadata", default_factory=SettingsMetadata),
+    ]
 
     # noinspection PyNestedDecorators
     @model_validator(mode="before")

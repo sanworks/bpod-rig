@@ -38,10 +38,12 @@ def reset_all(directories: Iterable[Path | str], force=False) -> bool:
             "related directories on this machine?"
         )
         if confirmation:
-            confirmation &= cli_io.yes_no_prompt(
+            final_confirmation = cli_io.yes_no_prompt(
                 "Final warning: Are you SURE you want to delete all "
                 "Bpod-related directories?"
             )
+            if not final_confirmation and not confirmation:
+                return False
 
         if not confirmation:
             return False

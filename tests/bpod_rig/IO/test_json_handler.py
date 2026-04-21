@@ -3,6 +3,7 @@ import tempfile
 from pathlib import Path
 
 import pytest
+
 from bpod_rig.IO import json_handler
 
 JSON_STRING = '{"first_key":{"second_key": "1234"}}'

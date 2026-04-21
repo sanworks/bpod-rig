@@ -1,7 +1,8 @@
-import pytest
 import urllib.request
 
-from bpod_rig.calibration.liquid import utils, populate_examples
+import pytest
+
+from bpod_rig.calibration.liquid import populate_examples, utils
 from bpod_rig.calibration.liquid.models import ValveData, ValveDataManager
 
 
@@ -13,7 +14,7 @@ class TestValveDataClass:
     def test_init_alias(self):
         # Test that alias works correctly
         # type checker may complain about this because of pydantic aliasing
-        assert ValveData(name="attrname").name == "attrname"  # noqa: Pydantic's validation aliases raises Unexpected Argument
+        assert ValveData(name="attrname").name == "attrname"  # pyright: ignore[reportCallIssue]
         assert ValveData(ValveName="aliasname").name == "aliasname"
 
     def test_add_measurement(self):

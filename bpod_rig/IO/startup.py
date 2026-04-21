@@ -3,13 +3,13 @@
 import logging
 from pathlib import Path
 
-from bpod_rig.examples.copy import copy_examples
 from bpod_rig.config import system_settings
 from bpod_rig.defaults import (
     DEFAULT_SUBDIRS,
     SYSTEM_CONFIG_DIR,
     SYSTEM_CONFIG_FILE,
 )
+from bpod_rig.examples.copy import copy_examples
 
 logger = logging.getLogger(__name__)
 

@@ -6,8 +6,8 @@ import pytest
 from pydantic_core import ValidationError
 
 from bpod_rig.config.system_settings import (
-    SystemSettings,
     BpodDir,
+    SystemSettings,
     load_system_configuration,
 )
 
@@ -24,8 +24,8 @@ def temp_config():
     # --- Setup ---
     bpod_dir = Path(tempfile.mkdtemp())
     config_dir = bpod_dir.joinpath("Config")
-    sp = BpodDir(base_dir=bpod_dir)
-    ss = SystemSettings(paths=sp)
+    sp = BpodDir.create(base_dir=bpod_dir)
+    ss = SystemSettings.create(paths=sp)
     full_file_path = ss.paths.base_config_dir.joinpath("config.json")
 
     # Yield the created objects to the test function
