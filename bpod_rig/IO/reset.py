@@ -42,10 +42,9 @@ def reset_all(directories: Iterable[Path | str], force=False) -> bool:
                 "Final warning: Are you SURE you want to delete all "
                 "Bpod-related directories?"
             )
-            if not final_confirmation and not confirmation:
+            if not final_confirmation:
                 return False
-
-        if not confirmation:
+        else:
             return False
 
     for directory in directories:

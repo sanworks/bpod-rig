@@ -8,54 +8,6 @@ from pydantic import Field
 from bpod_rig.config.base import ModelWithMetadata, SettingsMetadata
 
 
-def subdir_path_factory(data: dict, addition: str):
-    """Function to dynamically create BpodPaths subpaths at validation time.
-
-    Function creates a path in the below form:
-
-    {Parent_Dir}/Machine-{Bpod_ID}/[addition]
-
-    Path components in {} are retrieved from the dictionary of pre-validated data.
-
-    Parameters
-    ----------
-    data (dict): Dictionary containing all previously validated fields
-    addition (str): Addition to join to the end of the path
-
-    Returns
-    -------
-    (pathlib.Path): combined path in above form
-    """
-    if data["unique_bpod_dir"] is None:
-        return None
-
-    return data["unique_bpod_dir"].joinpath(addition)
-
-
-def unique_dir_path_factory(data: dict):
-    """Function to dynamically create current directory path at validation time.
-
-    Function creates a path in the below form:
-
-    {Parent_Dir}/Machine-{Bpod_ID}
-
-    Path components in {} are retrieved from the dictionary of pre-validated data.
-
-    Parameters
-    ----------
-    data : dict
-        Dictionary containing all previously validated fields
-
-    Returns
-    -------
-        pathlib.Path : combined path in above form
-    """
-    if "bpod_id" not in data or "parent_dir" not in data:
-        return None
-
-    return data["parent_dir"].joinpath(f"Machine-{data['bpod_id']}")
-
-
 class BpodPaths(ModelWithMetadata):
     """Path configuration for a unique Bpod instance.
 
@@ -175,6 +127,10 @@ class BpodPaths(ModelWithMetadata):
         calibration_dir = Path(
             calibration_dir or unique_bpod_dir.joinpath("Calibration")
         )
+        calibration_files = (
+            {} if calibration_files is None else dict(calibration_files)
+        )  # shallow copy to ensure immutability
+        metadata = metadata or SettingsMetadata(username=username or None)
 
         return cls(
             bpod_id=bpod_id,
@@ -182,6 +138,6 @@ class BpodPaths(ModelWithMetadata):
             unique_bpod_dir=unique_bpod_dir,
             settings_dir=settings_dir,
             calibration_dir=calibration_dir,
-            calibration_files=calibration_files or {},
-            metadata=metadata or SettingsMetadata(username=username or None),
+            calibration_files=calibration_files,
+            metadata=metadata,
         )
