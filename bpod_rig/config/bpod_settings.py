@@ -127,7 +127,9 @@ class BpodPaths(ModelWithMetadata):
         calibration_dir = Path(
             calibration_dir or unique_bpod_dir.joinpath("Calibration")
         )
-        calibration_files = {} if calibration_files is None else dict(calibration_files) # shallow copy to ensure immutability
+        calibration_files = (
+            {} if calibration_files is None else dict(calibration_files)
+        )  # shallow copy to ensure immutability
         metadata = metadata or SettingsMetadata(username=username or None)
 
         return cls(
