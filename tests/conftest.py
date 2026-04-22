@@ -19,9 +19,17 @@ def pytest_addoption(parser: pytest.Parser):
         "--runhardware", action="store_true", default=False, help="run hardware tests"
     )
     parser.addoption(
-        "--serial-number", action="store", default=None, help="Bpod rig serial number"
+        "--serial-number",
+        action="store",
+        default=None,
+        help="Bpod rig serial number, fed to Bpod() if --runhardware is given",
     )
-    parser.addoption("--port", action="store", default=None, help="Bpod rig port")
+    parser.addoption(
+        "--port",
+        action="store",
+        default=None,
+        help="Bpod rig port, fed to Bpod() if --runhardware is given",
+    )
 
 
 def pytest_configure(config: pytest.Config):
@@ -33,6 +41,8 @@ def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item
     if config.getoption("--runhardware"):
         # --runhardware given in cli: do not skip hardware tests
         return
+
+    # Add skip marker to hardware tests if --runhardware option not given
     skip_hardware = pytest.mark.skip(reason="need --runhardware option to run")
     for item in items:
         if "hardware" in item.keywords:
@@ -52,12 +62,8 @@ def create_bpod_instance(request: pytest.FixtureRequest | pytest.Session) -> Bpo
 @pytest.fixture(scope="session")
 def bpod_rig(request: pytest.FixtureRequest) -> Generator[Bpod, None, None]:
     """Fixture for providing a Bpod rig instance for tests."""
-    bpod_instance = create_bpod_instance(
-        request
-    )  # Test connection and exit if unsuccessful
+    bpod_instance = create_bpod_instance(request)
     yield bpod_instance
-
-    # Cleanup: close the connection when fixture scope ends
     bpod_instance.close()
 
 
@@ -65,6 +71,7 @@ def bpod_rig(request: pytest.FixtureRequest) -> Generator[Bpod, None, None]:
 def pytest_sessionstart(session: pytest.Session):
     """Pytest hook that runs before any tests are run."""
     # https://docs.pytest.org/en/stable/reference/reference.html#pytest.hookspec.pytest_sessionstart
+
     # Attempt to connect to the Bpod rig if --runhardware
     # option is given, and exit the tests if connection fails
     if session.config.getoption("--runhardware"):
