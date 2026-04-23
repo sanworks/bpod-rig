@@ -36,10 +36,11 @@ or
     $ git checkout dev
 
 
+
 Create Virtual Environment
 **************************
 
-1. Navigate into the cloned respository
+1. Navigate into the cloned repository
 2. Run the following command to create a virtual environment with all development dependencies
 
 .. code-block:: shell-session
@@ -64,4 +65,7 @@ Once complete there will be a new *.venv* folder containing an isolated Python i
 Open PyCharm Project
 ********************
 
-WIP
+1. Start PyCharm and open the `bpod-rig` directory as a project
+2. Add the newly created .venv as the project interpreter
+    See `Link here <https://www.jetbrains.com/help/pycharm/configuring-python-interpreter.html>` for more information
+
