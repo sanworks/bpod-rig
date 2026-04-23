@@ -52,16 +52,6 @@ def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item
             item.add_marker(skip_hardware)
 
 
-def create_bpod_instance(request: pytest.FixtureRequest | pytest.Session) -> Bpod:
-    """Helper function to create a Bpod instance based on pytest options."""
-    serial_number: str | None = request.config.getoption("--serial-number")
-    serial_number = None if serial_number == "None" else serial_number
-    port: str | None = request.config.getoption("--port")
-    port = None if port == "None" else port
-
-    return Bpod(serial_number=serial_number, port=port)
-
-
 @pytest.fixture(scope="session", autouse=True)
 def bpod_device(request: pytest.FixtureRequest) -> Generator[Bpod, None, None]:
     """Fixture for providing a Bpod rig instance for tests."""
@@ -70,7 +60,12 @@ def bpod_device(request: pytest.FixtureRequest) -> Generator[Bpod, None, None]:
         logger.info("Hardware tests not enabled; skipping Bpod device fixture setup.")
         return
     try:
-        bpod_instance = create_bpod_instance(request)
+        serial_number: str | None = request.config.getoption("--serial-number")
+        serial_number = None if serial_number == "None" else serial_number
+        port: str | None = request.config.getoption("--port")
+        port = None if port == "None" else port
+
+        bpod_instance = Bpod(serial_number=serial_number, port=port)
     except Exception as e:
         logger.error("Failed to connect to Bpod rig in fixture!", exc_info=e)
         pytest.exit("Connection to Bpod rig unsuccessful!")
