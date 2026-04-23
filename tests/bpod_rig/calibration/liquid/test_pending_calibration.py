@@ -90,10 +90,10 @@ class TestPendingMeasurementsManager:
 
 class TestIntegrationPendingCalibration:
     @pytest.mark.hardware
-    def test_protocol_run(self, bpod_rig: Bpod):
+    def test_protocol_run(self, bpod_device: Bpod):
         valve_manager = utils.create_empty_valve_data_manager()
         pending_manager = pending_calibration.PendingMeasurementsManager(valve_manager)
         pending_manager.add_pending("Valve1", 5.0)
         pending_manager.add_pending("Valve2", 7.0)
         pending_manager.n_pulses = 2  # only send 2 pulses to speed up test
-        pending_calibration.run_calibration(bpod_rig, pending_manager)
+        pending_calibration.run_calibration(bpod_device, pending_manager)

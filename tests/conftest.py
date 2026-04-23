@@ -69,7 +69,7 @@ def emit_startup_message(message: str) -> None:
 
 
 @pytest.fixture(scope="session")
-def bpod_rig(request: pytest.FixtureRequest) -> Generator[Bpod, None, None]:
+def bpod_device(request: pytest.FixtureRequest) -> Generator[Bpod, None, None]:
     """Fixture for providing a Bpod rig instance for tests."""
     bpod_instance = create_bpod_instance(request)
     logger.info(f"Successfully connected to Bpod rig in fixture: {bpod_instance}")
