@@ -52,7 +52,7 @@ def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item
             item.add_marker(skip_hardware)
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="session")
 def bpod_device(request: pytest.FixtureRequest) -> Generator[Bpod, None, None]:
     """Fixture for providing a Bpod rig instance for tests."""
     if not request.config.getoption("--runhardware"):
