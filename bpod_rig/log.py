@@ -5,7 +5,7 @@ import tempfile
 from pathlib import Path
 from logging.config import dictConfig
 
-LOGGING = {
+LOGGING_CONFIG = {
     'version': 1,
     'disable_existing_loggers': True,
     'formatters':
@@ -20,50 +20,80 @@ LOGGING = {
                 'format': '[%(levelname)s] %(name)s: %(message)s',
             }
         },
+    'filters':
+        {
+            'stdout_filter':
+                {
+                    '()': 'bpod_rig.log.stdout_filter',
+                }
+        },
     'handlers':
         {
         'stdout':
             {
             'class': 'logging.StreamHandler',
+            'level': 'INFO',
             'formatter': 'notime',
+            'filters': ['stdout_filter'],
             'stream': 'ext://sys.stdout'
             },
         'stderr':
             {
             'class': 'logging.StreamHandler',
+            'level': 'ERROR',
             'formatter': 'time',
             'stream': 'ext://sys.stderr'
+            },
+        'dynamic_file':
+            {
+                'class': 'bpod_rig.log.DynamicFileHandler',
+                'formatter': 'time',
+
             }
         },
     'loggers':
         {
         '':
             {
-            'handlers': ['stdout'],
+            'handlers': ['stdout', 'stderr', 'dynamic_file'],
             'level': 'DEBUG',
             'propagate': True
             }
         }
     }
 
+def stdout_filter():
+    def filter(lf: logging.LogRecord) -> bool:
+        return logging.ERROR > lf.levelno >= logging.INFO
+        # If 40 > lf.levelno >= 20
+    return filter
+
+
 class DynamicFileHandler(logging.FileHandler):
-    """ Dynamic log file handler
+    """Dynamic log file handler.
 
     When bpod-rig is initialized, the logging directory is not known.
     DynamicFileHandler creates a temporary file to output the initialization logging
     to. Once the logging directory is known, the output stream is swapped and the
     contents of the temp log copied over.
-
     """
+
     def __init__(self):
-        self.temp_stream = tempfile.NamedTemporaryFile()
+        self.temp_stream = tempfile.NamedTemporaryFile()  # noqa: SIM115
         self.log_dir: Path | None = None
         self.current_logfile: Path | None = None
         self.new_filepath: Path | None = None
         super().__init__(self.temp_stream.name)
 
 
-    def swap_stream(self, logging_dir: Path):
+    def __del__(self) -> None:
+        self.temp_stream.close()
+        self.stream.close()
+
+    def swap_stream(self, logging_dir: Path | str):
+        if isinstance(logging_dir, str):
+            logging_dir = Path(logging_dir)
+
         self.log_dir = logging_dir
         self._get_new_filepath()
         # Determine what our new logfile name should be
@@ -115,7 +145,7 @@ class DynamicFileHandler(logging.FileHandler):
 
 
     def _rename_current_logfile(self):
-        """Removes 'current' from logfile by renaming
+        """Removes 'current' from logfile by renaming.
 
         Takes the logfile with the name format "current-[date].log" and renames it
         to "[date].log"
