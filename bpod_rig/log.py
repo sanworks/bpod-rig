@@ -3,7 +3,6 @@ import logging
 import shutil
 import tempfile
 from pathlib import Path
-from logging.config import dictConfig
 
 LOGGING_CONFIG = {
     'version': 1,
@@ -63,7 +62,7 @@ LOGGING_CONFIG = {
     }
 
 def stdout_filter():
-    def filter(lf: logging.LogRecord) -> bool:
+    def filter(lf: logging.LogRecord) -> bool:  # noqa: A001
         return logging.ERROR > lf.levelno >= logging.INFO
         # If 40 > lf.levelno >= 20
     return filter
@@ -76,6 +75,24 @@ class DynamicFileHandler(logging.FileHandler):
     DynamicFileHandler creates a temporary file to output the initialization logging
     to. Once the logging directory is known, the output stream is swapped and the
     contents of the temp log copied over.
+
+    Currently, the naming convention for the currently used logfile will be:
+        current-[date].log
+
+    The DynamicFileHandler will automatically handle logfile naming, renaming, and
+    selection using the criteria below.
+
+    When swapping from the tempfile to a known logging directory, the DynamicFileHandler
+    will choose the correct logfile by making several checks within the new self.log_dir
+    directory:
+        1) If no logfiles exist, a new logfile named current-[date].log is used
+        2) If there are existing logfiles, but none contain the keyword `current`, a
+        new logfile named current-[date].log is created
+        3) If there is a logfile containing the keyword `current`, but the date is not
+        today, the keyword `current` is removed from the name, leaving just
+        [old_date].log Then, a new logfile named current-[date].log is created
+        4) If there is a logfile with the name current-[date].log and [date] is today,
+        that logfile is used
     """
 
     def __init__(self):
@@ -91,6 +108,21 @@ class DynamicFileHandler(logging.FileHandler):
         self.stream.close()
 
     def swap_stream(self, logging_dir: Path | str):
+        """Swaps the temporary stream for a file in the logging_dir directory.
+
+        This function takes a path to a logging directory, gets the new filename,
+        swaps the filestream for the FileStreamHandler, copies any log entries over, and
+        closes all the dangling streams.
+
+        Parameters
+        ----------
+        logging_dir : Path | str
+            Directory to store logfiles in
+
+        Returns
+        -------
+            None
+        """
         if isinstance(logging_dir, str):
             logging_dir = Path(logging_dir)
 
@@ -98,7 +130,7 @@ class DynamicFileHandler(logging.FileHandler):
         self._get_new_filepath()
         # Determine what our new logfile name should be
 
-        old_stream = self.setStream(open(self.new_filepath, 'a'))
+        old_stream = self.setStream(open(self.new_filepath, 'a'))  # noqa: SIM115
         # Let's do this first so any remaining data is flushed from the stream
         # Set the stream to our new stream, which returns the old stream
 
@@ -110,6 +142,16 @@ class DynamicFileHandler(logging.FileHandler):
 
 
     def _get_new_filepath(self) -> None:
+        """Function to help determine new logfile path.
+
+        This function uses the current logfile, determines if the date in the name is
+        old, triggers the file rename (if needed) and sets the self.new_filepath
+        parameter
+
+        Returns
+        -------
+            None
+        """
         self._find_current_logfile()  # Is there a file with pattern "current-[date].log"
 
         if self.current_logfile is not None:
@@ -125,7 +167,8 @@ class DynamicFileHandler(logging.FileHandler):
             self.new_filepath = self._new_logfile_path()
 
 
-    def _find_current_logfile(self):
+    def _find_current_logfile(self) -> None:
+        """Checks self.log_dir for logfile matching the `current-[date].log` format."""
         logfiles = self.log_dir.glob('*.log')
         current_logfile = [file for file in logfiles if "current" in file.name]
         if len(current_logfile) == 0:
@@ -136,7 +179,8 @@ class DynamicFileHandler(logging.FileHandler):
             self.current_logfile = current_logfile[0]
 
 
-    def _current_file_from_past(self):
+    def _current_file_from_past(self) -> bool:
+        """Determines whether the date in a filename is from the past."""
         date = self.current_logfile.stem.split("_")[1]
         file_date = datetime.date.fromisoformat(date)
         today_date = datetime.date.today()
@@ -144,7 +188,7 @@ class DynamicFileHandler(logging.FileHandler):
         return file_date < today_date
 
 
-    def _rename_current_logfile(self):
+    def _rename_current_logfile(self) -> None:
         """Removes 'current' from logfile by renaming.
 
         Takes the logfile with the name format "current-[date].log" and renames it
@@ -161,3 +205,28 @@ class DynamicFileHandler(logging.FileHandler):
 
     def _new_logfile_path(self) -> Path:
         return self.log_dir.joinpath(f"current-{datetime.date.today()}.log")
+
+
+class BpodLogger(logging.Logger):
+    """Bpod logger class.
+
+    Small wrapper class to bring the "swap_stream" functionality of the
+    DynamicFileHandler to the top level if it is present in the root logger handlers
+    property.
+
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.file_handler: DynamicFileHandler | None = None
+
+        for handler in self.root.handlers:
+            if isinstance(handler, DynamicFileHandler):
+                self.file_handler = handler
+
+    def swap_stream(self, logging_dir: Path | str):
+        if self.file_handler:
+            self.file_handler.swap_stream(logging_dir)
+        else:
+            self.error("There is no DynamicFileHandler instance present for this logger!")
