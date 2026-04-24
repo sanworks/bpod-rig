@@ -1,6 +1,6 @@
 """main entry point for bpod-rig."""
-
 import logging
+from logging.config import dictConfig
 
 from pydantic import ValidationError
 
@@ -8,10 +8,12 @@ from bpod_rig.config import utils
 from bpod_rig.config.system_settings import BpodDir
 from bpod_rig.defaults import DEFAULT_BPOD_PATH, SYSTEM_CONFIG_DIR, SYSTEM_CONFIG_FILE
 from bpod_rig.IO import cli_io, startup
+from bpod_rig.log import LOGGING_CONFIG, BpodLogger
 
-logging.basicConfig(level=logging.DEBUG)
+# Set up logging here
+dictConfig(LOGGING_CONFIG)
+logging.setLoggerClass(BpodLogger)
 logger = logging.getLogger(__name__)
-
 
 def main():
     ### Everything below is subject to change and is for testing purposes only
