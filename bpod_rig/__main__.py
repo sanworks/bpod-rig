@@ -1,4 +1,5 @@
 """main entry point for bpod-rig."""
+
 import logging
 from logging.config import dictConfig
 
@@ -14,6 +15,7 @@ from bpod_rig.log import LOGGING_CONFIG, BpodLogger
 dictConfig(LOGGING_CONFIG)
 logging.setLoggerClass(BpodLogger)
 logger = logging.getLogger(__name__)
+
 
 def main():
     ### Everything below is subject to change and is for testing purposes only

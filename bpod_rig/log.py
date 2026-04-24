@@ -5,66 +5,56 @@ import tempfile
 from pathlib import Path
 
 LOGGING_CONFIG = {
-    'version': 1,
-    'disable_existing_loggers': True,
-    'formatters':
-        {
-        'time':
-            {
-            'format': '%(asctime)s - [%(levelname)s] %(name)s: %(message)s',
-            'datefmt': '%H:%M:%S',
-            },
-        'notime':
-            {
-                'format': '[%(levelname)s] %(name)s: %(message)s',
-            }
+    "version": 1,
+    "disable_existing_loggers": True,
+    "formatters": {
+        "time": {
+            "format": "%(asctime)s - [%(levelname)s] %(name)s: %(message)s",
+            "datefmt": "%H:%M:%S",
         },
-    'filters':
-        {
-            'stdout_filter':
-                {
-                    '()': 'bpod_rig.log.stdout_filter',
-                }
+        "notime": {
+            "format": "[%(levelname)s] %(name)s: %(message)s",
         },
-    'handlers':
-        {
-        'stdout':
-            {
-            'class': 'logging.StreamHandler',
-            'level': 'INFO',
-            'formatter': 'notime',
-            'filters': ['stdout_filter'],
-            'stream': 'ext://sys.stdout'
-            },
-        'stderr':
-            {
-            'class': 'logging.StreamHandler',
-            'level': 'ERROR',
-            'formatter': 'time',
-            'stream': 'ext://sys.stderr'
-            },
-        'dynamic_file':
-            {
-                'class': 'bpod_rig.log.DynamicFileHandler',
-                'formatter': 'time',
-
-            }
-        },
-    'loggers':
-        {
-        '':
-            {
-            'handlers': ['stdout', 'stderr', 'dynamic_file'],
-            'level': 'DEBUG',
-            'propagate': True
-            }
+    },
+    "filters": {
+        "stdout_filter": {
+            "()": "bpod_rig.log.stdout_filter",
         }
-    }
+    },
+    "handlers": {
+        "stdout": {
+            "class": "logging.StreamHandler",
+            "level": "INFO",
+            "formatter": "notime",
+            "filters": ["stdout_filter"],
+            "stream": "ext://sys.stdout",
+        },
+        "stderr": {
+            "class": "logging.StreamHandler",
+            "level": "ERROR",
+            "formatter": "time",
+            "stream": "ext://sys.stderr",
+        },
+        "dynamic_file": {
+            "class": "bpod_rig.log.DynamicFileHandler",
+            "formatter": "time",
+        },
+    },
+    "loggers": {
+        "": {
+            "handlers": ["stdout", "stderr", "dynamic_file"],
+            "level": "DEBUG",
+            "propagate": True,
+        }
+    },
+}
+
 
 def stdout_filter():
     def filter(lf: logging.LogRecord) -> bool:  # noqa: A001
         return logging.ERROR > lf.levelno >= logging.INFO
         # If 40 > lf.levelno >= 20
+
     return filter
 
 
@@ -102,7 +92,6 @@ class DynamicFileHandler(logging.FileHandler):
         self.new_filepath: Path | None = None
         super().__init__(self.temp_stream.name)
 
-
     def __del__(self) -> None:
         self.temp_stream.close()
         self.stream.close()
@@ -130,7 +119,7 @@ class DynamicFileHandler(logging.FileHandler):
         self._get_new_filepath()
         # Determine what our new logfile name should be
 
-        old_stream = self.setStream(open(self.new_filepath, 'a'))  # noqa: SIM115
+        old_stream = self.setStream(open(self.new_filepath, "a"))  # noqa: SIM115
         # Let's do this first so any remaining data is flushed from the stream
         # Set the stream to our new stream, which returns the old stream
 
@@ -229,4 +218,6 @@ class BpodLogger(logging.Logger):
         if self.file_handler:
             self.file_handler.swap_stream(logging_dir)
         else:
-            self.error("There is no DynamicFileHandler instance present for this logger!")
+            self.error(
+                "There is no DynamicFileHandler instance present for this logger!"
+            )
