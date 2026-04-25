@@ -17,7 +17,7 @@ wheels = [
 
 [[package]]
 name = "bpod-core"
-version = "0.1.0a10"
+version = "0.1.0a11"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "cachetools" },
@@ -34,12 +34,13 @@ dependencies = [
     { name = "pyserial" },
     { name = "pyyaml" },
     { name = "pyzmq" },
+    { name = "typing-extensions" },
     { name = "xxhash" },
     { name = "zeroconf" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/70/ad/56f8922089a6c4cab9118fc77de7c99261164d32032d27c018907e885fcb/bpod_core-0.1.0a10.tar.gz", hash = "sha256:b584e56df0294c43b46cefb370748a77a665476a1e98f500d54899cea1e3a844", size = 118827, upload-time = "2026-04-16T22:46:35.55Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/05/ec/0da1f6ca916b7e1b6c9b3ef997226546b13be4f008f389f76f780aea09ad/bpod_core-0.1.0a11.tar.gz", hash = "sha256:0e0f6989edcd0548ed1762984eaf9383ed8b270890fcc4a6d6e13b387075869f", size = 125298, upload-time = "2026-04-24T11:33:28.806Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/17/33/92e6a4910652cef367be906be6a1735639e9f5b08e4e9870ad67bfa23e07/bpod_core-0.1.0a10-py3-none-any.whl", hash = "sha256:4bfe14b4faeda8c85a9b4ac900369525b9fc9f0e035d39097cae598195e45aca", size = 65818, upload-time = "2026-04-16T22:46:36.595Z" },
+    { url = "https://files.pythonhosted.org/packages/44/c4/cc1e1fa6a8a77e1a48adfcf8ffbb948a0d9e13a66259ddf319da084dbd7d/bpod_core-0.1.0a11-py3-none-any.whl", hash = "sha256:7130c8863127e70cce192f80f3ac7557c7fe0105277c7de8948221bf28f24164", size = 68235, upload-time = "2026-04-24T11:33:27.331Z" },
 ]
 
 [[package]]
@@ -69,7 +70,7 @@ test = [
 
 [package.metadata]
 requires-dist = [
-    { name = "bpod-core", specifier = "==0.1.0a10" },
+    { name = "bpod-core", specifier = "==0.1.0a11" },
     { name = "click", specifier = ">=8.3.1" },
     { name = "platformdirs", specifier = ">=4.5.1" },
     { name = "pydantic", specifier = "==2.11.7" },
