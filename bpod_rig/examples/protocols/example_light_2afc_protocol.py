@@ -87,7 +87,7 @@ def example_light_2afc_protocol(bpod: Bpod, *args, **kwargs) -> None:
             transitions={
                 "Port1In": left_poke_action,
                 "Port3In": right_poke_action,
-                "Tup": "exit",
+                "Tup": ">exit",
             },
             actions=stimulus_output,
         )
@@ -140,7 +140,7 @@ def example_light_2afc_protocol(bpod: Bpod, *args, **kwargs) -> None:
             name="DrinkingGrace",
             timer=0.5,
             transitions={
-                "Tup": "exit",
+                "Tup": ">exit",
                 "Port1In": "Drinking",
                 "Port3In": "Drinking",
             },
@@ -150,14 +150,14 @@ def example_light_2afc_protocol(bpod: Bpod, *args, **kwargs) -> None:
         sma.add_state(
             name="PunishTimeout",
             timer=punish_timeout,
-            transitions={"Tup": "exit"},
+            transitions={"Tup": ">exit"},
             actions=None,
         )
 
         sma.add_state(
             name="CorrectEarlyWithdrawal",
             timer=0,
-            transitions={"Tup": "exit"},
+            transitions={"Tup": ">exit"},
             actions=None,
         )
 
