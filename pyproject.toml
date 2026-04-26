@@ -127,6 +127,7 @@ ignore = [
     "PLR2004", # Magic value used in comparison, consider replacing with a constant variable
     "RET504",  # Unnecessary assignment to variable (e.g., `return x` instead of `x = ...; return x`)
     "S101",    # Use of assert
+    "SIM108",  # simplify if/else block to ternary expression
 ]
 
 # Allow fix for all enabled rules (when `--fix`) is provided.
