@@ -4,7 +4,7 @@ import shutil
 import tempfile
 from pathlib import Path
 
-from bpod_rig.defaults import TIME_FORMAT, LOGFILE_PREFIX
+from bpod_rig.defaults import LOGFILE_PREFIX, TIME_FORMAT
 
 LOGGING_CONFIG = {
     "version": 1,
@@ -76,7 +76,9 @@ class DynamicFileHandler(logging.FileHandler):
     """
 
     def __init__(self):
-        self.temp_stream = tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".log")  # noqa: SIM115
+        self.temp_stream = tempfile.NamedTemporaryFile(  # noqa: SIM115
+            mode="w", delete=False, suffix=".log"
+        )
         self.log_dir: Path | None = None
         self.new_filepath: Path | None = None
         super().__init__(self.temp_stream.name)
@@ -101,7 +103,6 @@ class DynamicFileHandler(logging.FileHandler):
         -------
             None
         """
-
         if isinstance(logging_dir, str):
             logging_dir = Path(logging_dir)
 
@@ -118,18 +119,19 @@ class DynamicFileHandler(logging.FileHandler):
 
         self.close()
         # Close current file stream and flush buffer
-        shutil.copyfile(self.temp_stream.name, self.new_filepath)
-        # Copy and rename the temp logfile
 
-        self.stream = open(self.new_filepath, "a")
-        # Open new stream and set to current stream
+        if self.new_filepath is not None:
+            shutil.copyfile(self.temp_stream.name, self.new_filepath)
+            # Copy and rename the temp logfile
+            self.stream = open(self.new_filepath, "a")  # NOQA SIM115
+            # Open new stream and set to current stream
 
         self.temp_stream.close()  # Close the tempfile which should delete it
 
-
     def _set_new_filepath(self) -> None:
         current_dt = datetime.datetime.now().strftime(TIME_FORMAT)
-        self.new_filepath = self.log_dir / f"{LOGFILE_PREFIX}-{current_dt}.log"
+        if self.log_dir is not None:
+            self.new_filepath = self.log_dir / f"{LOGFILE_PREFIX}-{current_dt}.log"
 
 
 class BpodLogger(logging.Logger):
@@ -154,4 +156,6 @@ class BpodLogger(logging.Logger):
         if self.file_handler:
             self.file_handler.swap_stream(logging_dir)
         else:
-            raise AttributeError("There is no DynamicFileHandler instance present for this logger!")
+            raise AttributeError(
+                "There is no DynamicFileHandler instance present for this logger!"
+            )

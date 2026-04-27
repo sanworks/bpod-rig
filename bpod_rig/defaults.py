@@ -18,4 +18,3 @@ DEFAULT_BPOD_PATH = platformdirs.user_documents_path() / DEFAULT_DIR_NAME
 # Logging
 TIME_FORMAT = "%Y-%m-%d-%H-%M-%S"
 LOGFILE_PREFIX = "bpod"
-

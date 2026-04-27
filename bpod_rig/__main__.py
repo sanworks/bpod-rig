@@ -133,7 +133,7 @@ def main():
         logger.error("No valid Bpod directory! Shutting down.")
         raise
 
-    logger.swap_stream(system_paths.log_dir)
+    logger.swap_stream(system_paths.log_dir)  # type: ignore
 
     initial_system_config = utils.init_system_configuration(bpod_path)
     user_config_path = initial_system_config.save_system_configuration()  # noqa: F841
