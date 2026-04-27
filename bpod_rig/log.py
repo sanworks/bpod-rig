@@ -85,7 +85,7 @@ class DynamicFileHandler(logging.FileHandler):
 
     def __del__(self) -> None:
         self.temp_stream.close()
-        self.stream.close()
+        self.close()
 
     def swap_stream(self, logging_dir: Path | str):
         """Swaps the temporary stream for a file in the logging_dir directory.
