@@ -78,7 +78,6 @@ class DynamicFileHandler(logging.FileHandler):
     """
 
     def __init__(self):
-        logger.debug("Opening temporary file stream")
         self.temp_stream = tempfile.NamedTemporaryFile(  # noqa: SIM115
             mode="w", delete=False, suffix=".log"
         )
@@ -87,8 +86,10 @@ class DynamicFileHandler(logging.FileHandler):
         super().__init__(self.temp_stream.name)
 
     def __del__(self) -> None:
-        self.temp_stream.close()
-        self.close()
+        if self.temp_stream is not None:
+            self.temp_stream.close()
+        if self.stream is not None:
+            self.close()
 
     def swap_stream(self, logging_dir: Path | str):
         """Swaps the temporary stream for a file in the logging_dir directory.
