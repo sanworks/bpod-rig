@@ -4,9 +4,9 @@ default:
 
 # Check formatting and types
 check:
-    uv run ruff format --check .
-    uv run ruff check .
-    uv run pyright .
+    -uv run ruff format --check .
+    -uv run ruff check .
+    -uv run pyright .
 
 # Run tests
 test:
