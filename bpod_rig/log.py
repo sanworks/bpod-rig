@@ -83,6 +83,7 @@ class DynamicFileHandler(logging.FileHandler):
         )
         self.log_dir: Path | None = None
         self.new_filepath: Path | None = None
+        self.logger: logging.Logger | None = None
         super().__init__(self.temp_stream.name)
 
     def __del__(self) -> None:
@@ -107,7 +108,6 @@ class DynamicFileHandler(logging.FileHandler):
         -------
             None
         """
-
         self.logger = logging.getLogger("temp_file_handler")
 
         if isinstance(logging_dir, str):
@@ -129,17 +129,23 @@ class DynamicFileHandler(logging.FileHandler):
 
         if self.new_filepath is not None:
             shutil.copyfile(self.temp_stream.name, self.new_filepath)
+            self.logger.debug(
+                "Copying and renaming temp logfile to %s", self.new_filepath
+            )
             # Copy and rename the temp logfile
             self.stream = open(self.new_filepath, "a")  # NOQA SIM115
+            self.logger.debug("Opening new file stream")
             # Open new stream and set to current stream
 
         self.temp_stream.close()  # Close the tempfile which should delete it
+        self.logger.debug("Closing temp file stream")
 
     def _set_new_filepath(self) -> None:
         current_dt = datetime.datetime.now().strftime(TIME_FORMAT)
         if self.log_dir is not None:
             self.new_filepath = self.log_dir / f"{LOGFILE_PREFIX}-{current_dt}.log"
-            self.logger.debug("New logfile path set to: %s", self.new_filepath)
+            if self.logger is not None:
+                self.logger.debug("New logfile path set to: %s", self.new_filepath)
 
 
 class BpodLogger(logging.Logger):

@@ -2,6 +2,7 @@
 
 import logging
 from logging.config import dictConfig
+from typing import cast
 
 from pydantic import ValidationError
 
@@ -20,7 +21,7 @@ if DEBUG:
 # Set up logging here
 dictConfig(LOGGING_CONFIG)
 logging.setLoggerClass(BpodLogger)
-logger = logging.getLogger(__name__)
+logger: BpodLogger = cast(BpodLogger, logging.getLogger(__name__))
 
 
 def main():
@@ -133,7 +134,7 @@ def main():
         logger.error("No valid Bpod directory! Shutting down.")
         raise
 
-    logger.swap_stream(system_paths.log_dir)  # type: ignore
+    logger.swap_stream(system_paths.log_dir)
 
     initial_system_config = utils.init_system_configuration(bpod_path)
     user_config_path = initial_system_config.save_system_configuration()  # noqa: F841
