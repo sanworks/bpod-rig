@@ -6,7 +6,7 @@ from pathlib import Path
 
 from bpod_rig.defaults import LOGFILE_PREFIX, TIME_FORMAT
 
-logger = logging.getLogger(__name__)
+# logger = logging.getLogger(__name__)
 
 LOGGING_CONFIG = {
     "version": 1,
@@ -107,6 +107,9 @@ class DynamicFileHandler(logging.FileHandler):
         -------
             None
         """
+
+        self.logger = logging.getLogger("temp_file_handler")
+
         if isinstance(logging_dir, str):
             logging_dir = Path(logging_dir)
 
@@ -114,7 +117,7 @@ class DynamicFileHandler(logging.FileHandler):
             raise FileNotFoundError(f"Logging directory {logging_dir} does not exist!")
 
         self.log_dir = logging_dir
-        logger.debug("Logging directory set to: %s", self.log_dir)
+        self.logger.debug("Logging directory set to: %s", self.log_dir)
         if self.log_dir is None:
             raise TypeError("Logging directory is not specified!")
 
@@ -136,7 +139,7 @@ class DynamicFileHandler(logging.FileHandler):
         current_dt = datetime.datetime.now().strftime(TIME_FORMAT)
         if self.log_dir is not None:
             self.new_filepath = self.log_dir / f"{LOGFILE_PREFIX}-{current_dt}.log"
-            logger.debug("New logfile path set to: %s", self.new_filepath)
+            self.logger.debug("New logfile path set to: %s", self.new_filepath)
 
 
 class BpodLogger(logging.Logger):
