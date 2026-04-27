@@ -1,3 +1,4 @@
+import atexit
 import datetime
 import logging
 import shutil
@@ -78,6 +79,7 @@ class DynamicFileHandler(logging.FileHandler):
     """
 
     def __init__(self):
+        atexit.register(self._cleanup)
         self.temp_stream = tempfile.NamedTemporaryFile(  # noqa: SIM115
             mode="w", delete=False, suffix=".log"
         )
@@ -86,7 +88,7 @@ class DynamicFileHandler(logging.FileHandler):
         self.logger: logging.Logger | None = None
         super().__init__(self.temp_stream.name)
 
-    def __del__(self) -> None:
+    def _cleanup(self) -> None:
         if self.temp_stream is not None:
             self.temp_stream.close()
         if self.stream is not None:
