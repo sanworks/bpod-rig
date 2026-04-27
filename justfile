@@ -3,10 +3,17 @@ default:
     just --list
 
 # Check formatting and types
+
 check:
-    -uv run ruff format --check .
     -uv run ruff check .
+
+check-format:
+    -uv run ruff format --check .
+
+check-types:
     -uv run pyright .
+
+check-all: check-format check check-types
 
 # Run tests
 test:
