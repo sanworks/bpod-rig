@@ -11,6 +11,12 @@ from bpod_rig.defaults import DEFAULT_BPOD_PATH, SYSTEM_CONFIG_DIR, SYSTEM_CONFI
 from bpod_rig.IO import cli_io, startup
 from bpod_rig.log import LOGGING_CONFIG, BpodLogger
 
+DEBUG = True
+
+if DEBUG:
+    LOGGING_CONFIG["handlers"]["stdout"]["level"] = "DEBUG"
+    LOGGING_CONFIG["handlers"]["stdout"]["filters"] = []
+
 # Set up logging here
 dictConfig(LOGGING_CONFIG)
 logging.setLoggerClass(BpodLogger)
@@ -126,6 +132,8 @@ def main():
     else:
         logger.error("No valid Bpod directory! Shutting down.")
         raise
+
+    logger.swap_stream(system_paths.log_dir)
 
     initial_system_config = utils.init_system_configuration(bpod_path)
     user_config_path = initial_system_config.save_system_configuration()  # noqa: F841
