@@ -29,8 +29,8 @@ def main():
     ### Has Bpod been initialized on this system before? ###
     system_initialized = startup.check_system_is_initialized()
     if not system_initialized:
-        logging.info("Initializing Bpod Rig...")
-        logging.debug(
+        logger.info("Initializing Bpod Rig...")
+        logger.debug(
             "System is not initialized. Creating system config dir [%s]",
             SYSTEM_CONFIG_DIR,
         )
@@ -110,7 +110,7 @@ def main():
     if reinitialize or not system_initialized:
         # We will (re) create the Bpod directories if the system isn't initialized
         # or something went wrong and we need to reinitialize
-        logging.info("Initializing Bpod directory at %s", bpod_path)
+        logger.info("Initializing Bpod directory at %s", bpod_path)
         bpod_path = startup.create_default_directories(bpod_path)
         bpod_dir_verified = True
 
@@ -122,7 +122,7 @@ def main():
             startup.copy_default_files(bpod_path)
 
     if bpod_dir_verified:
-        logging.debug("System paths at %s verified", bpod_path)
+        logger.debug("System paths at %s verified", bpod_path)
     else:
         logger.error("No valid Bpod directory! Shutting down.")
         raise
