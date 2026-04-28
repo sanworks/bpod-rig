@@ -10,16 +10,13 @@ from bpod_rig.config import utils
 from bpod_rig.config.system_settings import BpodDir
 from bpod_rig.defaults import DEFAULT_BPOD_PATH, SYSTEM_CONFIG_DIR, SYSTEM_CONFIG_FILE
 from bpod_rig.IO import cli_io, startup
-from bpod_rig.log import LOGGING_CONFIG, BpodLogger
+from bpod_rig.log import LOGGING_CONFIG, BpodLogger, get_log_config
 
 DEBUG = True
 
-if DEBUG:
-    LOGGING_CONFIG["handlers"]["stdout"]["level"] = "DEBUG"
-    LOGGING_CONFIG["handlers"]["stdout"]["filters"] = []
-
 # Set up logging here
-dictConfig(LOGGING_CONFIG)
+logging_config = get_log_config(DEBUG)
+dictConfig(logging_config)
 logging.setLoggerClass(BpodLogger)
 logger: BpodLogger = cast(BpodLogger, logging.getLogger(__name__))
 

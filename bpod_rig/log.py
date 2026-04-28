@@ -54,6 +54,26 @@ LOGGING_CONFIG = {
     },
 }
 
+def get_log_config(debug: bool = False) -> dict:
+    """Factory function to get logging configuration.
+
+    If debug is True, DEBUG messages are passed through to stdout
+
+    Parameters
+    ----------
+    debug : bool (optional)
+        Flag to enable/disable debug messages in stdout
+
+    Returns
+    -------
+        LOGGING_CONFIG: dict
+
+    """
+    if debug:
+        LOGGING_CONFIG["handlers"]["stdout"]["level"] = "DEBUG"
+        LOGGING_CONFIG["handlers"]["stdout"]["filters"] = ""
+
+    return LOGGING_CONFIG
 
 def stdout_filter():
     def filter(lf: logging.LogRecord) -> bool:  # noqa: A001
