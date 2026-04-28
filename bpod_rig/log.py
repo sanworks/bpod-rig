@@ -88,6 +88,9 @@ class DynamicFileHandler(logging.FileHandler):
         self.logger: logging.Logger | None = None
         super().__init__(self.temp_stream.name)
 
+        self._set_new_filepath()
+        # Determine what our new logfile name should be
+
     def _cleanup(self) -> None:
         if self.temp_stream is not None:
             self.temp_stream.close()
@@ -126,8 +129,6 @@ class DynamicFileHandler(logging.FileHandler):
         if self.log_dir is None:
             raise TypeError("Logging directory is not specified!")
 
-        self._set_new_filepath()
-        # Determine what our new logfile name should be
 
         self.close()
         # Close current file stream and flush buffer
