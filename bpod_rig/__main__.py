@@ -10,7 +10,7 @@ from bpod_rig.config import utils
 from bpod_rig.config.system_settings import BpodDir
 from bpod_rig.defaults import DEFAULT_BPOD_PATH, SYSTEM_CONFIG_DIR, SYSTEM_CONFIG_FILE
 from bpod_rig.IO import cli_io, startup
-from bpod_rig.log import LOGGING_CONFIG, BpodLogger, get_log_config
+from bpod_rig.log import BpodLogger, get_log_config
 
 DEBUG = True
 
