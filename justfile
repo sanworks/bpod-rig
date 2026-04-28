@@ -4,7 +4,7 @@ default:
 
 # Check formatting and types
 
-check:
+check-ruff:
     -uv run ruff check .
 
 check-format:
@@ -13,7 +13,7 @@ check-format:
 check-types:
     -uv run pyright .
 
-check-all: check-format check check-types
+check: check-format check-ruff check-types
 
 # Run tests
 test:
