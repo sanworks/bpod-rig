@@ -106,11 +106,11 @@ class DynamicFileHandler(logging.FileHandler):
             mode="w", delete=False, suffix=".log"
         )
         self.log_dir: Path | None = None
-        self.new_filepath: Path | None = None
+        self.new_filename: str | None = None
         self.logger: logging.Logger | None = None
         super().__init__(self.temp_stream.name)
 
-        self._set_new_filepath()
+        self._generate_filename()
         # Determine what our new logfile name should be
 
     def _cleanup(self) -> None:
@@ -154,25 +154,25 @@ class DynamicFileHandler(logging.FileHandler):
         self.close()
         # Close current file stream and flush buffer
 
-        if self.new_filepath is not None:
-            shutil.copyfile(self.temp_stream.name, self.new_filepath)
+        if self.new_filename is not None:
+            new_logfile_path = self.log_dir / self.new_filename
+            shutil.copyfile(self.temp_stream.name, new_logfile_path)
             self.logger.debug(
-                "Copying and renaming temp logfile to %s", self.new_filepath
+                "Copying and renaming temp logfile to %s", new_logfile_path
             )
             # Copy and rename the temp logfile
-            self.stream = open(self.new_filepath, "a")  # NOQA SIM115
+            self.stream = open(new_logfile_path, "a")  # NOQA SIM115
             self.logger.debug("Opening new file stream")
             # Open new stream and set to current stream
 
         self.temp_stream.close()  # Close the tempfile which should delete it
         self.logger.debug("Closing temp file stream")
 
-    def _set_new_filepath(self) -> None:
+    def _generate_filename(self) -> None:
         current_dt = datetime.datetime.now().strftime(TIME_FORMAT)
-        if self.log_dir is not None:
-            self.new_filepath = self.log_dir / f"{LOGFILE_PREFIX}-{current_dt}.log"
-            if self.logger is not None:
-                self.logger.debug("New logfile path set to: %s", self.new_filepath)
+        self.new_filename = f"{LOGFILE_PREFIX}-{current_dt}.log"
+        if self.logger is not None:
+            self.logger.debug("New logfile path set to: %s", self.new_filename)
 
 
 class BpodLogger(logging.Logger):
