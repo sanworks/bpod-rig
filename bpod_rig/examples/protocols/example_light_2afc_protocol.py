@@ -1,7 +1,20 @@
+from datetime import datetime
+from pathlib import Path
 import random
 
 from bpod_core.bpod import Bpod
 from bpod_core.fsm import StateMachine
+
+from bpod_rig.config.system_settings import SystemSettings
+from bpod_rig.defaults import DEFAULT_BPOD_PATH
+
+_SESSION_TIME = datetime.now().isoformat(timespec="seconds").replace(":", "-")
+_SESSION_NAME = f"{Path(__file__).stem}_{_SESSION_TIME}"
+
+settings  = SystemSettings.model_validate_json(Path(DEFAULT_BPOD_PATH).joinpath("Config/config.json").read_text())
+
+_SESSION_FOLDER = settings.paths.data_dir / _SESSION_NAME
+_SESSION_FOLDER.mkdir(parents=True, exist_ok=False)
 
 
 def example_light_2afc_protocol(bpod: Bpod, *args, **kwargs) -> None:
@@ -29,7 +42,7 @@ def example_light_2afc_protocol(bpod: Bpod, *args, **kwargs) -> None:
     punish_timeout = 3
 
     # Define trials
-    max_trials = 1000
+    max_trials = 5
     trial_types = [random.randint(1, 2) for _ in range(max_trials)]
 
     # Initialize plots
@@ -42,6 +55,11 @@ def example_light_2afc_protocol(bpod: Bpod, *args, **kwargs) -> None:
 
         # Determine trial-specific state machine variables
         if trial_types[current_trial] == 1:
+            trial_type = "Left"
+        else:
+            trial_type = "Right"
+
+        if trial_type == "Left":
             left_poke_action = "LeftRewardDelay"
             right_poke_action = "PunishTimeout"
             stimulus_output = {
@@ -60,7 +78,7 @@ def example_light_2afc_protocol(bpod: Bpod, *args, **kwargs) -> None:
         sma.add_state(
             name="WaitForPoke",
             timer=0,
-            transitions={"Port2In": "CueDelay"},
+            transitions={"Port2_High": "CueDelay"},
             actions=None,
         )
 
@@ -68,16 +86,16 @@ def example_light_2afc_protocol(bpod: Bpod, *args, **kwargs) -> None:
             name="CueDelay",
             timer=cue_delay,
             transitions={
-                "Port2Out": "WaitForPoke",
-                "Tup": "WaitForPortOut",
+                "Port2_Low": "WaitForPoke",
+                "Tup": "WaitForPort_Low",
             },
             actions=None,
         )
 
         sma.add_state(
-            name="WaitForPortOut",
+            name="WaitForPort_Low",
             timer=0,
-            transitions={"Port2Out": "WaitForResponse"},
+            transitions={"Port2_Low": "WaitForResponse"},
             actions=stimulus_output,
         )
 
@@ -85,53 +103,53 @@ def example_light_2afc_protocol(bpod: Bpod, *args, **kwargs) -> None:
             name="WaitForResponse",
             timer=response_time,
             transitions={
-                "Port1In": left_poke_action,
-                "Port3In": right_poke_action,
+                "Port1_High": left_poke_action,
+                "Port3_High": right_poke_action,
                 "Tup": ">exit",
             },
             actions=stimulus_output,
         )
 
-        sma.add_state(
-            name="LeftRewardDelay",
-            timer=reward_delay,
-            transitions={
-                "Tup": "LeftReward",
-                "Port1Out": "CorrectEarlyWithdrawal",
-            },
-            actions=None,
-        )
+        if trial_type == "Left":
+            sma.add_state(
+                name="LeftRewardDelay",
+                timer=reward_delay,
+                transitions={
+                    "Tup": "LeftReward",
+                    "Port1_Low": "CorrectEarlyWithdrawal",
+                },
+                actions=None,
+            )
+            sma.add_state(
+                name="LeftReward",
+                timer=left_valve_time,
+                transitions={"Tup": "Drinking"},
+                actions={"Valve1": True},
+            )
+        else:
+            sma.add_state(
+                name="RightRewardDelay",
+                timer=reward_delay,
+                transitions={
+                    "Tup": "RightReward",
+                    "Port3_Low": "CorrectEarlyWithdrawal",
+                },
+                actions=None,
+            )
 
-        sma.add_state(
-            name="RightRewardDelay",
-            timer=reward_delay,
-            transitions={
-                "Tup": "RightReward",
-                "Port3Out": "CorrectEarlyWithdrawal",
-            },
-            actions=None,
-        )
-
-        sma.add_state(
-            name="LeftReward",
-            timer=left_valve_time,
-            transitions={"Tup": "Drinking"},
-            actions={"ValveState": 1},
-        )
-
-        sma.add_state(
-            name="RightReward",
-            timer=right_valve_time,
-            transitions={"Tup": "Drinking"},
-            actions={"ValveState": 4},
-        )
+            sma.add_state(
+                name="RightReward",
+                timer=right_valve_time,
+                transitions={"Tup": "Drinking"},
+                actions={"Valve3": True},
+            )
 
         sma.add_state(
             name="Drinking",
             timer=0,
             transitions={
-                "Port1Out": "DrinkingGrace",
-                "Port3Out": "DrinkingGrace",
+                "Port1_Low": "DrinkingGrace",
+                "Port3_Low": "DrinkingGrace",
             },
             actions=None,
         )
@@ -141,8 +159,8 @@ def example_light_2afc_protocol(bpod: Bpod, *args, **kwargs) -> None:
             timer=0.5,
             transitions={
                 "Tup": ">exit",
-                "Port1In": "Drinking",
-                "Port3In": "Drinking",
+                "Port1_High": "Drinking",
+                "Port3_High": "Drinking",
             },
             actions=None,
         )
@@ -161,6 +179,8 @@ def example_light_2afc_protocol(bpod: Bpod, *args, **kwargs) -> None:
             actions=None,
         )
 
+        print(f"Starting trial {current_trial}: {trial_type} trial")
         bpod.run(sma)
 
-        # TODO: post run updates and data handling
+        data = bpod.get_data()
+        data.write_parquet(_SESSION_FOLDER / f"trial_{current_trial}.parquet")
