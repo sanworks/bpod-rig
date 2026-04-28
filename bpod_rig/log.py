@@ -157,12 +157,11 @@ class DynamicFileHandler(logging.FileHandler):
         if self.new_filename is not None:
             new_logfile_path = self.log_dir / self.new_filename
             shutil.copyfile(self.temp_stream.name, new_logfile_path)
-            self.logger.debug(
-                "Copying and renaming temp logfile to %s", new_logfile_path
-            )
+
             # Copy and rename the temp logfile
             self.stream = open(new_logfile_path, "a")  # NOQA SIM115
             self.logger.debug("Opening new file stream")
+            self.logger.debug("Temp logfile copied and renamed to %s", new_logfile_path)
             # Open new stream and set to current stream
 
         self.temp_stream.close()  # Close the tempfile which should delete it
