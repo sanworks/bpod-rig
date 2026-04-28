@@ -68,13 +68,13 @@ class DynamicFileHandler(logging.FileHandler):
 
     When bpod-rig is initialized, the logging directory is not known.
     DynamicFileHandler creates a temporary file to output the initialization logging
-    to. Once the logging directory is known, the output stream is swapped and the
-    contents of the temp log copied over.
+    to. Once the logging directory is known, the contents of the temp log are copied
+    over to the logging directory, and the output stream is swapped.
 
     Logfiles are created with each launch of bpod-rig. Logfiles are named based on
-    the current ISO 8601-formatted date and time and a prefix.
+    the current date and time with a prefix:
 
-        e.g.: bpod-YYYY-MM-DDTHH:MM:SS.log
+        bpod-YYYY-MM-DD-HH-MM-SS.log
 
     """
 
@@ -97,9 +97,12 @@ class DynamicFileHandler(logging.FileHandler):
     def swap_stream(self, logging_dir: Path | str):
         """Swaps the temporary stream for a file in the logging_dir directory.
 
-        This function takes a path to a logging directory, gets the new filename,
-        swaps the filestream for the FileStreamHandler, copies any log entries over, and
-        closes all the dangling streams.
+        This function has multiple steps:
+            1) checks for the existence of the logging directory
+            2) stops the current stream to flush the buffer
+            3) copies and renames the temporary logfile
+            4) opens and sets the new FileHandler stream
+            5) closes the temporary stream
 
         Parameters
         ----------
