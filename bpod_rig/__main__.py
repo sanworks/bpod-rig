@@ -1,6 +1,8 @@
 """main entry point for bpod-rig."""
 
 import logging
+from logging.config import dictConfig
+from typing import cast
 
 from pydantic import ValidationError
 
@@ -8,9 +10,15 @@ from bpod_rig.config import utils
 from bpod_rig.config.system_settings import BpodDir
 from bpod_rig.defaults import DEFAULT_BPOD_PATH, SYSTEM_CONFIG_DIR, SYSTEM_CONFIG_FILE
 from bpod_rig.IO import cli_io, startup
+from bpod_rig.log import BpodLogger, get_log_config
 
-logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger(__name__)
+DEBUG = True
+
+# Set up logging here
+logging_config = get_log_config(DEBUG)
+dictConfig(logging_config)
+logging.setLoggerClass(BpodLogger)
+logger: BpodLogger = cast(BpodLogger, logging.getLogger(__name__))
 
 
 def main():
@@ -25,8 +33,8 @@ def main():
     ### Has Bpod been initialized on this system before? ###
     system_initialized = startup.check_system_is_initialized()
     if not system_initialized:
-        logging.info("Initializing Bpod Rig...")
-        logging.debug(
+        logger.info("Initializing Bpod Rig...")
+        logger.debug(
             "System is not initialized. Creating system config dir [%s]",
             SYSTEM_CONFIG_DIR,
         )
@@ -106,7 +114,7 @@ def main():
     if reinitialize or not system_initialized:
         # We will (re) create the Bpod directories if the system isn't initialized
         # or something went wrong and we need to reinitialize
-        logging.info("Initializing Bpod directory at %s", bpod_path)
+        logger.info("Initializing Bpod directory at %s", bpod_path)
         bpod_path = startup.create_default_directories(bpod_path)
         bpod_dir_verified = True
 
@@ -118,10 +126,12 @@ def main():
             startup.copy_default_files(bpod_path)
 
     if bpod_dir_verified:
-        logging.debug("System paths at %s verified", bpod_path)
+        logger.debug("System paths at %s verified", bpod_path)
     else:
         logger.error("No valid Bpod directory! Shutting down.")
         raise
+
+    logger.swap_stream(system_paths.log_dir)
 
     initial_system_config = utils.init_system_configuration(bpod_path)
     user_config_path = initial_system_config.save_system_configuration()  # noqa: F841

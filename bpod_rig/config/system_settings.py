@@ -12,6 +12,7 @@ from bpod_rig.config.bpod_settings import BpodPaths
 from bpod_rig.defaults import (
     DEFAULT_CONFIG_DIR_NAME,
     DEFAULT_DATA_DIR_NAME,
+    DEFAULT_LOG_DIR_NAME,
     DEFAULT_PROTOCOL_DIR_NAME,
     SYSTEM_CONFIG_DIR,
 )
@@ -68,13 +69,12 @@ class BpodDir(ModelWithMetadata):
     ]
 
     log_dir: Annotated[
-        Optional[Path],
+        Path,
         Field(
             title="Bpod Log Directory",
             description="Local directory where Bpod logs are stored.",
-            # TODO: Add log folder to initial configuration; until then this is optional
         ),
-    ] = None
+    ]
 
     @classmethod
     def create(
@@ -125,7 +125,7 @@ class BpodDir(ModelWithMetadata):
         protocol_dir = Path(protocol_dir or base_dir / DEFAULT_PROTOCOL_DIR_NAME)
         data_dir = Path(data_dir or base_dir / DEFAULT_DATA_DIR_NAME)
         base_config_dir = Path(base_config_dir or base_dir / DEFAULT_CONFIG_DIR_NAME)
-        log_dir = Path(log_dir) if log_dir else None
+        log_dir = Path(log_dir or base_dir / DEFAULT_LOG_DIR_NAME)
 
         return cls(
             base_dir=base_dir,
