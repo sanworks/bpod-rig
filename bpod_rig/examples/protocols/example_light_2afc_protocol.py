@@ -1,6 +1,6 @@
+import random
 from datetime import datetime
 from pathlib import Path
-import random
 
 from bpod_core.bpod import Bpod
 from bpod_core.fsm import StateMachine
@@ -8,13 +8,17 @@ from bpod_core.fsm import StateMachine
 from bpod_rig.config.system_settings import SystemSettings
 from bpod_rig.defaults import DEFAULT_BPOD_PATH
 
-_SESSION_TIME = datetime.now().isoformat(timespec="seconds").replace(":", "-")
-_SESSION_NAME = f"{Path(__file__).stem}_{_SESSION_TIME}"
+settings = SystemSettings.model_validate_json(
+    Path(DEFAULT_BPOD_PATH).joinpath("Config/config.json").read_text()
+)
 
-settings  = SystemSettings.model_validate_json(Path(DEFAULT_BPOD_PATH).joinpath("Config/config.json").read_text())
 
-_SESSION_FOLDER = settings.paths.data_dir / _SESSION_NAME
-_SESSION_FOLDER.mkdir(parents=True, exist_ok=False)
+def generate_session_folder() -> Path:
+    session_time = datetime.now().isoformat(timespec="seconds").replace(":", "-")
+    session_name = f"{Path(__file__).stem}_{session_time}"
+    session_folder = settings.paths.data_dir / session_name
+    session_folder.mkdir(parents=True, exist_ok=False)
+    return session_folder
 
 
 def example_light_2afc_protocol(bpod: Bpod, *args, **kwargs) -> None:
@@ -25,6 +29,8 @@ def example_light_2afc_protocol(bpod: Bpod, *args, **kwargs) -> None:
     After a variable delay, lights illuminate indicating left or right choices.
     Correct choices lead to reward, incorrect choices to timeout.
     """
+    session_folder = generate_session_folder()
+
     print(args)
     print(kwargs)
     # Define parameters
@@ -42,7 +48,7 @@ def example_light_2afc_protocol(bpod: Bpod, *args, **kwargs) -> None:
     punish_timeout = 3
 
     # Define trials
-    max_trials = 5
+    max_trials = 1000
     trial_types = [random.randint(1, 2) for _ in range(max_trials)]
 
     # Initialize plots
@@ -183,4 +189,4 @@ def example_light_2afc_protocol(bpod: Bpod, *args, **kwargs) -> None:
         bpod.run(sma)
 
         data = bpod.get_data()
-        data.write_parquet(_SESSION_FOLDER / f"trial_{current_trial}.parquet")
+        data.write_parquet(session_folder / f"trial_{current_trial}.parquet")
