@@ -54,6 +54,7 @@ LOGGING_CONFIG = {
     },
 }
 
+
 def get_log_config(debug: bool = False) -> dict:
     """Factory function to get logging configuration.
 
@@ -74,6 +75,7 @@ def get_log_config(debug: bool = False) -> dict:
         LOGGING_CONFIG["handlers"]["stdout"]["filters"] = ""
 
     return LOGGING_CONFIG
+
 
 def stdout_filter():
     def filter(lf: logging.LogRecord) -> bool:  # noqa: A001
@@ -148,7 +150,6 @@ class DynamicFileHandler(logging.FileHandler):
         self.logger.debug("Logging directory set to: %s", self.log_dir)
         if self.log_dir is None:
             raise TypeError("Logging directory is not specified!")
-
 
         self.close()
         # Close current file stream and flush buffer
