@@ -17,7 +17,7 @@ wheels = [
 
 [[package]]
 name = "bpod-core"
-version = "0.1.0a11"
+version = "0.1.0a12"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "cachetools" },
@@ -31,6 +31,7 @@ dependencies = [
     { name = "polars" },
     { name = "psutil" },
     { name = "pydantic" },
+    { name = "pydantic-extra-types" },
     { name = "pyserial" },
     { name = "pyyaml" },
     { name = "pyzmq" },
@@ -38,9 +39,9 @@ dependencies = [
     { name = "xxhash" },
     { name = "zeroconf" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/05/ec/0da1f6ca916b7e1b6c9b3ef997226546b13be4f008f389f76f780aea09ad/bpod_core-0.1.0a11.tar.gz", hash = "sha256:0e0f6989edcd0548ed1762984eaf9383ed8b270890fcc4a6d6e13b387075869f", size = 125298, upload-time = "2026-04-24T11:33:28.806Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/4f/aa/ee9b961c3be7d000fcc4ca94cdd7b9093e5c652e0e2806be3502919971fa/bpod_core-0.1.0a12.tar.gz", hash = "sha256:d4d1d2b91eb0b5ad5c6b04c3ebefaca74cbbb21b754a8ae8130c9fc23afc5ed0", size = 147110, upload-time = "2026-04-30T14:51:48.517Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/44/c4/cc1e1fa6a8a77e1a48adfcf8ffbb948a0d9e13a66259ddf319da084dbd7d/bpod_core-0.1.0a11-py3-none-any.whl", hash = "sha256:7130c8863127e70cce192f80f3ac7557c7fe0105277c7de8948221bf28f24164", size = 68235, upload-time = "2026-04-24T11:33:27.331Z" },
+    { url = "https://files.pythonhosted.org/packages/c6/ef/0947b07b295b18228369e3d8ebc59900a67eddd1998b3033c00b3e7a23e5/bpod_core-0.1.0a12-py3-none-any.whl", hash = "sha256:9a9d97cf06f820f78c6ff0f7a5fc3113e13cdc4b1e276e3994f7c97999a4c511", size = 68164, upload-time = "2026-04-30T14:51:47.394Z" },
 ]
 
 [[package]]
@@ -70,7 +71,7 @@ test = [
 
 [package.metadata]
 requires-dist = [
-    { name = "bpod-core", specifier = "==0.1.0a11" },
+    { name = "bpod-core", specifier = "==0.1.0a12" },
     { name = "click", specifier = ">=8.3.1" },
     { name = "platformdirs", specifier = ">=4.5.1" },
     { name = "pydantic", specifier = "==2.11.7" },
@@ -772,6 +773,19 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/b8/e9/1f7efbe20d0b2b10f6718944b5d8ece9152390904f29a78e68d4e7961159/pydantic_core-2.33.2-pp311-pypy311_pp73-musllinux_1_1_armv7l.whl", hash = "sha256:de4b83bb311557e439b9e186f733f6c645b9417c84e2eb8203f3f820a4b988bf", size = 2239013, upload-time = "2025-04-23T18:33:26.621Z" },
     { url = "https://files.pythonhosted.org/packages/3c/b2/5309c905a93811524a49b4e031e9851a6b00ff0fb668794472ea7746b448/pydantic_core-2.33.2-pp311-pypy311_pp73-musllinux_1_1_x86_64.whl", hash = "sha256:82f68293f055f51b51ea42fafc74b6aad03e70e191799430b90c13d643059ebb", size = 2238715, upload-time = "2025-04-23T18:33:28.656Z" },
     { url = "https://files.pythonhosted.org/packages/32/56/8a7ca5d2cd2cda1d245d34b1c9a942920a718082ae8e54e5f3e5a58b7add/pydantic_core-2.33.2-pp311-pypy311_pp73-win_amd64.whl", hash = "sha256:329467cecfb529c925cf2bbd4d60d2c509bc2fb52a20c1045bf09bb70971a9c1", size = 2066757, upload-time = "2025-04-23T18:33:30.645Z" },
+]
+
+[[package]]
+name = "pydantic-extra-types"
+version = "2.11.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pydantic" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/66/71/dba38ee2651f84f7842206adbd2233d8bbdb59fb85e9fa14232486a8c471/pydantic_extra_types-2.11.1.tar.gz", hash = "sha256:46792d2307383859e923d8fcefa82108b1a141f8a9c0198982b3832ab5ef1049", size = 172002, upload-time = "2026-03-16T08:08:03.92Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/17/c1/3226e6d7f5a4f736f38ac11a6fbb262d701889802595cdb0f53a885ac2e0/pydantic_extra_types-2.11.1-py3-none-any.whl", hash = "sha256:1722ea2bddae5628ace25f2aa685b69978ef533123e5638cfbddb999e0100ec1", size = 79526, upload-time = "2026-03-16T08:08:02.533Z" },
 ]
 
 [[package]]
