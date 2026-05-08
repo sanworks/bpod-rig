@@ -29,6 +29,16 @@ except ImportError:
     sys.modules['bpod_core'] = MagicMock()
     sys.modules['bpod_core.bpod'] = MagicMock()
 
+# Try import a util func
+try:
+    from .util import helper_function
+    helper_function()
+    print("Imported with relative import")
+except ImportError:
+    print("Failed to import with relative import")
+
+
+
 def test_protocol(bpod):
     '''Test protocol function that prints working directory and args.'''
     # Print current working directory to verify it's set correctly
@@ -38,6 +48,13 @@ def test_protocol(bpod):
     print(f"Args: {sys.argv[1:]}")
     
     # Protocol runs successfully
+"""
+    )
+    util_file = protocol_dir / "util.py"
+    util_file.write_text(
+        """
+def helper_function():
+    return "Helper function output"
 """
     )
     return protocol_file
@@ -87,6 +104,13 @@ def wrong_name(bpod):
         with pytest.raises(FileNotFoundError, match="Protocol file not found"):
             load_protocol_function(Path("/nonexistent/protocol.py"))
 
+    def test_valid_protocol_function(self, temp_protocol_path: Path):
+        """Test successful loading of a valid protocol function."""
+        protocol_function = load_protocol_function(temp_protocol_path)
+        assert callable(protocol_function), (
+            "Loaded protocol function should be callable"
+        )
+
 
 class TestRunProtocolAsync:
     def test_run_protocol_async(self, temp_protocol_path: Path, session_dir: Path):
@@ -107,6 +131,7 @@ class TestRunProtocolAsync:
 
         assert process.returncode == 0, f"Process failed with stderr: {stderr}"
         assert f"CWD: {protocol_path.parent}" in stdout
+        # assert "Imported with relative import" in stdout
 
     def test_run_protocol_async_with_args(
         self, temp_protocol_path: Path, session_dir: Path

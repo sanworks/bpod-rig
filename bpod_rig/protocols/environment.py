@@ -113,11 +113,14 @@ def prepare_and_run_protocol_session(
     session_dir : Path
         Path to the existing session data folder
     """
-    protocol_function = load_protocol_function(protocol_path)
-
     # either throw an error or set os.chdir to the protocol folder?
     if Path.cwd() != protocol_path.parent:
-        pass
+        raise RuntimeError(
+            f"Current working directory {Path.cwd()} does not match protocol directory {protocol_path.parent}. "
+            "Please run the protocol from its own directory or change to the protocol's directory before running."
+        )
+
+    protocol_function = load_protocol_function(protocol_path)
 
     # prepare BpodSession
     # TODO: read session configs from session_dir if needed and pass to BpodSession
