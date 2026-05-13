@@ -1,6 +1,5 @@
 import logging
 from datetime import datetime
-from inspect import signature
 from pathlib import Path
 from serial import SerialException
 
@@ -36,7 +35,7 @@ class BpodSession:
 
         self.session_dir: Path | None = None
 
-    def connect(self):
+    def _connect(self):
         if self.bpod:
             raise ConnectionError("Bpod already connected!")
         else:
@@ -49,21 +48,33 @@ class BpodSession:
                 if arg in self._kwargs:
                     logger.debug("Bpod connection argument %s found in BpodSession kwargs", args)
                     connection_args[arg] = self._kwargs[arg]
+            self.bpod = Bpod(**connection_args)
 
-            try:
-                self.bpod = Bpod(**connection_args)
-            except SerialException as se:
-                logger.error("Unable to open serial connection to Bpod!", exc_info=se)
-            except BpodError as bpe:
-                logger.error("Handshake with Bpod failed!", exc_info=bpe)
 
+    def _disconnect(self):
+        if not self.bpod:
+            raise ConnectionError("Bpod is already disconnected!")
+        self.bpod.close()
 
 
     def start(self):
-        pass
+        logger.info("Starting Bpod Session!")
+
+        try:
+            self._connect()
+        except SerialException as se:
+            logger.error("Unable to open serial connection to Bpod!", exc_info=se)
+        except BpodError as bpe:
+            logger.error("Handshake with Bpod failed!", exc_info=bpe)
 
     def end(self):
-        pass
+        logger.info("Closing Bpod Session!")
+
+        try:
+            self._disconnect()
+        except SerialException as se:
+            logger.error("Unable to close serial connection to Bpod!", exc_info=se)
+
 
     def __enter__(self):
         self.start()
