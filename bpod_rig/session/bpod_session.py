@@ -1,4 +1,5 @@
 import logging
+import warnings
 from datetime import datetime
 from pathlib import Path
 from serial import SerialException
@@ -35,6 +36,32 @@ class BpodSession:
 
         self.session_dir: Path | None = None
 
+
+    def start(self, warn: bool = True):
+        logger.info("Starting Bpod Session!")
+        if warn:
+            warnings.warn(
+                "BpodSession started outside of a context manager."
+                " Make sure to call end() once finished to properly clean up the session!"
+            )
+
+        try:
+            self._connect()
+        except SerialException as se:
+            logger.error("Unable to open serial connection to Bpod!", exc_info=se)
+        except BpodError as bpe:
+            logger.error("Handshake with Bpod failed!", exc_info=bpe)
+
+
+    def end(self):
+        logger.info("Closing Bpod Session!")
+
+        try:
+            self._disconnect()
+        except SerialException as se:
+            logger.error("Unable to close serial connection to Bpod!", exc_info=se)
+
+
     def _connect(self):
         if self.bpod:
             raise ConnectionError("Bpod already connected!")
@@ -56,28 +83,9 @@ class BpodSession:
             raise ConnectionError("Bpod is already disconnected!")
         self.bpod.close()
 
-
-    def start(self):
-        logger.info("Starting Bpod Session!")
-
-        try:
-            self._connect()
-        except SerialException as se:
-            logger.error("Unable to open serial connection to Bpod!", exc_info=se)
-        except BpodError as bpe:
-            logger.error("Handshake with Bpod failed!", exc_info=bpe)
-
-    def end(self):
-        logger.info("Closing Bpod Session!")
-
-        try:
-            self._disconnect()
-        except SerialException as se:
-            logger.error("Unable to close serial connection to Bpod!", exc_info=se)
-
-
     def __enter__(self):
-        self.start()
+        self.start(warn=False)
+
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.end()
