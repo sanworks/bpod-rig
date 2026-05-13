@@ -7,7 +7,7 @@ from serial import SerialException
 from bpod_core.bpod import Bpod, RemoteBpod, BpodError
 
 from bpod_rig.config.system_settings import SystemSettings
-from bpod_rig.protocols.bpod_protocol import BpodProtocol
+from bpod_rig.protocols import BpodProtocol
 from bpod_rig.utils import get_func_params
 
 logger = logging.getLogger(__name__)
