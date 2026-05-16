@@ -2,6 +2,7 @@
 
 import logging
 from pathlib import Path
+from typing import Optional
 
 import typer
 from pydantic import ValidationError
@@ -14,7 +15,7 @@ from bpod_rig.defaults import (
     SYSTEM_CONFIG_FILE,
 )
 from bpod_rig.examples.copy import copy_examples
-from bpod_rig.IO import startup
+from bpod_rig.IO import cli_io, startup
 
 logger = logging.getLogger(__name__)
 
@@ -146,13 +147,15 @@ class InitializeBpodSystemOperation:
     3. Create/verify directory structure
     4. Optionally copy example files
     5. Save system configuration
+
+
     """
 
-    def __init__(self):
+    def __init__(self, logger: Optional[logging.Logger] = None):
         self._system_initialized = False
         self._bpod_dir_verified = False
         self.bpod_path: Path | None = None
-        self._logger = logging.getLogger(__name__)
+        self._logger = logger or logging.getLogger(__name__)
 
     def execute(self):
         self._initialize_system_config()
