@@ -3,13 +3,18 @@
 import logging
 from pathlib import Path
 
+import typer
+from pydantic import ValidationError
+
 from bpod_rig.config import system_settings
 from bpod_rig.defaults import (
+    DEFAULT_BPOD_PATH,
     DEFAULT_SUBDIRS,
     SYSTEM_CONFIG_DIR,
     SYSTEM_CONFIG_FILE,
 )
 from bpod_rig.examples.copy import copy_examples
+from bpod_rig.IO import startup
 
 logger = logging.getLogger(__name__)
 
@@ -130,3 +135,87 @@ def check_system_is_initialized() -> bool:
             logger.debug("System configuration file found: %s", SYSTEM_CONFIG_FILE)
             return True
     return False
+
+
+class InitializeBpodSystemOperation:
+    """Create filesystem structure.
+
+    Steps
+    1. Check if system is already initialized
+    2. Prompt for or use provided bpod_path
+    3. Create/verify directory structure
+    4. Optionally copy example files
+    5. Save system configuration
+    """
+
+    def __init__(self):
+        self._system_initialized = False
+        self._bpod_dir_verified = False
+        self.bpod_path: Path | None = None
+        self._logger = logging.getLogger(__name__)
+
+    def execute(self):
+        self._initialize_system_config()
+        self._determine_bpod_path()
+        if True:
+            self._reinitialize_bpod_directory(Path(""))
+        self._swap_log_stream(Path(""))
+
+    def _initialize_system_config(self) -> None:
+        if check_system_is_initialized():
+            self._logger.info("System is already initialized.")
+            self._system_initialized = True
+            return
+        logger.info("Initializing Bpod Rig...")
+        logger.debug(
+            "System is not initialized. Creating system config dir [%s]",
+            SYSTEM_CONFIG_DIR,
+        )
+        # Create the system configuration directory
+        SYSTEM_CONFIG_DIR.mkdir(exist_ok=True, parents=True)
+
+    def _determine_bpod_path(self) -> None:
+        try:
+            self.bpod_path = startup.get_bpod_dir_from_system()
+        except ValidationError as e:
+            logger.error(
+                "Configuration file at %s failed to validate! "
+                "Cannot read the Bpod Directory from existing configuration!",
+                SYSTEM_CONFIG_FILE,
+                exc_info=e,
+            )
+            raise e
+        if self.bpod_path is not None:
+            return
+
+        # bpod_path does not exist
+
+        logger.info("Creating Bpod directory...")
+        override_directory = typer.confirm(
+            f"Bpod has not been initialized on this system! "
+            f"Would you like to override the default path {DEFAULT_BPOD_PATH}?"
+        )
+        override_directory = cli_io.yes_no_prompt(
+            f"Bpod has not been initialized on this system! "
+            f"Would you like to override the default path {DEFAULT_BPOD_PATH}?"
+        )
+        if override_directory is None:
+            logger.info("User aborted when overriding default path! Exiting...")
+            return
+        if override_directory:
+            logger.debug("User is going to override the path!")
+            bpod_path = cli_io.prompt_for_path(
+                "Please enter the path to create the Bpod directory"
+            )
+            if bpod_path is None:
+                logger.info("User aborted when overriding default path! Exiting...")
+                return
+        else:
+            # If the user does not want to overwrite the default directory
+            bpod_path = DEFAULT_BPOD_PATH
+
+    def _reinitialize_bpod_directory(self, bpod_path: Path) -> None:
+        pass
+
+    def _swap_log_stream(self, new_log_path: Path) -> None:
+        pass
