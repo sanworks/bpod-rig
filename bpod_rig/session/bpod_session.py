@@ -64,16 +64,26 @@ class BpodSession:
 
     def _connect(self):
         if self.bpod:
-            raise ConnectionError("Bpod already connected!")
+            logger.debug("Bpod already connected!")
+            return
+
         connection_args = {}
 
-        args = get_func_params(Bpod.__init__, RemoteBpod.__init__)
+        potential_args = get_func_params(Bpod.__init__, RemoteBpod.__init__)
         # Get the possible parameters for the Bpod/RemoteBpod constructors
 
-        for arg in args:
+        required_args = potential_args['required']
+        for req_arg in required_args:
+            if req_arg not in self._kwargs:
+                raise AttributeError(f"Required argument {req_arg} for Bpod is missing!")
+
+        potential_args.pop('required')
+        # Required args parsed, dropping the list
+
+        for arg in potential_args:
             if arg in self._kwargs:
                 logger.debug(
-                    "Bpod connection argument %s found in BpodSession kwargs", args
+                    "Bpod connection argument %s found in BpodSession kwargs", potential_args
                 )
                 connection_args[arg] = self._kwargs[arg]
         self.bpod = Bpod(**connection_args)
