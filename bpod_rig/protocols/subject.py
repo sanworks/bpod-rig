@@ -2,6 +2,7 @@ import datetime
 
 from bpod_rig.session import BpodSession
 
+
 # TODO: make this a Pydantic model
 class BpodSubject:
     def __init__(self):
