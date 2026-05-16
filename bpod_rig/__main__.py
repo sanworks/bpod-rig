@@ -4,8 +4,11 @@ import logging
 from logging.config import dictConfig
 from typing import cast
 
+import typer
 from pydantic import ValidationError
 
+from bpod_rig.cli.protocols import app as protocols_app
+from bpod_rig.cli.run import app as run_app
 from bpod_rig.config import utils
 from bpod_rig.config.system_settings import BpodDir
 from bpod_rig.defaults import DEFAULT_BPOD_PATH, SYSTEM_CONFIG_DIR, SYSTEM_CONFIG_FILE
@@ -20,8 +23,14 @@ dictConfig(logging_config)
 logging.setLoggerClass(BpodLogger)
 logger: BpodLogger = cast(BpodLogger, logging.getLogger(__name__))
 
+app = typer.Typer(no_args_is_help=True)
+app.add_typer(protocols_app, name="protocols", help="Manage protocols.")
+app.add_typer(run_app, name="run", help="Run protocols.")
 
-def system_startup():
+
+@app.command()
+def init():
+    """Initialize the Bpod Rig on this system."""
     ### Everything below is subject to change and is for testing purposes only
     logger.info("Starting bpod-rig!")
     # Let's put this in a BpodSystem class later
@@ -143,7 +152,8 @@ def system_startup():
 
 
 def main():
-    system_startup()
+    app()
+    # system_startup()
 
 
 if __name__ == "__main__":

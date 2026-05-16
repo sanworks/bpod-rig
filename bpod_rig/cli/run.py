@@ -12,3 +12,7 @@ def run(
     subject: Annotated[str, typer.Argument(..., help="Subject identifier")],
 ):
     raise NotImplementedError()
+
+
+if __name__ == "__main__":
+    app()
