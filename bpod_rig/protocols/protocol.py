@@ -1,16 +1,19 @@
-from typing import Callable
 from types import MethodType
+from typing import Callable
 
 from bpod_core.bpod import Bpod, RemoteBpod
+
 from bpod_rig.session.bpod_session import BpodSession
 
 
 class BpodProtocol:
-    name: str = None
+    name: str = "DefaultProtocol"
     version: str = "0"
-    default_config: dict = dict()
+    default_config: dict = {}
 
-    def __init__(self, bpod_session: BpodSession, protocol_function: Callable | None = None):
+    def __init__(
+        self, bpod_session: BpodSession, protocol_function: Callable | None = None
+    ):
         self.session: BpodSession = bpod_session
         self.end_session: bool = False
 
@@ -28,7 +31,9 @@ class BpodProtocol:
         pass
 
     def protocol(self):
-        raise NotImplementedError("You must implement your Bpod protocol within the run function!")
+        raise NotImplementedError(
+            "You must implement your Bpod protocol within the run function!"
+        )
 
     def teardown(self):
         pass
@@ -41,5 +46,7 @@ class BpodProtocol:
     @property
     def bpod(self) -> Bpod | RemoteBpod:
         if self.session.bpod is None:
-            raise AttributeError("Your session does not have an active Bpod connection!")
+            raise AttributeError(
+                "Your session does not have an active Bpod connection!"
+            )
         return self.session.bpod

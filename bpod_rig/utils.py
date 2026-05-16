@@ -1,14 +1,18 @@
-"""bpod-rig utility functions"""
-import inspect
-from typing import Callable, Any
+"""bpod-rig utility functions."""
 
-def get_func_params(*functions: Callable, optional_only: bool = False) -> dict[str, Any]:
-    """This function takes one or more functions and returns a dictionary parameters.
+import inspect
+from typing import Any, Callable
+
+
+def get_func_params(
+    *functions: Callable, optional_only: bool = False
+) -> dict[str, Any]:
+    """Function takes one or more functions and returns a dictionary parameters.
 
     Knowing the keyword-based parameters for a function is useful for **kwargs parsing.
-    This function uses inspect to retrieve the parameters in a function's signature and adds
-    to a dictionary. This function can also filter for parameters that have default values
-    and are optional.
+    This function uses inspect to retrieve the parameters in a function's signature and
+    adds to a dictionary. This function can also filter for parameters that have
+    default values and are optional.
 
     The 'self' parameter is not returned
 
@@ -46,7 +50,7 @@ def get_func_params(*functions: Callable, optional_only: bool = False) -> dict[s
         If the parameter is optional, it is stored as param_name : default_value
     """
     params = {
-        'required': [],
+        "required": [],
     }
 
     for func in functions:
@@ -55,12 +59,9 @@ def get_func_params(*functions: Callable, optional_only: bool = False) -> dict[s
             if value.default == inspect.Parameter.empty:
                 if optional_only:
                     continue
-                params['required'].append(param)
+                params["required"].append(param)
 
             if param != "self":
                 params[param] = value.default
 
     return params
-
-
-
