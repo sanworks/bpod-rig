@@ -21,7 +21,7 @@ logging.setLoggerClass(BpodLogger)
 logger: BpodLogger = cast(BpodLogger, logging.getLogger(__name__))
 
 
-def main():
+def system_startup():
     ### Everything below is subject to change and is for testing purposes only
     logger.info("Starting bpod-rig!")
     # Let's put this in a BpodSystem class later
@@ -140,6 +140,10 @@ def main():
     )
 
     return 0
+
+
+def main():
+    system_startup()
 
 
 if __name__ == "__main__":
