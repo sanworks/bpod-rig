@@ -1,15 +1,12 @@
 """Commands for testing bpod-rig and hardware."""
 
 import os
-import sys
 from pathlib import Path
 
 import bpod_core
 import typer
 
 import bpod_rig
-
-app = typer.Typer()
 
 
 def prepare_tests() -> Path:
@@ -44,24 +41,17 @@ def prepare_tests() -> Path:
     return tests_path
 
 
-@app.command()
-def software():
-    """Test bpod_rig package installation and functionality."""
-    tests_path = prepare_tests()
-
-    # Run pytest
-    exit_code = os.system(f"pytest {tests_path} -v")  # noqa: S605
-
+def report_test_result(exit_code: int):
     if exit_code == 0:
         typer.secho("\n✓ All tests passed!", fg=typer.colors.GREEN, bold=True)
     else:
         typer.secho("\n✗ Some tests failed.", fg=typer.colors.RED, bold=True)
 
-    sys.exit(exit_code)
 
-
-@app.command()
-def hardware():
-    """Test hardware devices."""
-    typer.echo("Testing hardware connections for bpod-rig...")
-    raise NotImplementedError("Hardware tests not implemented yet.")
+def run_test(test_path: Path, hardware: bool = False) -> int:
+    # Run pytest on the specified test path
+    run_command = f"pytest {test_path} -v"
+    if hardware:
+        raise NotImplementedError("Hardware tests not implemented yet.")
+    exit_code = os.system(run_command)  # noqa: S605
+    return exit_code

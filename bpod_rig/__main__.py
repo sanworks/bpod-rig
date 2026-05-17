@@ -2,14 +2,13 @@
 
 import logging
 from logging.config import dictConfig
-from typing import cast
+from typing import Annotated, Literal, cast
 
 import typer
 from pydantic import ValidationError
 
+from bpod_rig.cli import test as test_helper
 from bpod_rig.cli.protocols import app as protocols_app
-from bpod_rig.cli.run import app as run_app
-from bpod_rig.cli.test import app as test_app
 from bpod_rig.config import utils
 from bpod_rig.config.system_settings import BpodDir
 from bpod_rig.defaults import DEFAULT_BPOD_PATH, SYSTEM_CONFIG_DIR, SYSTEM_CONFIG_FILE
@@ -26,8 +25,8 @@ logger: BpodLogger = cast(BpodLogger, logging.getLogger(__name__))
 
 app = typer.Typer(no_args_is_help=True)
 app.add_typer(protocols_app, name="protocols", help="Manage protocols.")
-app.add_typer(run_app, name="run", help="Run protocols.")
-app.add_typer(test_app, name="test", help="Test bpod-rig installation and hardware.")
+# app.add_typer(run_app, name="run", help="Run protocols.")
+# app.add_typer(test_app, name="test", help="Test bpod-rig installation and hardware.")
 
 
 @app.command()
@@ -151,6 +150,34 @@ def init():
     )
 
     return 0
+
+
+@app.command()
+def run(
+    protocol: Annotated[
+        str,
+        typer.Argument(
+            ..., help="Name of the protocol file, or path to the protocol file"
+        ),
+    ],
+    subject: Annotated[str, typer.Argument(..., help="Subject identifier")],
+):
+    raise NotImplementedError()
+
+
+@app.command()
+def test(
+    target: Annotated[
+        Literal["software", "hardware"],
+        typer.Argument(..., help="Test target"),
+    ] = "software",
+):
+    tests_path = test_helper.prepare_tests()
+
+    # Run pytest
+    exit_code = test_helper.run_test(tests_path, hardware=(target == "hardware"))
+
+    test_helper.report_test_result(exit_code)
 
 
 def main():
