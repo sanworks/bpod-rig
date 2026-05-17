@@ -183,11 +183,9 @@ def test(
         typer.Argument(..., help="Test target"),
     ] = "software",
 ):
+    """Test bpod-rig installation and hardware."""
     tests_path = test_helper.prepare_tests()
-
-    # Run pytest
     exit_code = test_helper.run_test(tests_path, hardware=(target == "hardware"))
-
     test_helper.report_test_result(exit_code)
 
 
