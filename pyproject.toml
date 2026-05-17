@@ -24,6 +24,9 @@ dependencies = [
     "typer>=0.25.1",
 ]
 
+[project.optional-dependencies]
+test = ["pytest>=9.0.2"]
+
 [project.urls]
 Changelog = "https://github.com/sanworks/bpod-rig/blob/main/CHANGELOG.md"
 # Documentation = "https://int-brain-lab.github.io/bpod-core/"
@@ -32,9 +35,10 @@ Issues = "https://github.com/sanworks/bpod-rig/issues"
 Repository = "https://github.com/sanworks/bpod-rig.git"
 
 [tool.setuptools.packages]
-find = { where = [""], include = ["*", "examples"] }
+find = { where = [""], include = ["*", "examples", "tests"] }
 # We want to include the examples folder in the wheel incase its needed
 # We need to explicitly include examples as it is a reserved name
+# We also include tests so users can verify installation on their systems
 
 [project.scripts]
 bpod = "bpod_rig.__main__:main"

@@ -72,6 +72,11 @@ dependencies = [
     { name = "typer" },
 ]
 
+[package.optional-dependencies]
+test = [
+    { name = "pytest" },
+]
+
 [package.dev-dependencies]
 dev = [
     { name = "pyright" },
@@ -92,8 +97,10 @@ requires-dist = [
     { name = "click", specifier = ">=8.3.1" },
     { name = "platformdirs", specifier = ">=4.5.1" },
     { name = "pydantic", specifier = "==2.11.7" },
+    { name = "pytest", marker = "extra == 'test'", specifier = ">=9.0.2" },
     { name = "typer", specifier = ">=0.25.1" },
 ]
+provides-extras = ["test"]
 
 [package.metadata.requires-dev]
 dev = [
