@@ -56,7 +56,7 @@ def get_func_params(
     for func in functions:
         sig = inspect.signature(func)
         for param, value in sig.parameters.items():
-            if value.default == inspect.Parameter.empty:
+            if value.default == inspect.Parameter.empty and param != "self":
                 if optional_only:
                     continue
                 params["required"].append(param)
