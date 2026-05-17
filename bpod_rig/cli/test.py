@@ -1,4 +1,4 @@
-"""Commands for testing bpod-rig and hardware."""
+"""Helpers for running tests from CLI."""
 
 import os
 from pathlib import Path
@@ -10,6 +10,7 @@ import bpod_rig
 
 
 def prepare_tests() -> Path:
+    """Find the tests directory in the installed package."""
     try:
         import pytest  # noqa: F401
     except ImportError:
@@ -35,13 +36,14 @@ def prepare_tests() -> Path:
 
     typer.echo(f"Tests found: {tests_path}")
     typer.echo(f"bpod_core version: {bpod_core.__version__}")
-    typer.echo(f"bpod_rig version {bpod_rig.__version__}")
+    typer.echo(f"bpod_rig version: {bpod_rig.__version__}")
     typer.echo("")
 
     return tests_path
 
 
 def report_test_result(exit_code: int):
+    """Print end-result message to console."""
     if exit_code == 0:
         typer.secho("\n✓ All tests passed!", fg=typer.colors.GREEN, bold=True)
     else:
@@ -49,9 +51,11 @@ def report_test_result(exit_code: int):
 
 
 def run_test(test_path: Path, hardware: bool = False) -> int:
-    # Run pytest on the specified test path
+    """Execute pytest on test path."""
     run_command = f"pytest {test_path} -v"
     if hardware:
         raise NotImplementedError("Hardware tests not implemented yet.")
+    # pytest.main doesn't work because of log capture issues
+    # refactoring all cli to typer may allow us to use pytest.main in the future
     exit_code = os.system(run_command)  # noqa: S605
     return exit_code
