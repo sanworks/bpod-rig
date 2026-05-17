@@ -8,6 +8,9 @@ from bpod_core.fsm import StateMachine
 from bpod_rig.config.system_settings import SystemSettings
 from bpod_rig.defaults import DEFAULT_BPOD_PATH
 
+PROTOCOL_NAME = "light_2afc_protocol"
+PROTOCOL_VERSION = 1
+
 settings = SystemSettings.model_validate_json(
     Path(DEFAULT_BPOD_PATH).joinpath("Config/config.json").read_text()
 )
@@ -21,7 +24,7 @@ def generate_session_folder() -> Path:
     return session_folder
 
 
-def example_light_2afc_protocol(bpod: Bpod, *args, **kwargs) -> None:
+def protocol(bpod: Bpod, *args, **kwargs) -> None:
     """
     Light-based 2-alternative forced choice (2AFC) protocol.
 
