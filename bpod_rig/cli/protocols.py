@@ -1,13 +1,13 @@
 import typer
 
-from bpod_rig.config import get_bpod_dir
+from bpod_rig.config import get_settings
 
 app = typer.Typer()
 
 
 @app.command()
-def list():
-    bpod_dir = get_bpod_dir()
+def list():  # noqa: A001
+    _ = get_settings()
     raise NotImplementedError("Protocol searcher required.")
 
 

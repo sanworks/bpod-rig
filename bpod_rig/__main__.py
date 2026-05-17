@@ -29,6 +29,7 @@ app.add_typer(protocols_app, name="protocols", help="Manage protocols.")
 app.add_typer(run_app, name="run", help="Run protocols.")
 app.add_typer(test_app, name="test", help="Test bpod-rig installation and hardware.")
 
+
 @app.command()
 def init():
     """Initialize the Bpod Rig on this system."""
