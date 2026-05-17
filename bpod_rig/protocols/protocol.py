@@ -1,24 +1,25 @@
+from __future__ import annotations
 from types import MethodType
-from typing import Callable
+from typing import Callable, TYPE_CHECKING
 
 from bpod_core.bpod import Bpod, RemoteBpod
 
-from bpod_rig.session.bpod_session import BpodSession
+if TYPE_CHECKING:
+    from bpod_rig.session.bpod_session import BpodSession
 
 
 class BpodProtocol:
+    from bpod_rig.session import BpodSession
+    # No circular dependencies here
+
     name: str = "DefaultProtocol"
     version: str = "0"
     default_config: dict = {}
-
     def __init__(
         self, bpod_session: BpodSession, protocol_function: Callable | None = None
     ):
         self.session: BpodSession = bpod_session
         self.end_session: bool = False
-
-        self.protocol_name: str | None = None
-        self.protocol_version: str | None = None
 
         self._protocol_function: Callable | None = protocol_function
 
