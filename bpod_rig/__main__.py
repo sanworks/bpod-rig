@@ -25,8 +25,6 @@ logger: BpodLogger = cast(BpodLogger, logging.getLogger(__name__))
 
 app = typer.Typer(no_args_is_help=True)
 app.add_typer(protocols_app, name="protocols", help="Manage protocols.")
-# app.add_typer(run_app, name="run", help="Run protocols.")
-# app.add_typer(test_app, name="test", help="Test bpod-rig installation and hardware.")
 
 
 @app.command()
@@ -161,7 +159,20 @@ def run(
         ),
     ],
     subject: Annotated[str, typer.Argument(..., help="Subject identifier")],
+    port: Annotated[str | None, typer.Option(..., help="COM port for the Bpod")] = None,
+    serial_number: Annotated[
+        int | None, typer.Option(..., help="Serial number of the Bpod")
+    ] = None,
+    protocol_args: Annotated[
+        str | None,
+        typer.Option(..., help="Additional arguments for the protocol"),
+    ] = None,
 ):
+    """Run a protocol on the Bpod Rig.
+
+    A protocol can be specified by its name if in protocol folder, or by a path to the
+    protocol file.
+    """
     raise NotImplementedError()
 
 
@@ -182,7 +193,6 @@ def test(
 
 def main():
     app()
-    # system_startup()
 
 
 if __name__ == "__main__":
