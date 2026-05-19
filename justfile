@@ -23,3 +23,6 @@ test:
 format:
     uv run ruff format .
     uv run ruff check --fix .
+
+build-doc:
+    sphinx-build docs/source docs/build

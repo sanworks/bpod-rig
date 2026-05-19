@@ -1,0 +1,285 @@
+{
+  "$defs": {
+    "Actions": {
+      "additionalProperties": {
+        "description": "The integer value of the output action",
+        "maximum": 255,
+        "minimum": 0,
+        "type": "integer"
+      },
+      "description": "A collection of actions.",
+      "propertyNames": {
+        "description": "The name of the output action",
+        "minLength": 1
+      },
+      "title": "Actions",
+      "type": "object"
+    },
+    "Condition": {
+      "description": "A condition in the state machine.",
+      "properties": {
+        "channel": {
+          "description": "The channel or global timer attached to the condition",
+          "minLength": 1,
+          "title": "Channel",
+          "type": "string"
+        },
+        "value": {
+          "description": "The value of the condition channel if the condition is met",
+          "title": "Value",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "channel",
+        "value"
+      ],
+      "title": "Condition",
+      "type": "object"
+    },
+    "Conditions": {
+      "description": "A collection of conditions.",
+      "patternProperties": {
+        "^\\d+$": {
+          "$ref": "#/$defs/Condition"
+        }
+      },
+      "title": "Conditions",
+      "type": "object"
+    },
+    "GlobalCounter": {
+      "description": "A global counter in the state machine.",
+      "properties": {
+        "event": {
+          "description": "A state machine event",
+          "minLength": 1,
+          "title": "Event",
+          "type": "string"
+        },
+        "threshold": {
+          "description": "The count threshold to generate an event",
+          "maximum": 4294967295,
+          "minimum": 0,
+          "title": "Threshold",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "event",
+        "threshold"
+      ],
+      "title": "Global Counter",
+      "type": "object"
+    },
+    "GlobalCounters": {
+      "description": "A collection of global counters.",
+      "patternProperties": {
+        "^\\d+$": {
+          "$ref": "#/$defs/GlobalCounter"
+        }
+      },
+      "title": "Global Counters",
+      "type": "object"
+    },
+    "GlobalTimer": {
+      "description": "A global timer in the state machine.",
+      "properties": {
+        "duration": {
+          "description": "The duration of the global timer in seconds",
+          "minimum": 0.0,
+          "title": "Global Timer Duration",
+          "type": "number"
+        },
+        "onset_delay": {
+          "default": 0.0,
+          "description": "The onset delay of the global timer in seconds",
+          "minimum": 0.0,
+          "title": "Onset Delay",
+          "type": "number"
+        },
+        "channel": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Channel"
+        },
+        "value_on": {
+          "default": 0,
+          "description": "The value a channel is set to",
+          "maximum": 255,
+          "minimum": 0,
+          "title": "Channel Value",
+          "type": "integer"
+        },
+        "value_off": {
+          "default": 0,
+          "description": "The value a channel is set to",
+          "maximum": 255,
+          "minimum": 0,
+          "title": "Channel Value",
+          "type": "integer"
+        },
+        "send_events": {
+          "default": true,
+          "description": "Whether the global timer is sending events",
+          "title": "Send Events",
+          "type": "boolean"
+        },
+        "loop": {
+          "default": 0,
+          "description": "Whether the global timer is looping or not",
+          "maximum": 255,
+          "minimum": 0,
+          "title": "Loop Mode",
+          "type": "integer"
+        },
+        "loop_interval": {
+          "default": 0.0,
+          "description": "The interval in seconds that the global timer is looping",
+          "minimum": 0.0,
+          "title": "Loop Interval",
+          "type": "number"
+        },
+        "onset_trigger": {
+          "default": 0,
+          "description": "An integer whose bits indicate other global timers to trigger",
+          "minimum": 0,
+          "title": "Onset Trigger",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "duration"
+      ],
+      "title": "Global Timer",
+      "type": "object"
+    },
+    "GlobalTimers": {
+      "description": "A collection of global timers.",
+      "patternProperties": {
+        "^\\d+$": {
+          "$ref": "#/$defs/GlobalTimer"
+        }
+      },
+      "title": "Global Timers",
+      "type": "object"
+    },
+    "State": {
+      "description": "A state in the state machine.",
+      "properties": {
+        "timer": {
+          "default": 0.0,
+          "description": "The state's timer in seconds",
+          "minimum": 0.0,
+          "title": "State Timer",
+          "type": "number"
+        },
+        "transitions": {
+          "$ref": "#/$defs/Transitions",
+          "default": {}
+        },
+        "actions": {
+          "$ref": "#/$defs/Actions",
+          "default": {}
+        },
+        "comment": {
+          "anyOf": [
+            {
+              "description": "A comment describing the state.",
+              "title": "Comment",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Comment"
+        }
+      },
+      "title": "State",
+      "type": "object"
+    },
+    "States": {
+      "description": "A collection of states.",
+      "patternProperties": {
+        "^(?!>)(?!exit$)(?!back$).+$": {
+          "$ref": "#/$defs/State"
+        }
+      },
+      "propertyNames": {
+        "description": "The name of the state",
+        "minLength": 1
+      },
+      "title": "States",
+      "type": "object"
+    },
+    "Transitions": {
+      "additionalProperties": {
+        "anyOf": [
+          {
+            "description": "The name of the state",
+            "minLength": 1,
+            "pattern": "^(?!>)(?!exit$)(?!back$).+$",
+            "title": "State Name",
+            "type": "string"
+          },
+          {
+            "description": "A state machine operator",
+            "examples": [
+              ">exit",
+              ">back"
+            ],
+            "minLength": 2,
+            "pattern": "^>.+$",
+            "title": "State Machine Operator",
+            "type": "string"
+          }
+        ]
+      },
+      "description": "A collection of state transitions.",
+      "propertyNames": {
+        "description": "A state machine event",
+        "minLength": 1
+      },
+      "title": "State Transitions",
+      "type": "object"
+    }
+  },
+  "$id": "https://github.com/int-brain-lab/bpod-core/blob/main/.schema/statemachine.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "Definition of a Bpod finite-state machine.",
+  "properties": {
+    "name": {
+      "default": "State Machine",
+      "description": "The name of the state machine",
+      "minLength": 1,
+      "title": "State Machine Name",
+      "type": "string"
+    },
+    "states": {
+      "$ref": "#/$defs/States",
+      "default": {}
+    },
+    "global_timers": {
+      "$ref": "#/$defs/GlobalTimers",
+      "default": {}
+    },
+    "global_counters": {
+      "$ref": "#/$defs/GlobalCounters",
+      "default": {}
+    },
+    "conditions": {
+      "$ref": "#/$defs/Conditions",
+      "default": {}
+    }
+  },
+  "title": "State Machine",
+  "type": "object"
+}

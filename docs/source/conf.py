@@ -1,0 +1,264 @@
+import json
+import sys
+from datetime import datetime
+from pathlib import Path
+
+project_root = Path(__file__).parents[2].resolve()
+docs_source_path = Path(__file__).parent.resolve()
+sys.path.insert(0, str(project_root))
+sys.path.insert(0, str(docs_source_path / "_ext"))
+
+from bpod_core import __version__  # noqa: E402
+from bpod_core.fsm import StateMachine  # noqa: E402
+
+# -- Project information -------------------------------------------------------
+# https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
+
+project = "bpod-rig"
+copyright = f"{datetime.now().year}, Sanworks"  # noqa: A001
+author = "Sanworks"
+release = ".".join(__version__.split(".")[:3])
+version = ".".join(__version__.split(".")[:3])
+rst_prolog = f"""
+.. |version_code| replace:: ``{version}``
+"""
+
+# -- Schema generation ---------------------------------------------------------
+
+schema_root = project_root / ".schema"
+schema_root.mkdir(exist_ok=True)
+with schema_root.joinpath("statemachine.json").open("w") as f:
+    schema = StateMachine.model_json_schema()
+    json.dump(schema, f, indent=2)
+    f.write("\n")  # add final newline
+
+# -- General configuration -----------------------------------------------------
+# https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
+
+extensions = [
+    "myst_parser",
+    "sphinx.ext.intersphinx",
+    "sphinx.ext.autodoc",
+    "sphinx.ext.napoleon",
+    "sphinx_autodoc_typehints",
+    "sphinx.ext.autosummary",
+    "sphinx.ext.graphviz",
+    "sphinx.ext.doctest",
+    "sphinx.ext.inheritance_diagram",
+    "sphinx_github_style",
+    "sphinx_copybutton",
+    "sphinx_design",
+    "sphinx-jsonschema",
+    "sphinx_toolbox.wikipedia",
+    # 'sphinx_toolbox.more_autodoc.autonamedtuple',
+    "sphinx_toolbox.more_autodoc.generic_bases",
+    "sphinx_toolbox.more_autodoc.typevars",
+    "sphinx_toolbox.more_autodoc.genericalias",
+    # 'sphinx_toolbox.more_autodoc.overloads',
+    # "dark_light_figure",
+    # "doctest_codeblock",
+    # "fsm_codeblock",
+    # "fsm_examples",
+    # "missing_references",
+    "matplotlib.sphinxext.plot_directive",
+]
+
+source_suffix = [".rst", ".md"]
+templates_path = ["_templates"]
+exclude_patterns = []
+
+numfig = True
+nitpicky = True
+
+# -- MyST ----------------------------------------------------------------------
+
+myst_heading_anchors = 2
+
+# -- Code blocks ---------------------------------------------------------------
+
+doctest_global_setup = f"""
+_DOCS_STATIC = __import__('pathlib').Path({str(docs_source_path / "_static")!r})
+"""
+plot_pre_code = f"""
+_DOCS_STATIC = __import__('pathlib').Path({str(docs_source_path / "_static")!r})
+"""
+
+copybutton_prompt_text = r">>> |\.\.\. |\$ |In \[\d*\]: | {2,5}\.\.\.: | {5,8}: "
+copybutton_prompt_is_regexp = True
+
+# -- Intersphinx ---------------------------------------------------------------
+
+intersphinx_timeout = 30
+intersphinx_mapping = {
+    "python": ("https://docs.python.org/3", None),
+    "numpy": ("https://numpy.org/doc/stable", None),
+    "pandas": ("https://pandas.pydata.org/docs", None),
+    "polars": ("https://docs.pola.rs/api/python/stable", None),
+    "pyarrow": ("https://arrow.apache.org/docs/", None),
+    "serial": ("https://pyserial.readthedocs.io/en/stable", None),
+    "graphviz": ("https://graphviz.readthedocs.io/en/stable", None),
+    "pydantic": ("https://pydantic.dev/docs/validation/latest", None),
+    "msgspec": ("https://jcristharif.com/msgspec/", None),
+    "zmq": ("https://pyzmq.readthedocs.io/en/latest", None),
+    "zeroconf": ("https://python-zeroconf.readthedocs.io/en/latest/", None),
+    "typing_extensions": ("https://typing-extensions.readthedocs.io/en/latest", None),
+}
+
+# -- HTML output ---------------------------------------------------------------
+# https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
+
+
+html_theme = "shibuya"
+html_title = "bpod-rig documentation"
+html_favicon = "_static/favicon.svg"
+html_css_files = ["custom.css"]
+html_static_path = ["_static"]
+html_theme_options = {
+    "color_mode": "auto",
+    "light_logo": "_static/bpod-rig.svg",
+    "dark_logo": "_static/bpod-rig__dark.svg",
+}
+html_context = {
+    "display_github": False,
+    "github_user": "sanworks",
+    "github_repo": "bpod-rig",
+    "github_version": "master",
+    "conf_py_path": "/docs/source/",
+    # 'source_type': 'github',
+    # 'source_user': 'sanworks',
+    # 'source_repo': 'bpod-rig',
+    # 'source_version': 'develop',
+    # 'source_docs_path': '/docs/source/',
+}
+
+# -- Autodoc -------------------------------------------------------------------
+
+autodoc_mock_imports = ["_typeshed", "serial"]
+autodoc_class_signature = "separated"  # 'mixed', 'separated'
+autodoc_member_order = "groupwise"  # 'alphabetical', 'groupwise', 'bysource'
+autodoc_inherit_docstrings = True
+autodoc_typehints = "signature"  # 'description', 'signature', 'none', 'both'
+autodoc_typehints_description_target = "all"  # 'all', 'documented', 'documented_params'
+autodoc_typehints_format = "short"  # 'fully-qualified', 'short'
+autodoc_use_type_comments = False
+autodoc_default_options = {
+    "member-order": "groupwise",
+    "show-inheritance": True,
+    "undoc-members": True,
+    "exclude-members": "__new__, __init__, model_config",
+    "class-doc-from": "class",
+}
+autodoc_type_aliases = {
+    # Map internal module paths to public API names for intersphinx cross-references
+    "polars.dataframe.frame.DataFrame": "polars.DataFrame",
+    "polars.lazyframe.frame.LazyFrame": "polars.LazyFrame",
+}
+
+autosummary_generate = True
+autosummary_imported_members = False
+
+# -- Napoleon ------------------------------------------------------------------
+
+napoleon_google_docstring = False
+napoleon_numpy_docstring = True
+napoleon_include_init_with_doc = False
+napoleon_include_private_with_doc = False
+napoleon_include_special_with_doc = False
+napoleon_use_admonition_for_examples = True
+napoleon_use_admonition_for_notes = True
+napoleon_use_admonition_for_references = True
+napoleon_use_ivar = True
+napoleon_use_param = True
+napoleon_use_rtype = True
+napoleon_use_keyword = True
+napoleon_preprocess_types = True
+napoleon_type_aliases = {
+    "ndarray": "~numpy.ndarray",
+    "Mapping": "~collections.abc.Mapping",
+    "MutableMapping": "~collections.abc.MutableMapping",
+    "Collection": "~collections.abc.Collection",
+    "Sequence": "~collections.abc.Sequence",
+    "Iterable": "~collections.abc.Iterable",
+    "ValidationError": "~pydantic_core.ValidationError",
+    "Buffer": "~collections.abc.Buffer",
+    "Callable": "~collections.abc.Callable",
+    "PathLike": "~os.PathLike",
+    "Any": "~typing.Any",
+    "UUID": "~uuid.UUID",
+    "SerialException": "~serial.SerialException",
+    "SerialTimeoutException": "~serial.SerialTimeoutException",
+    "StateMachine": "~bpod_core.fsm.StateMachine",
+    "StateMachineLookup": "~bpod_core.bpod.structs.StateMachineLookup",
+    "SimpleQueue": "~queue.SimpleQueue",
+    "DataFrame": "polars.DataFrame",
+    "LazyFrame": "polars.LazyFrame",
+    "TimeReferences": "~bpod_core.bpod.structs.TimeReferences",
+    "BpodInfo": "~bpod_core.bpod.structs.BpodInfo",
+    "Digraph": "~graphviz.Digraph",
+    "ListPortInfo": "~serial.tools.list_ports.ListPortInfo",
+    "TypeVar": "~typing.TypeVar",
+    "ValidatedDict": "~bpod_core.misc.ValidatedDict",
+    "ColorType": "~pydantic_extra_types.color.ColorType",
+}
+napoleon_attr_annotations = True
+
+# -- Type hints ----------------------------------------------------------------
+
+always_use_bars_union = True
+typehints_defaults = "comma"
+typehints_use_rtype = True
+typehints_use_signature = False
+typehints_use_signature_return = False
+typehints_document_overloads = True
+
+# -- FSM diagrams --------------------------------------------------------------
+
+fsm_light_colors = {
+    "color_stroke": "black",
+    "color_fill": "white",
+    "color_highlight": "lightblue",
+    "color_back": "red",
+}
+fsm_dark_colors = {
+    "color_stroke": "white",
+    "color_fill": "black",
+    "color_highlight": "darkred",
+    "color_back": "red",
+}
+
+# -- Graphviz ------------------------------------------------------------------
+
+graphviz_dot = "dot"
+graphviz_output_format = "svg"
+graphviz_dot_args = [
+    "-Grankdir=LR",  # Graph layout direction (left-to-right)
+    "-Gfontsize=11",  # Graph-level font size
+    "-Gtooltip= ",  # no graph tooltips
+    "-Gbgcolor=transparent",  # transparent background
+    "-Nshape=box",  # Node shape
+    "-Nfontname=Helvetica, sans-serif",  # Node font
+    "-Nfontsize=11",  # Node font size
+    "-Ntooltip= ",  # no node tooltips
+    "-Efontname=Helvetica, sans-serif",  # Edge font
+    "-Efontsize=10",  # Edge font size
+    "-Etooltip= ",  # no edge tooltips
+]
+
+# -- Plot directive ------------------------------------------------------------
+
+plot_include_source = True
+plot_formats = [("svg", 90)]
+plot_html_show_source_link = False
+plot_html_show_formats = False
+plot_apply_rcparams = True
+plot_rcparams = {
+    "font.size": 8,
+    "figure.constrained_layout.use": True,
+    "figure.facecolor": "none",
+}
+
+# -- Miscellaneous -------------------------------------------------------------
+
+linkcode_link_text = " "
+pygments_style = "default"
+highlight_language = "python3"

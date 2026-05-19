@@ -171,3 +171,20 @@ test = [
     "ruff>=0.15.4",
     "pyright>=1.1.408",
 ]
+
+doc = [
+    "myst-parser>=4.0.0",
+    "sphinx-autobuild>=2024.10.3",
+    "sphinx-autodoc-typehints>=3.0.0",
+    "sphinx-copybutton>=0.5.2",
+    "sphinx-rtd-theme>=3.0.2",
+    "sphinx<9.0.0",
+    "sphinx-jsonschema>=1.19.1",
+    "sphinx-design>=0.6.1",
+    "sphinx-toolbox>=4.2.0rc1",
+    "sphinx-github-style>=1.2.2",
+      "matplotlib>=3.10.8",
+  "pyarrow>=23.0.1",
+  "pandas>=2.3.3",
+  "shibuya>=2026.1.9",
+]
