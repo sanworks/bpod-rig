@@ -1,3 +1,4 @@
+"""Find and manage protocol files in the Bpod protocol directory."""
 from pathlib import Path
 
 
