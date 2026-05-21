@@ -41,6 +41,7 @@ bpod = "bpod_rig.__main__:main"
 [tool.uv]
 exclude-newer = "2 weeks"
 exclude-newer-package = { bpod-core = false }
+required-version = ">=0.11.15"
 
 [tool.ruff]
 # Exclude a variety of commonly ignored directories.
