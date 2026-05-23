@@ -17,10 +17,6 @@ import typer
 from bpod_core.bpod import Bpod
 
 
-class ProtocolFunction(Protocol):
-    def __call__(self, bpod_session: BpodSession) -> None: ...
-
-
 def load_protocol_function(protocol_path: Path) -> ProtocolFunction:
     """Load the protocol function from the given protocol file.
 
@@ -74,31 +70,6 @@ def load_protocol_function(protocol_path: Path) -> ProtocolFunction:
         raise TypeError(f"Protocol function in {protocol_path} is not callable")
 
     return protocol_function
-
-
-class BpodSession:
-    def __init__(self, session_dir: Path, connection_config=None):
-        self._bpod = None
-        self.session_dir = session_dir
-        self._connection_config = connection_config
-
-    def connect(self):
-        # use _connection_config to establish connection
-        self._bpod = Bpod()  # TODO: this requires configuration
-
-    @property
-    def bpod(self) -> Bpod:
-        if self._bpod is None:
-            # or should this run the connect method?
-            raise RuntimeError("Bpod session not connected. Call connect() first.")
-        return self._bpod
-
-    def run(self, sma):
-        self.bpod.run(sma)
-
-
-def prepare_session_folder(session_dir: Path) -> None:
-    """Prepare the session with relevant configs."""
 
 
 def prepare_and_run_protocol_session(

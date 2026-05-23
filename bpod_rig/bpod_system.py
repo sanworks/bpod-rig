@@ -14,7 +14,7 @@ from bpod_rig.utils import get_func_params
 if TYPE_CHECKING:
     from bpod_rig.protocols import BpodProtocol
 
-class BpodSession:
+class BpodSystem:
     def __init__(self, *args, **kwargs):
         self.logger = logging.getLogger(__name__)
         self._args = args
