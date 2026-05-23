@@ -1,8 +1,5 @@
 import datetime
 
-from bpod_rig.session import BpodSystem
-
-
 # TODO: make this a Pydantic model
 class BpodSubject:
     def __init__(self):
@@ -12,5 +9,3 @@ class BpodSubject:
         self.cohort: str | None = None
         self.genotype: str | None = None
         self.description: str | None = None
-
-        self.current_session: BpodSystem | None = None
