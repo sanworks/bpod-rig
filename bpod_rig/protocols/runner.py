@@ -17,7 +17,7 @@ import typer
 from bpod_core.bpod import Bpod
 
 
-def load_protocol_function(protocol_path: Path) -> ProtocolFunction:
+def load_protocol_function(protocol_path: Path):
     """Load the protocol function from the given protocol file.
 
     The protocol function is expected to have the same name as the file (without .py).
@@ -57,7 +57,7 @@ def load_protocol_function(protocol_path: Path) -> ProtocolFunction:
     # Execute the module to define its contents
     spec.loader.exec_module(protocol_module)
     module_name = protocol_path.stem
-    protocol_function: ProtocolFunction | None = getattr(
+    protocol_function: None = getattr(
         protocol_module, module_name, None
     )
 

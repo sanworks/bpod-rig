@@ -1,179 +1,119 @@
 from __future__ import annotations
 
-import multiprocessing as mp
-from multiprocessing.connection import Connection
-from pathlib import Path
-from typing import Optional, TypeAlias
+import warnings
 
-from bpod_core.bpod import Bpod
+from datetime import datetime
+from serial import SerialException
 
-from bpod_rig.calibration.liquid.models import ValveDataManager
-from bpod_rig.calibration.liquid.pending_calibration import PendingMeasurementsManager
-from bpod_rig.protocols.environment import load_protocol_function
-
-SerialNumber: TypeAlias = str
+from bpod_core.bpod import Bpod, BpodError, RemoteBpod
 
 
-class BpodMainManager:
-    available_rigs: dict[SerialNumber, BpodRigManager]
+from bpod_rig.log import BpodLogger
+from bpod_rig.subject import BpodSubject
+from bpod_rig.utils import get_func_params
+from config.system_settings import SystemSettings
 
+
+class SessionTimes:
     def __init__(self):
-        self.available_rigs = {}
+        # Times and Dates
+        self.session_start_time: datetime | None = None
+        self.session_end_time: datetime | None = None
+        self.protocol_start_time: datetime | None = None
+        self.protocol_end_time: datetime | None = None
 
-    def discover_rigs(self, rigs_folder: Path) -> None:
-        for rig_folder in rigs_folder.iterdir():
-            if rig_folder.is_dir():
-                rig_manager = BpodRigManager(rig_folder)
-                self.available_rigs[rig_manager.serial_number] = rig_manager
 
-    def get_rig(
-        self,
-        *,
-        serial_port: Optional[SerialNumber | str] = None,
-        com: Optional[str] = None,
-        name: Optional[str] = None,
-    ) -> BpodRigManager:
-        if (serial_port, com, name).count(None) != 2:
-            raise ValueError("One of serial_port, com, or name should be provided")
-        if len(self.available_rigs) == 0:
-            raise RuntimeError("No rigs available")
+class SessionInfo:
+    def __init__(self):
+        # Session Information
+        self.session_id: str | None = None
+        self.subject: BpodSubject | None = None
+        self.protocol: None = None
+        self.system_info: dict | None = None
 
-        if serial_port is not None:
-            key = serial_port
-        elif com is not None:
-            key = next(
-                (
-                    serial_number
-                    for serial_number, rig_manager in self.available_rigs.items()
-                    if rig_manager.port == com
-                ),
-                None,
+
+class SessionManager:
+    def __init__(self, *args, **kwargs):
+        self.logger: BpodLogger | None = None
+        self.system_settings: SystemSettings | None = None
+        self.gui_handles: None = None
+
+        self.bpod: Bpod | None = None
+        self.times: SessionTimes | None = None
+        self.info: SessionInfo | None = None
+
+    def start(self, warn: bool = True):
+        self.logger.info("Starting Bpod Session!")
+        if warn:
+            warnings.warn(
+                "BpodSession started outside of a context manager."
+                " Make sure to call end() once finished to properly"
+                " clean up the session!",
+                stacklevel=2,
             )
-        elif name is not None:
-            key = next(
-                (
-                    serial_number
-                    for serial_number, rig_manager in self.available_rigs.items()
-                    if rig_manager.name == name
-                ),
-                None,
-            )
-        else:
-            raise AssertionError("Unreachable code")
-        if key is None:
-            raise ValueError("No rig found matching the provided identifier")
-        return self.available_rigs[key]
 
+        try:
+            self._connect()
+            self.logger.debug("Successfully connected to Bpod!")
+        except SerialException as se:
+            self.logger.error("Unable to open serial connection to Bpod!", exc_info=se)
+        except BpodError as bpe:
+            self.logger.error("Handshake with Bpod failed!", exc_info=bpe)
 
-class BpodRigManager:
-    port: str
-    serial_number: str
-    _connection: Bpod | None = None
-    valve_manager: ValveDataManager
-    folder: Path
-    name: str
-    process: Optional[mp.Process] = None
-    parent_pipe: Optional[Connection] = None
-    child_pipe: Optional[Connection] = None
+        self.times.session_start_time = datetime.now()
 
-    def __init__(self, folder: Path):
-        self.folder = folder
+    def end(self):
+        self.logger.info("Closing Bpod Session!")
 
-    def run_protocol(self, protocol: Path) -> mp.Process:
-        if self._connection is not None:
-            self.disconnect()
-        session_dir = self.folder / "sessions"
-        # If polars are used ot exchange data
-        # <https://docs.pola.rs/user-guide/misc/multiprocessing/#when-not-to-use-multiprocessing>
-        ctx = mp.get_context("spawn")
-        self.parent_pipe, self.child_pipe = ctx.Pipe()
-        # This type checking is wack because the context returns SpawnProcess
-        # Is it a subclass?
-        self.process = ctx.Process(
-            target=prepare_and_run_protocol_session, args=(protocol, session_dir)
-        )  # type: ignore
-        if self.process is None:
-            raise RuntimeError("Failed to create process for protocol")
-        self.process.start()
-        return self.process
+        try:
+            self._disconnect()
+        except SerialException as se:
+            self.logger.error("Unable to close serial connection to Bpod!", exc_info=se)
 
-    def connect(self) -> None:
-        if self._connection is not None:
-            raise RuntimeError("Bpod connection already established")
-        self._connection = Bpod(self.port)
+        self.times.session_end_time = datetime.now()
 
-    def disconnect(self) -> None:
-        if self._connection is None:
-            raise RuntimeError("Bpod connection not established")
-        self._connection.close()
-        self._connection = None
+    def _connect(self):
+        if self.bpod:
+            self.logger.debug("Bpod already connected!")
+            return
 
-    def bpod(self) -> Bpod:
-        if self._connection is None:
-            raise RuntimeError("Bpod connection not established")
-        return self._connection
+        connection_args = {}
 
-    def get_valve_calibrator(self) -> PendingMeasurementsManager:
-        return PendingMeasurementsManager(self.valve_manager)
+        potential_args = get_func_params(Bpod.__init__, RemoteBpod.__init__)
+        # Get the possible parameters for the Bpod/RemoteBpod constructors
 
+        required_args = potential_args['required']
+        for req_arg in required_args:
+            if req_arg not in self._kwargs:
+                raise AttributeError(
+                    f"Required argument {req_arg} for Bpod is missing!"
+                    )
 
-class BpodSession:
-    def __init__(self, pipe: Connection, session_dir: Path, connection_config=None):
-        self._bpod = None
-        self.session_dir = session_dir
-        self._connection_config = connection_config
-        self.pipe = pipe
+        potential_args.pop('required')
+        # Required args parsed, dropping the list
 
-    def connect(self):
-        # use _connection_config to establish connection
-        self._bpod = Bpod()  # TODO: this requires configuration
+        for arg in potential_args:
+            if arg in self._kwargs:
+                self.logger.debug(
+                    "Bpod connection argument %s found in BpodSession kwargs",
+                    potential_args
+                )
+                connection_args[arg] = self._kwargs[arg]
+        self.logger.debug("Attempting to connect to Bpod")
+        self.bpod = Bpod(**connection_args)
 
-    @property
-    def bpod(self) -> Bpod:
-        if self._bpod is None:
-            # or should this run the connect method?
-            raise RuntimeError("Bpod session not connected. Call connect() first.")
-        return self._bpod
+    def _disconnect(self):
+        if not self.bpod:
+            raise ConnectionError("Bpod is already disconnected!")
+        self.bpod.close()
 
-    def run(self, sma):
-        self.bpod.run(sma)
+    def __enter__(self):
+        self.logger.debug("Enter context manager!")
+        self.start(warn=False)
+        return self
 
-
-def prepare_and_run_protocol_session(
-    protocol_path: Path, session_dir: Path, protocol_args: list[str] | None = None
-) -> None:
-    """Run the protocol function.
-
-    Parameters
-    ----------
-    protocol_path : Path
-        Path to the protocol
-    session_dir : Path
-        Path to the existing session data folder
-    """
-    # either throw an error or set os.chdir to the protocol folder?
-    if Path.cwd() != protocol_path.parent:
-        raise RuntimeError(
-            f"Current working directory {Path.cwd()} does not match protocol directory {protocol_path.parent}. "
-            "Please run the protocol from its own directory or change to the protocol's directory before running."
-        )
-
-    protocol_function = load_protocol_function(protocol_path)
-    pipe = mp.Pipe()
-    import sys
-
-    # prepare BpodSession
-    # TODO: read session configs from session_dir if needed and pass to BpodSession
-    bpod_session = BpodSession(pipe[1], session_dir)
-
-    original_args = None
-    if protocol_args:
-        original_args = sys.argv.copy()
-        sys.argv = [sys.argv[0]] + protocol_args
-
-    try:
-        protocol_function(bpod_session)  # type: ignore
-    finally:
-        # This is unnecessary in a subprocess, but just in case
-        if original_args:
-            sys.argv = original_args
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.logger.debug("Exiting context manager!")
+        self.end()
+        if exc_type is not None:
+            self.logger.error("Error!", exc_info=(exc_type, exc_val, exc_tb))
