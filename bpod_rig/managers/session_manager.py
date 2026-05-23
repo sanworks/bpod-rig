@@ -40,7 +40,12 @@ class SessionParams:
 
 
 class SessionManager:
-    def __init__(self, *args, **kwargs):
+    def __init__(self, connection_params: dict, *args, **kwargs):
+        self._args = args
+        self._kwargs = kwargs
+
+        self._connection_params = connection_params
+
         self.logger: BpodLogger | None = None
         self.system_settings: SystemSettings | None = None
         self.gui_handles: None = None
@@ -90,21 +95,24 @@ class SessionManager:
 
         required_args = potential_args['required']
         for req_arg in required_args:
-            if req_arg not in self._kwargs:
+            if req_arg not in self._connection_params:
                 raise AttributeError(
-                    f"Required argument {req_arg} for Bpod is missing!"
+                    f"Required argument {req_arg} for Bpod is missing from connection params!"
                     )
+
+            connection_args[req_arg] = self._connection_params[req_arg]
 
         potential_args.pop('required')
         # Required args parsed, dropping the list
 
         for arg in potential_args:
-            if arg in self._kwargs:
+            if arg in self._connection_params:
                 self.logger.debug(
-                    "Bpod connection argument %s found in BpodSession kwargs",
+                    "Bpod connection argument %s found in connection params",
                     potential_args
                 )
-                connection_args[arg] = self._kwargs[arg]
+                connection_args[arg] = self._connection_params[arg]
+
         self.logger.debug("Attempting to connect to Bpod")
         self.bpod = Bpod(**connection_args)
 
