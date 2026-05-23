@@ -13,6 +13,10 @@ from bpod_rig.subject import BpodSubject
 from bpod_rig.utils import get_func_params
 from config.system_settings import SystemSettings
 
+class SessionPaths:
+    def __init__(self):
+        pass
+
 
 class SessionTimes:
     def __init__(self):
@@ -23,13 +27,16 @@ class SessionTimes:
         self.protocol_end_time: datetime | None = None
 
 
-class SessionInfo:
+class SessionParams:
     def __init__(self):
         # Session Information
         self.session_id: str | None = None
         self.subject: BpodSubject | None = None
         self.protocol: None = None
         self.system_info: dict | None = None
+
+        self.times: SessionTimes | None = None
+        self.paths: SessionPaths | None = None
 
 
 class SessionManager:
@@ -39,8 +46,7 @@ class SessionManager:
         self.gui_handles: None = None
 
         self.bpod: Bpod | None = None
-        self.times: SessionTimes | None = None
-        self.info: SessionInfo | None = None
+        self.params: SessionParams | None = None
 
     def start(self, warn: bool = True):
         self.logger.info("Starting Bpod Session!")
