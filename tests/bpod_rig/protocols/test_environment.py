@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from bpod_rig.protocols.environment import (
+from bpod_rig.protocols.runner import (
     load_protocol_function,
     run_protocol_async,
 )
@@ -43,10 +43,10 @@ def test_protocol(bpod):
     '''Test protocol function that prints working directory and args.'''
     # Print current working directory to verify it's set correctly
     print(f"CWD: {Path.cwd()}")
-    
+
     # Print arguments passed
     print(f"Args: {sys.argv[1:]}")
-    
+
     # Protocol runs successfully
 """
     )
