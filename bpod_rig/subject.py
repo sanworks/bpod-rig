@@ -1,6 +1,6 @@
 import datetime
 
-from bpod_rig.session import BpodSession
+from bpod_rig.session import BpodSystem
 
 
 # TODO: make this a Pydantic model
@@ -13,4 +13,4 @@ class BpodSubject:
         self.genotype: str | None = None
         self.description: str | None = None
 
-        self.current_session: BpodSession | None = None
+        self.current_session: BpodSystem | None = None
