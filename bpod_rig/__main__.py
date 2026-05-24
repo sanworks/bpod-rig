@@ -24,7 +24,7 @@ logging.setLoggerClass(BpodLogger)
 logger: BpodLogger = cast(BpodLogger, logging.getLogger(__name__))
 
 app = typer.Typer(no_args_is_help=True)
-app.add_typer(protocols_app, name="protocols", help="Manage protocols.")
+app.add_typer(protocols_app, name="protocols")
 
 
 @app.command()
