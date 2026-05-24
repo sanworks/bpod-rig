@@ -21,7 +21,7 @@ class ProtocolManager:
         self.protocols = set()
         for protocol_file in self.protocol_dir.glob("**/*/*.py"):
             if protocol_file.stem == protocol_file.parent.name:
-                self.protocols.add(protocol_file)
+                self.protocols.add(protocol_file.absolute())
 
     def find_protocol_file(self, protocol_name: str) -> Path:
         r"""Find a protocol file in the protocol directory.
@@ -67,40 +67,44 @@ class ProtocolManager:
 
     def _find_protocol_with_path(self, protocol_name: str) -> Path:
         """Find a protocol file using the relative path."""
+
         # Split into path components
-        parts = protocol_name.split("/")
-        protocol_basename = parts[-1]
-        subfolder_parts = parts[:-1]
-
-        # Construct the expected path
-        expected_path = self.protocol_dir.joinpath(
-            *subfolder_parts, protocol_basename, f"{protocol_basename}.py"
-        )
-
-        if expected_path.exists():
-            return expected_path
-        raise FileNotFoundError(
-            f"Protocol '{protocol_name}' not found at location: {expected_path}"
-        )
-
-    def _glob_protocol(self, protocol_name: str) -> Path:
-        """Find a protocol file by globbing the protocol directory."""
-        protocol_basename = protocol_name
-        pattern = f"**/{protocol_basename}/{protocol_basename}.py"
-        matches = list(self.protocol_dir.glob(pattern))
+        protocol_basename = protocol_name.split("/")[-1]
+        matches = []
+        for protocol_file in self.protocols:
+            if protocol_file.match(f"*/{protocol_name}/{protocol_basename}.py"):
+                matches.append(protocol_file)
 
         if len(matches) == 0:
             raise FileNotFoundError(
                 f"Protocol '{protocol_name}' not found in {self.protocol_dir}"
             )
-        if len(matches) == 1:
+        elif len(matches) > 1:
+            self._raise_ambiguous_error(protocol_name, matches)
+        else:
             return matches[0]
 
-        # Multiple matches found - ambiguous
+    def _raise_ambiguous_error(self, protocol_name: str, matches: list[Path]):
         match_paths = "\n  ".join(
-            str(m.relative_to(self.protocol_dir)) for m in matches
+            str(m) for m in matches
         )
         raise ValueError(
             f"Multiple protocols found matching '{protocol_name}':\n  {match_paths}\n"
-            f"Please specify the full path (e.g., 'subfolder/{protocol_name}')"
+            f"Please specify more of the path (e.g., 'subfolder/{protocol_name}')"
         )
+
+    def _glob_protocol(self, protocol_name: str) -> Path:
+        """Find a protocol file by globbing the protocol directory."""
+        matches = []
+        for protocol_file in self.protocols:
+            if protocol_file.stem == protocol_name:
+                matches.append(protocol_file)
+
+        if len(matches) == 0:
+            raise FileNotFoundError(
+                f"Protocol '{protocol_name}' not found in {self.protocol_dir}"
+            )
+        elif len(matches) > 1:
+            self._raise_ambiguous_error(protocol_name, matches)
+        else:
+            return matches[0]
