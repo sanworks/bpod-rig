@@ -1,4 +1,5 @@
 """Find and manage protocol files in the Bpod protocol directory."""
+
 from pathlib import Path
 
 
@@ -59,52 +60,24 @@ class ProtocolManager:
         # Normalize path separators to use forward slashes
         protocol_name_normalized = protocol_name.replace("\\", "/")
 
-        # Check if the protocol_name includes a path
-        if "/" in protocol_name_normalized:
-            return self._find_protocol_with_path(protocol_name_normalized)
-
-        return self._glob_protocol(protocol_name_normalized)
-
-    def _find_protocol_with_path(self, protocol_name: str) -> Path:
-        """Find a protocol file using the relative path."""
-
         # Split into path components
-        protocol_basename = protocol_name.split("/")[-1]
+        protocol_basename = protocol_name_normalized.split("/")[-1]
         matches = []
         for protocol_file in self.protocols:
-            if protocol_file.match(f"*/{protocol_name}/{protocol_basename}.py"):
+            if protocol_file.match(
+                f"*/{protocol_name_normalized}/{protocol_basename}.py"
+            ):
                 matches.append(protocol_file)
 
         if len(matches) == 0:
             raise FileNotFoundError(
                 f"Protocol '{protocol_name}' not found in {self.protocol_dir}"
             )
-        elif len(matches) > 1:
-            self._raise_ambiguous_error(protocol_name, matches)
-        else:
-            return matches[0]
-
-    def _raise_ambiguous_error(self, protocol_name: str, matches: list[Path]):
-        match_paths = "\n  ".join(
-            str(m) for m in matches
-        )
-        raise ValueError(
-            f"Multiple protocols found matching '{protocol_name}':\n  {match_paths}\n"
-            f"Please specify more of the path (e.g., 'subfolder/{protocol_name}')"
-        )
-
-    def _glob_protocol(self, protocol_name: str) -> Path:
-        """Find a protocol file by globbing the protocol directory."""
-        matches = []
-        for protocol_file in self.protocols:
-            if protocol_file.stem == protocol_name:
-                matches.append(protocol_file)
-
-        if len(matches) == 0:
-            raise FileNotFoundError(
-                f"Protocol '{protocol_name}' not found in {self.protocol_dir}"
+        if len(matches) > 1:
+            match_paths = "\n  ".join(str(m) for m in matches)
+            raise ValueError(
+                f"Multiple protocols found matching '{protocol_name}':\n"
+                f"      {match_paths}\n"
+                f"Please specify more of the path (e.g., 'subfolder/{protocol_name}')"
             )
-        elif len(matches) > 1:
-            self._raise_ambiguous_error(protocol_name, matches)
-        else:
-            return matches[0]
+        return matches[0]
