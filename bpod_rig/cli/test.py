@@ -2,7 +2,6 @@
 
 import os
 from pathlib import Path
-from typing import Annotated, Literal
 
 import bpod_core
 import typer
@@ -16,15 +15,18 @@ app = typer.Typer(
 
 
 @app.command()
-def run(
-    target: Annotated[
-        Literal["software", "hardware"],
-        typer.Argument(..., help="Test target"),
-    ] = "software",
-):
-    """Test bpod-rig installation and hardware."""
+def software():
+    """Run software tests to verify installation."""
     tests_path = prepare_tests()
-    exit_code = run_test(tests_path, hardware=(target == "hardware"))
+    exit_code = run_test(tests_path, hardware=False)
+    report_test_result(exit_code)
+
+
+@app.command()
+def hardware():
+    """Run hardware tests to verify hardware functionality."""
+    tests_path = prepare_tests()
+    exit_code = run_test(tests_path, hardware=True)
     report_test_result(exit_code)
 
 
