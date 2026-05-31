@@ -2,7 +2,7 @@ import logging
 import multiprocessing as mp
 from multiprocessing.connection import Connection
 from pathlib import Path
-from typing import cast, Optional, TypeAlias
+from typing import Optional, TypeAlias, cast
 
 from bpod_core.bpod import Bpod, BpodInfo, discover_bpod, discover_remote_bpod
 
@@ -19,15 +19,15 @@ class BpodManager:
         self._all_local_bpods: dict[SerialNumber, BpodInfo] | None = None
         # self.remote_bpods: dict[SerialNumber, BpodInfo] | None = None
 
-        self.last_selected_bpod: BpodInfo | None = None
+        self.current_bpod: BpodInfo | None = None
 
 
     def load(self):
         self._get_local_bpods()
 
 
-    def select_bpod(self, serial: SerialNumber = None, index: int = 0) -> BpodInfo:
-        """Returns a BpodInfo instance
+    def select_bpod(self, serial: SerialNumber | None = None, index: int = 0) -> BpodInfo:
+        """Returns a BpodInfo instance.
 
         Function will return the BpodInfo instance with the given serial number or
         index. serial will always take precedence over index. If no parameter is
@@ -42,27 +42,26 @@ class BpodManager:
 
         Returns
         -------
-
         BpodInfo instance
 
         """
-
         if self._all_local_bpods is None:
             raise ValueError("No local Bpods found!")
+
 
         serials: list[SerialNumber] = list(self._all_local_bpods.keys())
 
         if serial is not None:
-            if serial in self._all_local_bpods.keys():
-                self.last_selected_bpod = self._all_local_bpods[serial]
+            if serial in serials:
+                self.current_bpod = self._all_local_bpods[serial] # type: ignore
             else:
                 raise KeyError(f"Bpod {serial} not found!")
+        else:
+            if index > len(serials) or index < 0:
+                raise IndexError(f"Index {index} out of range!")
+            self.current_bpod = self._all_local_bpods[serials[index]] # type: ignore
 
-        if index > len(serials) or index < 0:
-            raise IndexError(f"Index {index} out of range!")
-
-        self.last_selected_bpod = self._all_local_bpods[serials[index]]
-        return self.last_selected_bpod
+        return self.current_bpod
 
 
     def _format_all_bpods_info(self):
@@ -73,15 +72,20 @@ class BpodManager:
             f"[{i}]: Local Bpod\n"
             f"Name: {info.name} | Serial Number: {sn}\n"
             f"Port: {info.port} | Location: {info.location}\n\n"
-            for i, sn, info in enumerate(self._all_local_bpods.items())
+            for i, (sn, info) in enumerate(self._all_local_bpods.items())
         ]
 
-        return f"The following Bpods are available:\n{info}"
+        return f"The following Bpods are available:\n {info}"
 
 
     def _get_local_bpods(self):
-        local_bpods = discover_bpod()
+        local_bpods = list(discover_bpod())
         # remote_bpods = discover_remote_bpod()
+
+        if len(local_bpods) == 0:
+            self._all_local_bpods = None
+            self.logger.warning("No local Bpods found!")
+            return None
 
         self._all_local_bpods = {
             info.serial_number: info
@@ -92,18 +96,13 @@ class BpodManager:
         #     for info in remote_bpods
         # }
 
-        if self._all_local_bpods is None:
-            self.logger.warning("No local Bpods found!")
-
         return self._all_local_bpods
 
 
     @property
     def bpod(self):
-        if self.last_selected_bpod is not None:
-            return self.last_selected_bpod
-        else:
-            return None
+        return self.current_bpod
+
 
     def __str__(self):
         return self._format_all_bpods_info()
