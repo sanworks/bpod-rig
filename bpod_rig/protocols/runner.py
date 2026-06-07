@@ -11,7 +11,7 @@ import importlib.util
 import subprocess
 import sys
 from pathlib import Path
-from typing import Annotated, Any, Optional, Protocol
+from typing import Annotated, Any, Callable, Optional
 
 import typer
 from bpod_core.bpod import Bpod
@@ -57,7 +57,7 @@ def load_protocol_function(protocol_path: Path):
     # Execute the module to define its contents
     spec.loader.exec_module(protocol_module)
     module_name = protocol_path.stem
-    protocol_function: None = getattr(
+    protocol_function: None | Callable = getattr(
         protocol_module, module_name, None
     )
 
@@ -108,74 +108,6 @@ def prepare_and_run_protocol_session(
         # This is unnecessary in a subprocess, but just in case
         if original_args:
             sys.argv = original_args
-
-
-def run_protocol_async(
-    protocol_path: Path,
-    session_dir: Path,
-    protocol_args: Optional[list[Any]] = None,
-    python_executable: Optional[str | Path] = None,
-) -> subprocess.Popen:
-    """
-    Run a bpod protocol asynchronously in a subprocess.
-
-    This starts the protocol but doesn't wait for it to complete.
-    Useful for long-running protocols that you want to monitor or control separately.
-
-    Parameters
-    ----------
-        protocol_path
-            Path to the protocol Python file to execute.
-        protocol_args
-            Positional arguments to pass to the protocol (optional)
-        python_executable
-            Path to Python executable (defaults to current interpreter)
-
-    Returns
-    -------
-        Popen
-            The subprocess handle for monitoring/control
-
-    Raises
-    ------
-        FileNotFoundError
-            If protocol_path doesn't exist
-    """
-    protocol_path = Path(protocol_path).resolve()
-
-    # Validate that there's a protocol function to run
-    _ = load_protocol_function(protocol_path)
-
-    # Use current Python interpreter if not specified
-    if python_executable is None:
-        python_executable = sys.executable
-    else:
-        # unlikely but in case someone wants to run something quite custom
-        python_executable = str(python_executable)
-
-    cmd = [
-        python_executable,
-        "-m",
-        "bpod_rig.protocols.environment",
-        "run",
-        str(protocol_path),
-        str(session_dir),
-    ]
-
-    # Add arguments if provided
-    if protocol_args:
-        cmd.extend(str(arg) for arg in protocol_args)
-
-    # Start subprocess
-    process = subprocess.Popen(  # noqa: S603
-        cmd,
-        cwd=str(protocol_path.parent),
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        text=True,
-    )
-
-    return process
 
 
 app = typer.Typer()
