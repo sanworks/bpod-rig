@@ -100,12 +100,7 @@ def prompt_for_path(
     logger.debug("Asking user to select a path: %s", prompt)
     try:
         return typer.prompt(
-            prompt,
-            value_proc=lambda path: verify_path(
-                path,
-                is_file,
-                must_exist
-            )
+            prompt, value_proc=lambda path: verify_path(path, is_file, must_exist)
         )
     except typer.Abort:
         logger.debug("User aborted before answering!")
