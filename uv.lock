@@ -66,7 +66,6 @@ version = "0.0.2"
 source = { editable = "." }
 dependencies = [
     { name = "bpod-core" },
-    { name = "click" },
     { name = "platformdirs" },
     { name = "pydantic" },
     { name = "typer" },
@@ -94,7 +93,6 @@ test = [
 [package.metadata]
 requires-dist = [
     { name = "bpod-core", specifier = "==0.1.0a12" },
-    { name = "click", specifier = ">=8.3.1" },
     { name = "platformdirs", specifier = ">=4.5.1" },
     { name = "pydantic", specifier = "==2.11.7" },
     { name = "pytest", marker = "extra == 'test'", specifier = ">=9.0.2" },
