@@ -4,9 +4,9 @@ from pathlib import Path
 from unittest.mock import patch
 
 import pytest
-from click.testing import CliRunner
+from typer.testing import CliRunner
 
-from bpod_rig.IO.cli_io import prompt_for_path_cli_runner, yes_no_prompt_cli_runner
+from bpod_rig.cli.prompts import prompt_for_path_cli_runner, yes_no_prompt_cli_runner
 
 
 class TestCliIO:
