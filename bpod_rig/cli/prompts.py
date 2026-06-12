@@ -21,7 +21,7 @@ def yes_no_prompt(prompt: str) -> bool | None:
 
 @app.command()
 def yes_no_prompt_cli_runner(
-    prompt: Annotated[str, typer.Option(prompt=True)],
+    prompt: Annotated[str, typer.Option()],
 ) -> bool | None:
     return yes_no_prompt(prompt)
 
