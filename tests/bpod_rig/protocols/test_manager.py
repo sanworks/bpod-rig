@@ -31,48 +31,26 @@ def create_test_protocols_folder(root_path: Path):
     protocol_folder = root_path / "protocols"
     protocol_folder.mkdir(parents=True, exist_ok=True)
 
+    def create_protocol_file(*path: str) -> Path:
+        protocol_name = path[-1]
+        dir_path = protocol_folder.joinpath(*path[:-1])
+        dir_path.mkdir(parents=True, exist_ok=True)
+
+        protocol_file = dir_path / f"{protocol_name}.py"
+        protocol_file.write_text(f"def {protocol_name}(bpod_session):\n    pass\n")
+        return protocol_file
+
     # Create Protocol_unique1
-    (protocol_folder / "Protocol_unique1").mkdir(parents=True, exist_ok=True)
-    (protocol_folder / "Protocol_unique1" / "Protocol_unique1.py").write_text(
-        "def Protocol_unique1(bpod_session):\n    pass\n"
-    )
+    create_protocol_file("Protocol_unique1", "Protocol_unique1")
 
     # Create subfolderA protocols
-    (protocol_folder / "subfolderA" / "Protocol_matching1").mkdir(
-        parents=True, exist_ok=True
-    )
-    (
-        protocol_folder / "subfolderA" / "Protocol_matching1" / "Protocol_matching1.py"
-    ).write_text("def Protocol_matching1(bpod_session):\n    pass\n")
-
-    (protocol_folder / "subfolderA" / "Protocol_matching2").mkdir(
-        parents=True, exist_ok=True
-    )
-    (
-        protocol_folder / "subfolderA" / "Protocol_matching2" / "Protocol_matching2.py"
-    ).write_text("def Protocol_matching2(bpod_session):\n    pass\n")
+    create_protocol_file("subfolderA", "Protocol_matching1", "Protocol_matching1")
+    create_protocol_file("subfolderA", "Protocol_matching2", "Protocol_matching2")
 
     # Create subfolderB protocols
-    (protocol_folder / "subfolderB" / "Protocol_matching1").mkdir(
-        parents=True, exist_ok=True
-    )
-    (
-        protocol_folder / "subfolderB" / "Protocol_matching1" / "Protocol_matching1.py"
-    ).write_text("def Protocol_matching1(bpod_session):\n    pass\n")
-
-    (protocol_folder / "subfolderB" / "Protocol_matching2").mkdir(
-        parents=True, exist_ok=True
-    )
-    (
-        protocol_folder / "subfolderB" / "Protocol_matching2" / "Protocol_matching2.py"
-    ).write_text("def Protocol_matching2(bpod_session):\n    pass\n")
-
-    (protocol_folder / "subfolderB" / "Protocol_unique3").mkdir(
-        parents=True, exist_ok=True
-    )
-    (
-        protocol_folder / "subfolderB" / "Protocol_unique3" / "Protocol_unique3.py"
-    ).write_text("def Protocol_unique3(bpod_session):\n    pass\n")
+    create_protocol_file("subfolderB", "Protocol_matching1", "Protocol_matching1")
+    create_protocol_file("subfolderB", "Protocol_matching2", "Protocol_matching2")
+    create_protocol_file("subfolderB", "Protocol_unique3", "Protocol_unique3")
 
 
 @pytest.fixture(scope="function")
