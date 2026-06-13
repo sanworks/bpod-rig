@@ -15,6 +15,10 @@ def create_test_protocols_folder(root_path: Path):
     protocol_folder/
         Protocol_unique1/
             Protocol_unique1.py
+        Protocol_unique2/
+            Protocol_unique2.py
+        Protocol_invalid1_x/
+            Protocol_invalid1.py
         subfolderA/
             Protocol_matching1/
                 Protocol_matching1.py
@@ -42,6 +46,8 @@ def create_test_protocols_folder(root_path: Path):
 
     # Create Protocol_unique1
     create_protocol_file("Protocol_unique1", "Protocol_unique1")
+    create_protocol_file("Protocol_unique2", "Protocol_unique2")
+    create_protocol_file("Protocol_invalid1_x", "Protocol_invalid1")
 
     # Create subfolderA protocols
     create_protocol_file("subfolderA", "Protocol_matching1", "Protocol_matching1")
@@ -83,6 +89,14 @@ class TestFindProtocolFile:
             FileNotFoundError, match="Protocol 'Protocol_noMatch' not found"
         ):
             manager.find_protocol_file("Protocol_noMatch")
+
+    def test_invalid_match_fail(self, protocol_folder):
+        """Test that an error is raised when a file matches but is invalid."""
+        manager = ProtocolManager(protocol_folder)
+        with pytest.raises(
+            FileNotFoundError, match="Protocol 'Protocol_invalid1' not found"
+        ):
+            manager.find_protocol_file("Protocol_invalid1")
 
     def test_subfolder_find(self, protocol_folder):
         """Test finding a protocol in a subfolder."""
@@ -170,4 +184,4 @@ class TestProtocolManager:
 
     def test_load_protocols(self, protocol_folder):
         manager = ProtocolManager(protocol_folder)
-        assert len(manager.protocols) == 6
+        assert len(manager.protocols) == 7
