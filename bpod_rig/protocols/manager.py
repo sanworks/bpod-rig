@@ -78,6 +78,6 @@ class ProtocolManager:
             raise ValueError(
                 f"Multiple protocols found matching '{protocol_name}':\n"
                 f"      {match_paths}\n"
-                f"Please specify more of the path (e.g., 'subfolder/{protocol_name}')"
+                f"Please provide a more specific path (e.g., 'subfolder/{protocol_name}')"
             )
         return matches[0]
