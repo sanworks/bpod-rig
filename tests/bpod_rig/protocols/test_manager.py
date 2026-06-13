@@ -8,7 +8,7 @@ import pytest
 from bpod_rig.protocols.manager import ProtocolManager
 
 
-def create_test_protocols_folder(root_path: Path):
+def create_test_protocols_folder(root_path: Path) -> Path:
     """Initialize test environment with protocol directory structure.
 
     Creates the following structure:
@@ -58,6 +58,8 @@ def create_test_protocols_folder(root_path: Path):
     create_protocol_file("subfolderB", "Protocol_matching2", "Protocol_matching2")
     create_protocol_file("subfolderB", "Protocol_unique3", "Protocol_unique3")
 
+    return protocol_folder
+
 
 @pytest.fixture(scope="function")
 def protocol_folder(
@@ -65,8 +67,8 @@ def protocol_folder(
 ) -> Generator[Path, None, None]:
     """Setup test environment once for all tests."""
     root_path = tmp_path_factory.mktemp("protocol_manager_tests")
-    create_test_protocols_folder(root_path)
-    yield root_path / "protocols"
+    protocol_folder = create_test_protocols_folder(root_path)
+    yield protocol_folder
     # Cleanup happens automatically with tmp_path_factory
 
 
