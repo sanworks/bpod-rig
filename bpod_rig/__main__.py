@@ -30,6 +30,22 @@ app.add_typer(test_app, name="test")
 
 @app.command()
 def init():
+    from bpod_rig.config.startup import CLIStartupChoiceAdapter, InitService
+
+    init_service = InitService(
+        choices=CLIStartupChoiceAdapter(),
+        default_bpod_path=DEFAULT_BPOD_PATH,
+        logger=logger,
+    )
+    result = init_service.run()
+    if not result.success:
+        logger.error("Initialization failed: %s", result.message)
+        typer.Exit(code=-1)
+        # raise RuntimeError(f"Initialization failed: {result.message}")
+
+
+@app.command()
+def init_old():
     """Initialize the Bpod Rig on this system."""
     ### Everything below is subject to change and is for testing purposes only
     logger.info("Starting bpod-rig!")

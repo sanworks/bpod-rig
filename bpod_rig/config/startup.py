@@ -23,7 +23,10 @@ class InitState(Enum):
     """Possible states during initialization process."""
 
     NOT_INITIALIZED = auto()
-    """The system has not been initialized. This is the default state before any initialization logic runs."""
+    """
+    The system has not been initialized.
+    This is the default state before any initialization logic runs.
+    """
     INITIALIZED_VALID = auto()
     """The system has been initialized and the Bpod directory is valid."""
     INITIALIZED_INVALID = auto()
@@ -45,7 +48,10 @@ class InitResult:
     state: InitState
     """The final state of the initialization process."""
     message: list[str] | str
-    """An optional message providing additional information about the initialization result."""
+    """
+    An optional message providing additional information about the initialization 
+    result.
+    """
     details: dict | None = None
     """Any additional details about the initialization result."""
     bpod_path: Path | None = None
@@ -58,20 +64,31 @@ class InitResult:
     """The path to the saved system configuration file, if applicable."""
 
 
-
 class StartupChoicePort(Protocol):
     """Each of the possible decisions during system initialization."""
 
     def choose_path_first_init(self, default_path: Path) -> Path | None:
-        """When the system is not initialized, ask the user if they want to override the default path and if so, prompt them to enter a path. Return the chosen path or None if the user aborts."""
+        """
+        When the system is not initialized, ask the user if they want to override the
+        default path and if so, prompt them to enter a path.
+        Return the chosen path or None if the user aborts.
+        """
         ...
 
     def choose_reinitialize_invalid_dir(self, invalid_path: Path) -> bool | None:
-        """When the system is initialized but the Bpod directory fails verification, ask the user if they want to reinitialize. Return True if they want to reinitialize, False if they want to keep the invalid directory, or None if they abort."""
+        """
+        When the system is initialized but the Bpod directory fails verification, ask
+        the user if they want to reinitialize.
+        Return True if they want to reinitialize, False if they want to keep the
+        invalid directory, or None if they abort.
+        """
         ...
 
     def choose_copy_defaults(self, bpod_path: Path) -> bool | None:
-        """Ask the user if they want to copy default files to the given Bpod path. Return True if they want to copy defaults, False if not, or None if they abort."""
+        """
+        Ask the user if they want to copy default files to the given Bpod path.
+        Return True if they want to copy defaults, False if not, or None if they abort.
+        """
         ...
 
 
@@ -98,69 +115,74 @@ class CLIStartupChoiceAdapter(StartupChoicePort):
             f"Copy default protocols and calibration files to {bpod_path}?"
         )
 
+
 class InitService:
     """Service class to handle Bpod initialization logic."""
 
     def __init__(
         self,
-        choices: StartupChoicePort,  # this is "Port" because it's an interface that can be implemented by different adapters (e.g. CLI, GUI)
+        choices: StartupChoicePort,  # dependency injection
         default_bpod_path: Path,
         logger: BpodLogger,
     ):
         self.choices = choices
         self.default_bpod_path = default_bpod_path
         self.logger = logger
-        self.result = InitResult(
+
+    def run(self) -> InitResult:
+        result = InitResult(
             success=False,
             state=InitState.NOT_INITIALIZED,
             message="Initialization not started.",
         )
-
-    def run(self) -> InitResult:
         try:
             initialized = check_system_is_initialized()
             # todo: verify integ of system file
             if not initialized:
                 if not self._ensure_system_config_dir_exists():
-                    self.result.state = InitState.FAILED
-                    self.result.message = "Failed to create system configuration directory. Check permissions and available disk space."
-                    return self.result
+                    result.state = InitState.FAILED
+                    result.message = (
+                        "Failed to create system configuration directory."
+                        " Check permissions and available disk space."
+                    )
+                    return result
                 bpod_path = self.choices.choose_path_first_init(self.default_bpod_path)
                 if bpod_path is None:
-                    self.result.state = InitState.ABORTED
-                    self.result.message = "User aborted path selection"
-                    return self.result
+                    result.state = InitState.ABORTED
+                    result.message = "User aborted path selection"
+                    return result
 
-                self._initialize_system_config_dir()
+                self._initialize_system_config_dir(bpod_path)
             else:
                 bpod_path = get_bpod_dir_from_system()
                 if bpod_path is None:
-                    self.result.state = InitState.FAILED
-                    self.result.message = "System is initialized but failed to read Bpod path from system configuration file."
-                    return self.result
+                    result.state = InitState.FAILED
+                    result.message = (
+                        "System is initialized but "
+                        "failed to read Bpod path from system configuration file."
+                    )
+                    return result
 
                 system_paths = system_settings.BpodDir.create(base_dir=bpod_path)
                 configuration_is_valid = system_paths.verify()
                 if not configuration_is_valid:
                     reinit = self.choices.choose_reinitialize_invalid_dir(bpod_path)
                     if reinit is None:
-                        self.result.state = InitState.ABORTED
-                        self.result.bpod_path = bpod_path
-                        self.result.message = "User aborted reinitialize decision"
-                        return self.result
+                        result.state = InitState.ABORTED
+                        result.bpod_path = bpod_path
+                        result.message = "User aborted reinitialize decision"
+                        return result
                     if not reinit:
-                        self.result.success = False
-                        self.result.state = InitState.INITIALIZED_INVALID
-                        self.result.bpod_path = bpod_path
-                        self.result.message = (
-                            "Directory invalid and reinitialize declined"
-                        )
-                        return self.result
+                        result.success = False
+                        result.state = InitState.INITIALIZED_INVALID
+                        result.bpod_path = bpod_path
+                        result.message = "Directory invalid and reinitialize declined"
+                        return result
 
-                    self._initialize_system_config_dir()
+                    self._initialize_system_config_dir(bpod_path)
                 else:
                     # System is already initialized and the directory is valid
-                    self.result.copied_defaults = False
+                    self.copied_defaults = False
 
             # self.logger.swap_stream(system_paths.log_dir)
             initial_system_config = utils.init_system_configuration(bpod_path)
@@ -168,26 +190,24 @@ class InitService:
             system_config_path = initial_system_config.save_system_configuration(  # noqa: F841
                 save_dir_override=SYSTEM_CONFIG_DIR
             )
-            self.result.success = True
-            self.result.state = InitState.COMPLETED
-            self.result.user_config_path = user_config_path
-            self.result.system_config_path = system_config_path
-            return self.result
+            result.success = True
+            result.state = InitState.COMPLETED
+            result.user_config_path = user_config_path
+            result.system_config_path = system_config_path
+            return result
         except Exception as exc:
-            self.result.success = False
-            self.result.state = InitState.FAILED
-            self.result.message = "Unexpected error occurred: " + str(exc)
-            return self.result
+            result.success = False
+            result.state = InitState.FAILED
+            result.message = "Unexpected error occurred: " + str(exc)
+            return result
 
-    def _initialize_system_config_dir(self) -> None:
-        if self.result.bpod_path is None:
-            raise ValueError(
-                "Bpod path must be set before initializing system config directory"
-            )
-        bpod_path = self.result.bpod_path
-        bpod_path = create_default_directories(bpod_path)
-        self.result.bpod_path = bpod_path
-        self.result.copied_defaults = self._maybe_copy_defaults(bpod_path)
+    def _initialize_system_config_dir(self, bpod_path: Path) -> bool:
+        create_default_directories(bpod_path)
+        copy_default = self.choices.choose_copy_defaults(bpod_path)
+        if copy_default:
+            copy_default_files(bpod_path)
+            return True
+        return False
 
     def _ensure_system_config_dir_exists(self) -> bool:
         try:
@@ -197,15 +217,8 @@ class InitService:
             return False
         return True
 
-    def _maybe_copy_defaults(self, bpod_path: Path) -> bool:
-        copy_default = self.choices.choose_copy_defaults(bpod_path)
-        if copy_default:
-            copy_default_files(bpod_path)
-            return True
-        return False
 
-
-def create_default_directories(bpod_directory_path: Path) -> Path:
+def create_default_directories(bpod_directory_path: Path) -> None:
     """Create the default Bpod folder structure.
 
     The Bpod directory will be created inside the given path with the following
@@ -227,10 +240,6 @@ def create_default_directories(bpod_directory_path: Path) -> Path:
     bpod_directory_path : pathlib.Path
         The path to initialize the Bpod folder location
 
-    Returns
-    -------
-    pathlib.Path
-        The path to the created Bpod directory.
     """
     is_new_install = False
 
@@ -254,8 +263,6 @@ def create_default_directories(bpod_directory_path: Path) -> Path:
 
     if is_new_install:
         logger.info("Bpod user directory initialized to %s", bpod_directory_path)
-
-    return bpod_directory_path
 
 
 def copy_default_files(bpod_folder_path: Path, override: bool = False):
