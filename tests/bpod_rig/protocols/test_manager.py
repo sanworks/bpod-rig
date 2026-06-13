@@ -37,7 +37,7 @@ def create_test_protocols_folder(root_path: Path):
         dir_path.mkdir(parents=True, exist_ok=True)
 
         protocol_file = dir_path / f"{protocol_name}.py"
-        protocol_file.write_text(f"def {protocol_name}(bpod_session):\n    pass\n")
+        protocol_file.write_text("def protocol(bpod_session):\n    pass\n")
         return protocol_file
 
     # Create Protocol_unique1
