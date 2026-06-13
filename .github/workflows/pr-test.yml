@@ -5,6 +5,13 @@ on:
     paths-ignore:
       - 'docs/**'
       - '**/*.md'
+  push:
+    branches:
+      - main
+      - dev
+    paths-ignore:
+      - 'docs/**'
+      - '**/*.md'
 
 jobs:
   test:
