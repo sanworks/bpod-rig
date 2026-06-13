@@ -29,7 +29,7 @@ class ProtocolManager:
 
         Searches for a protocol file matching the given name. The protocol file
         should be located in a directory structure like:
-            protocol_dir/[subfolder/]protocol_name/protocol_name.py
+            protocol_dir/[subfolder]/protocol_name/protocol_name.py
 
         If the protocol_name includes path separators (/ or \), they are used
         to narrow the search to a specific subfolder.
