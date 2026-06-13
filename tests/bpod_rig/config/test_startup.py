@@ -52,6 +52,8 @@ class TestInitService:
         """Setup and teardown."""
         self.temp_dir = tempfile.TemporaryDirectory()
         self.temp_path = Path(self.temp_dir.name)
+
+        # Set DEFAULT_BPOD_PATH and SYSTEM_CONFIG_DIR to temp paths for testing
         self.bpod_path = self.temp_path / "Bpod"
         self.system_path = self.temp_path / "sanworks"
 
@@ -64,8 +66,7 @@ class TestInitService:
 
         self.temp_dir.cleanup()
 
-    def test_init_service(self):
-
+    def test_init_service_success(self):
         init_service = startup.InitService(
             choices=ChoiceAdapter(),
             default_bpod_path=self.bpod_path,

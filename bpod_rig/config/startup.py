@@ -184,6 +184,7 @@ class InitService:
                     # System is already initialized and the directory is valid
                     self.copied_defaults = False
 
+            # TODO: figure this out
             # self.logger.swap_stream(system_paths.log_dir)
             initial_system_config = utils.init_system_configuration(bpod_path)
             user_config_path = initial_system_config.save_system_configuration()  # noqa: F841
