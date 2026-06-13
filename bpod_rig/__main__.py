@@ -140,7 +140,7 @@ def init_old():
         # We will (re) create the Bpod directories if the system isn't initialized
         # or something went wrong and we need to reinitialize
         logger.info("Initializing Bpod directory at %s", bpod_path)
-        bpod_path = startup.create_default_directories(bpod_path)
+        startup.create_default_directories(bpod_path)
         bpod_dir_verified = True
 
         copy_default = yes_no_prompt(
