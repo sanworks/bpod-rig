@@ -29,28 +29,36 @@ class TestCliIO:
 
     def test_yes_no_prompt(self, caplog):
         y1 = self.runner.invoke(
-            prompt_app, ["yes-no-prompt-cli-runner", "--prompt", "Testing..."], input="Y\n"
+            prompt_app,
+            ["yes-no-prompt-cli-runner", "--prompt", "Testing..."],
+            input="Y\n",
         )
 
         assert y1.exit_code == 0
         assert "Testing..." in y1.output
 
         y2 = self.runner.invoke(
-            prompt_app, ["yes-no-prompt-cli-runner", "--prompt", "Testing..."], input="y\n"
+            prompt_app,
+            ["yes-no-prompt-cli-runner", "--prompt", "Testing..."],
+            input="y\n",
         )
         # assert y1.return_value
         assert y2.exit_code == 0
         assert "Testing..." in y2.output
 
         n1 = self.runner.invoke(
-            prompt_app, ["yes-no-prompt-cli-runner", "--prompt","Testing..."], input="N\n"
+            prompt_app,
+            ["yes-no-prompt-cli-runner", "--prompt", "Testing..."],
+            input="N\n",
         )
         # assert not n1.return_value
         assert n1.exit_code == 0
         assert "Testing..." in n1.output
 
         n2 = self.runner.invoke(
-            prompt_app, ["yes-no-prompt-cli-runner", "--prompt", "Testing..."], input="n\n"
+            prompt_app,
+            ["yes-no-prompt-cli-runner", "--prompt", "Testing..."],
+            input="n\n",
         )
         # assert not n2.return_value
         assert n2.exit_code == 0
@@ -68,7 +76,7 @@ class TestCliIO:
         ) and caplog.at_level(logging.DEBUG):
             # patch to force a KeyboardInterrupt
             # Capture the logging to make sure 'aborted' is output
-            early = self.runner.invoke(
+            self.runner.invoke(
                 prompt_app,
                 ["yes-no-prompt-cli-runner", "--prompt", "Testing..."],
                 input="",
@@ -108,7 +116,7 @@ class TestCliIO:
         ) and caplog.at_level(logging.DEBUG):
             # patch to force a KeyboardInterrupt
             # Capture the logging to make sure 'aborted' is output
-            early = self.runner.invoke(
+            self.runner.invoke(
                 prompt_app,
                 ["prompt-for-path-cli-runner", "--prompt", "Testing..."],
                 input="\n",

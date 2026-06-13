@@ -1,4 +1,4 @@
-"""Helpers for running tests from CLI."""
+"""Test running for users to diagnose installation and hardware issues."""
 
 import os
 from pathlib import Path
