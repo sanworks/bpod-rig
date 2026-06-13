@@ -4,7 +4,7 @@ import shutil
 from pathlib import Path
 from typing import Iterable
 
-from bpod_rig.IO import cli_io
+from bpod_rig.cli import prompts
 
 logger = logging.getLogger(__name__)
 
@@ -33,12 +33,12 @@ def reset_all(directories: Iterable[Path | str], force=False) -> bool:
             True if directories were deleted
     """
     if not force:
-        confirmation = cli_io.yes_no_prompt(
+        confirmation = prompts.yes_no_prompt(
             "Are you sure you want to delete ALL Bpod-"
             "related directories on this machine?"
         )
         if confirmation:
-            final_confirmation = cli_io.yes_no_prompt(
+            final_confirmation = prompts.yes_no_prompt(
                 "Final warning: Are you SURE you want to delete all "
                 "Bpod-related directories?"
             )
