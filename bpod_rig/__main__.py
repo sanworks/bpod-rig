@@ -10,10 +10,9 @@ from pydantic import ValidationError
 from bpod_rig.cli.prompts import prompt_for_path, yes_no_prompt
 from bpod_rig.cli.protocols import app as protocols_app
 from bpod_rig.cli.test import app as test_app
-from bpod_rig.config import utils
+from bpod_rig.config import startup, utils
 from bpod_rig.config.system_settings import BpodDir
 from bpod_rig.defaults import DEFAULT_BPOD_PATH, SYSTEM_CONFIG_DIR, SYSTEM_CONFIG_FILE
-from bpod_rig.IO import startup
 from bpod_rig.log import BpodLogger, get_log_config
 
 DEBUG = True

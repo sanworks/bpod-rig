@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from bpod_rig.IO import startup
+from bpod_rig.config import startup
 
 
 class TestCreateDefaultDirectories:
