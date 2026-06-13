@@ -192,6 +192,8 @@ class InitService:
             )
             result.success = True
             result.state = InitState.COMPLETED
+            result.bpod_path = bpod_path
+            result.message = "Initialization successful."
             result.user_config_path = user_config_path
             result.system_config_path = system_config_path
             return result

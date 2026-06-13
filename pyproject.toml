@@ -139,6 +139,16 @@ unfixable = []
 # Allow unused variables when underscore-prefixed.
 dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 
+[tool.ruff.lint.per-file-ignores]
+"tests/**.py" = [
+    "ARG001", # Unused function argument
+    "ARG002", # Unused method argument
+    "PERF",   # Perflint
+    "S101",   # Use of assert detected
+    "S104",   # Possible binding to all interfaces
+    "SLF001", # private-member-access
+]
+
 [tool.ruff.lint.pydocstyle]
 convention = "numpy"
 
