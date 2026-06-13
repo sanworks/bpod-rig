@@ -114,8 +114,8 @@ class CLIStartupChoiceAdapter(StartupChoicePort):
         )
 
 
-class InitService:
-    """Service class to handle Bpod initialization logic."""
+class InitializationWorkflow:
+    """Use case/workflow/operation to initialize the bpod-rig on a system."""
 
     def __init__(
         self,

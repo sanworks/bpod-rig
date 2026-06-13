@@ -30,9 +30,9 @@ app.add_typer(test_app, name="test")
 
 @app.command()
 def init():
-    from bpod_rig.config.startup import CLIStartupChoiceAdapter, InitService
+    from bpod_rig.config.startup import CLIStartupChoiceAdapter, InitializationWorkflow
 
-    init_service = InitService(
+    init_service = InitializationWorkflow(
         choices=CLIStartupChoiceAdapter(),
         default_bpod_path=DEFAULT_BPOD_PATH,
         logger=logger,

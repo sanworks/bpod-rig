@@ -18,7 +18,7 @@ def get_logger() -> BpodLogger:
     return logger
 
 
-class ChoiceAdapter(startup.StartupChoicePort):
+class DefaultChoiceAdapter(startup.StartupChoicePort):
     def choose_path_first_init(self, default_path: Path) -> Path:
         return default_path
 
@@ -66,10 +66,9 @@ class TestInitService:
 
         self.temp_dir.cleanup()
 
-    def test_init_service_success(self):
-        """Basic test to ensure InitService runs successfully with valid choices."""
-        init_service = startup.InitService(
-            choices=ChoiceAdapter(),
+    def test_happy_path(self):
+        init_service = startup.InitializationWorkflow(
+            choices=DefaultChoiceAdapter(),
             default_bpod_path=self.bpod_path,
             logger=get_logger(),
         )
