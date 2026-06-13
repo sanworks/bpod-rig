@@ -43,8 +43,6 @@ class InitState(Enum):
 class InitResult:
     """Representation of initialization process outcome."""
 
-    success: bool
-    """Whether the initialization process completed successfully."""
     state: InitState
     """The final state of the initialization process."""
     message: list[str] | str
@@ -130,59 +128,56 @@ class InitService:
         self.logger = logger
 
     def run(self) -> InitResult:
-        result = InitResult(
-            success=False,
-            state=InitState.NOT_INITIALIZED,
-            message="Initialization not started.",
-        )
         try:
             initialized = check_system_is_initialized()
             # todo: verify integ of system file
             if not initialized:
                 if not self._ensure_system_config_dir_exists():
-                    result.state = InitState.FAILED
-                    result.message = (
-                        "Failed to create system configuration directory."
-                        " Check permissions and available disk space."
+                    return InitResult(
+                        state=InitState.FAILED,
+                        message="Failed to create system configuration directory."
+                        " Check permissions and available disk space.",
                     )
-                    return result
                 bpod_path = self.choices.choose_path_first_init(self.default_bpod_path)
                 if bpod_path is None:
-                    result.state = InitState.ABORTED
-                    result.message = "User aborted path selection"
-                    return result
+                    return InitResult(
+                        state=InitState.ABORTED,
+                        message="User aborted path selection",
+                    )
 
-                self._initialize_system_config_dir(bpod_path)
+                copied_defaults = self._initialize_system_config_dir(bpod_path)
             else:
                 bpod_path = get_bpod_dir_from_system()
                 if bpod_path is None:
-                    result.state = InitState.FAILED
-                    result.message = (
-                        "System is initialized but "
-                        "failed to read Bpod path from system configuration file."
+                    return InitResult(
+                        state=InitState.FAILED,
+                        message=(
+                            "System is initialized but failed to read Bpod path from "
+                            "system configuration file."
+                        ),
                     )
-                    return result
 
                 system_paths = system_settings.BpodDir.create(base_dir=bpod_path)
                 configuration_is_valid = system_paths.verify()
                 if not configuration_is_valid:
                     reinit = self.choices.choose_reinitialize_invalid_dir(bpod_path)
                     if reinit is None:
-                        result.state = InitState.ABORTED
-                        result.bpod_path = bpod_path
-                        result.message = "User aborted reinitialize decision"
-                        return result
+                        return InitResult(
+                            state=InitState.ABORTED,
+                            message="User aborted reinitialize decision",
+                            bpod_path=bpod_path,
+                        )
                     if not reinit:
-                        result.success = False
-                        result.state = InitState.INITIALIZED_INVALID
-                        result.bpod_path = bpod_path
-                        result.message = "Directory invalid and reinitialize declined"
-                        return result
+                        return InitResult(
+                            state=InitState.INITIALIZED_INVALID,
+                            message="Directory invalid and reinitialize declined",
+                            bpod_path=bpod_path,
+                        )
 
-                    self._initialize_system_config_dir(bpod_path)
+                    copied_defaults = self._initialize_system_config_dir(bpod_path)
                 else:
                     # System is already initialized and the directory is valid
-                    self.copied_defaults = False
+                    copied_defaults = False
 
             # TODO: figure this out
             # self.logger.swap_stream(system_paths.log_dir)
@@ -191,18 +186,19 @@ class InitService:
             system_config_path = initial_system_config.save_system_configuration(  # noqa: F841
                 save_dir_override=SYSTEM_CONFIG_DIR
             )
-            result.success = True
-            result.state = InitState.COMPLETED
-            result.bpod_path = bpod_path
-            result.message = "Initialization successful."
-            result.user_config_path = user_config_path
-            result.system_config_path = system_config_path
-            return result
+            return InitResult(
+                state=InitState.COMPLETED,
+                message="Initialization successful.",
+                bpod_path=bpod_path,
+                copied_defaults=copied_defaults,
+                user_config_path=user_config_path,
+                system_config_path=system_config_path,
+            )
         except Exception as exc:
-            result.success = False
-            result.state = InitState.FAILED
-            result.message = "Unexpected error occurred: " + str(exc)
-            return result
+            return InitResult(
+                state=InitState.FAILED,
+                message="Unexpected error occurred: " + str(exc),
+            )
 
     def _initialize_system_config_dir(self, bpod_path: Path) -> bool:
         create_default_directories(bpod_path)

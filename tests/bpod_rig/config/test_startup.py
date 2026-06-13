@@ -67,21 +67,23 @@ class TestInitService:
         self.temp_dir.cleanup()
 
     def test_init_service_success(self):
+        """Basic test to ensure InitService runs successfully with valid choices."""
         init_service = startup.InitService(
             choices=ChoiceAdapter(),
             default_bpod_path=self.bpod_path,
             logger=get_logger(),
         )
         result = init_service.run()
-        assert self.system_path.exists()
-        assert self.bpod_path.exists()
+
         expected_result = startup.InitResult(
-            success=True,
             state=startup.InitState.COMPLETED,
             message="Initialization successful.",
             bpod_path=self.bpod_path,
+            copied_defaults=True,
             details=None,
             user_config_path=self.bpod_path.joinpath("Config/config.json"),
             system_config_path=self.system_path.joinpath("config.json"),
         )
         assert result == expected_result
+        assert self.bpod_path.joinpath("Config/config.json").exists()
+        assert self.system_path.joinpath("config.json").exists()

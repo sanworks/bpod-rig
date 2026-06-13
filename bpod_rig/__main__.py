@@ -38,7 +38,7 @@ def init():
         logger=logger,
     )
     result = init_service.run()
-    if not result.success:
+    if result.state != startup.InitState.COMPLETED:
         logger.error("Initialization failed: %s", result.message)
         typer.Exit(code=-1)
         # raise RuntimeError(f"Initialization failed: {result.message}")
