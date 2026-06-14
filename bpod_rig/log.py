@@ -3,6 +3,7 @@ import datetime
 import logging
 import shutil
 import tempfile
+from collections.abc import Callable
 from pathlib import Path
 
 from bpod_rig.defaults import LOGFILE_PREFIX, TIME_FORMAT
@@ -55,7 +56,7 @@ LOGGING_CONFIG = {
 }
 
 
-def get_log_config(debug: bool = False) -> dict:
+def get_log_config(*, debug: bool = False) -> dict:
     """Factory function to get logging configuration.
 
     If debug is True, DEBUG messages are passed through to stdout
@@ -77,7 +78,7 @@ def get_log_config(debug: bool = False) -> dict:
     return LOGGING_CONFIG
 
 
-def stdout_filter():
+def stdout_filter() -> Callable[[logging.LogRecord], bool]:
     def filter(lf: logging.LogRecord) -> bool:  # noqa: A001
         return logging.ERROR > lf.levelno >= logging.INFO
         # If 40 > lf.levelno >= 20
@@ -100,7 +101,7 @@ class DynamicFileHandler(logging.FileHandler):
 
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         atexit.register(self._cleanup)
         self.temp_stream = tempfile.NamedTemporaryFile(  # noqa: SIM115
             mode="w", delete=False, suffix=".log"
@@ -119,7 +120,7 @@ class DynamicFileHandler(logging.FileHandler):
         if self.stream is not None:
             self.close()
 
-    def swap_stream(self, logging_dir: Path | str):
+    def swap_stream(self, logging_dir: Path | str) -> None:
         """Swaps the temporary stream for a file in the logging_dir directory.
 
         This function has multiple steps:
@@ -183,7 +184,7 @@ class BpodLogger(logging.Logger):
 
     """
 
-    def __init__(self, name: str):
+    def __init__(self, name: str) -> None:
         super().__init__(name)
 
         self.file_handler: DynamicFileHandler | None = None
@@ -192,7 +193,7 @@ class BpodLogger(logging.Logger):
             if isinstance(handler, DynamicFileHandler):
                 self.file_handler = handler
 
-    def swap_stream(self, logging_dir: Path | str):
+    def swap_stream(self, logging_dir: Path | str) -> None:
         if self.file_handler:
             self.file_handler.swap_stream(logging_dir)
         else:

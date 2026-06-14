@@ -11,7 +11,7 @@ app = typer.Typer(
 
 
 @app.command(name="list")
-def list_protocols():
+def list_protocols() -> None:
     """List all available protocols on the system."""
     _ = get_settings()
     raise NotImplementedError("Protocol searcher required.")
@@ -20,8 +20,9 @@ def list_protocols():
 @app.command()
 def open(  # noqa: A001
     protocol: Annotated[str | None, typer.Option()] = None,
+    *,
     open_file: Annotated[bool, typer.Option()] = False,
-):
+) -> None:
     """Open a protoocl folder (or file)."""
     raise NotImplementedError("Protocol searcher required.")
 

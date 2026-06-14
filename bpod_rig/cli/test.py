@@ -15,7 +15,7 @@ app = typer.Typer(
 
 
 @app.command()
-def software():
+def software() -> None:
     """Run software tests to verify installation."""
     tests_path = prepare_tests()
     exit_code = run_test(tests_path, hardware=False)
@@ -23,7 +23,7 @@ def software():
 
 
 @app.command()
-def hardware():
+def hardware() -> None:
     """Run hardware tests to verify hardware functionality."""
     tests_path = prepare_tests()
     exit_code = run_test(tests_path, hardware=True)
@@ -33,7 +33,7 @@ def hardware():
 def prepare_tests() -> Path:
     """Find the tests directory in the installed package."""
     try:
-        import pytest  # noqa: F401
+        import pytest  # noqa: F401, PLC0415
     except ImportError:
         typer.secho(
             "Error: pytest not installed. Install test dependencies with:",
@@ -63,7 +63,7 @@ def prepare_tests() -> Path:
     return tests_path
 
 
-def report_test_result(exit_code: int):
+def report_test_result(exit_code: int) -> None:
     """Print end-result message to console."""
     if exit_code == 0:
         typer.secho("\n✓ All tests passed!", fg=typer.colors.GREEN, bold=True)
@@ -71,7 +71,7 @@ def report_test_result(exit_code: int):
         typer.secho("\n✗ Some tests failed.", fg=typer.colors.RED, bold=True)
 
 
-def run_test(test_path: Path, hardware: bool = False) -> int:
+def run_test(test_path: Path, *, hardware: bool = False) -> int:
     """Execute pytest on test path."""
     run_command = f"pytest {test_path} -v"
     if hardware:

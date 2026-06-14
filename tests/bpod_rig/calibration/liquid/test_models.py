@@ -8,56 +8,56 @@ from bpod_rig.calibration.liquid.models import ValveData, ValveDataManager
 
 class TestValveDataClass:
     @pytest.fixture(autouse=True)
-    def setup_method(self):
+    def setup_method(self) -> None:
         self.valve = ValveData(ValveName="Test Valve")
 
-    def test_init_alias(self):
+    def test_init_alias(self) -> None:
         # Test that alias works correctly
         # type checker may complain about this because of pydantic aliasing
         assert ValveData(name="attrname").name == "attrname"  # pyright: ignore[reportCallIssue]
         assert ValveData(ValveName="aliasname").name == "aliasname"
 
-    def test_add_measurement(self):
+    def test_add_measurement(self) -> None:
         self.valve.add_measurement(10, 1.0)
         assert len(self.valve.amounts) == 1
         assert len(self.valve.durations) == 1
 
-    def test_get_valve_time(self):
+    def test_get_valve_time(self) -> None:
         self.valve.add_measurement(10, 1.0)
         self.valve.add_measurement(20, 2.0)
         duration = self.valve.get_valve_time(1.0)
         assert duration == pytest.approx(10)
 
-    def test_remove_measurement_by_index(self):
+    def test_remove_measurement_by_index(self) -> None:
         self.valve.add_measurement(10, 1.0)
         self.valve.remove_measurement(0)
         assert len(self.valve.amounts) == 0
 
-    def test_remove_measurement_by_duration(self):
+    def test_remove_measurement_by_duration(self) -> None:
         self.valve.add_measurement(10, 1.0)
         self.valve.remove_measurement(10, method="duration")
         assert len(self.valve.amounts) == 0
 
-    def test_remove_measurement_invalid_index(self):
+    def test_remove_measurement_invalid_index(self) -> None:
         self.valve.add_measurement(10, 1.0)
         self.valve.add_measurement(20, 2.0)
         self.valve.remove_measurement(0)
         with pytest.raises(IndexError):
             self.valve.remove_measurement(5)
 
-    def test_remove_measurement_invalid_duration(self):
+    def test_remove_measurement_invalid_duration(self) -> None:
         self.valve.add_measurement(10, 1.0)
         self.valve.add_measurement(20, 2.0)
         with pytest.raises(ValueError):
             self.valve.remove_measurement(15, method="duration")
 
-    def test_remove_measurement_duplicate_duration(self):
+    def test_remove_measurement_duplicate_duration(self) -> None:
         self.valve.add_measurement(10, 1.0)
         self.valve.add_measurement(10, 2.0)
         with pytest.raises(ValueError):
             self.valve.remove_measurement(10, method="duration")
 
-    def test_no_coeffs_with_insufficient_data(self):
+    def test_no_coeffs_with_insufficient_data(self) -> None:
         self.valve.add_measurement(10, 1.0)
         assert len(self.valve.coeffs) == 0
         with pytest.raises(ValueError):
@@ -68,22 +68,22 @@ class TestValveDataClass:
 
 class TestValveDataManagerClass:
     @pytest.fixture(autouse=True)
-    def setup_method(self):
+    def setup_method(self) -> None:
         self.manager = ValveDataManager()
         self.manager.create_valve("Test Valve")
         dummy = utils.create_empty_valve_data_manager()
         populate_examples.add_dummy_measurements(dummy)
         self.dummy = dummy
 
-    def test_create_valve(self):
+    def test_create_valve(self) -> None:
         assert self.manager.n_valves == 1
         assert "Test Valve" in self.manager.valve_names
 
-    def test_get_valve(self):
+    def test_get_valve(self) -> None:
         valve = self.manager.get_valve("Test Valve")
         assert isinstance(valve, ValveData)
 
-    def test_measurements(self):
+    def test_measurements(self) -> None:
         """Test that the default values are behaving as expected."""
         liquid_amount = 15
 
@@ -102,7 +102,7 @@ class TestGen2CalibrationFile:
     """Test loading a calibration file from the Bpod_Gen2 (MATLAB) repo."""
 
     @pytest.fixture(scope="class")
-    def jsontext(self):
+    def jsontext(self) -> str:
         return (
             urllib.request.urlopen(
                 "https://raw.githubusercontent.com/sanworks/Bpod_Gen2/refs/heads/develop/Examples/Example%20Calibration%20Files/LiquidCalibration.json"
@@ -111,13 +111,13 @@ class TestGen2CalibrationFile:
             .decode()
         )
 
-    def test_load_calibration_file(self, jsontext):
+    def test_load_calibration_file(self, jsontext: str) -> None:
         loaded_valves = ValveDataManager.model_validate_json(jsontext)
         assert isinstance(loaded_valves, ValveDataManager)
         assert loaded_valves.n_valves >= 1
         assert "Valve1" in loaded_valves.valve_names
 
-    def test_valve_modtime(self, jsontext):
+    def test_valve_modtime(self, jsontext: str) -> None:
         valvemanager = ValveDataManager.model_validate_json(jsontext)
         assert not utils.check_valvemanager_user_updated(valvemanager)
         newvalve = ValveDataManager.model_validate_json(valvemanager.to_json())
@@ -126,13 +126,13 @@ class TestGen2CalibrationFile:
 
 class TestValveDataManagerJSON:
     @pytest.fixture(autouse=True)
-    def setup_method(self):
+    def setup_method(self) -> None:
         self.manager = utils.create_empty_valve_data_manager()
         populate_examples.add_dummy_measurements(self.manager)
         self.json_str = self.manager.to_json()
         self.loaded_manager = ValveDataManager.model_validate_json(self.json_str)
 
-    def test_json_round_trip(self):
+    def test_json_round_trip(self) -> None:
         assert self.manager.n_valves == self.loaded_manager.n_valves
         assert self.manager.valve_names == self.loaded_manager.valve_names
         for valve_name in self.manager.valve_names:

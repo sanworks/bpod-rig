@@ -3,7 +3,7 @@
 import datetime
 import logging
 import pathlib
-from typing import Annotated, Any, Optional
+from typing import Annotated
 
 from pydantic import (
     BaseModel,
@@ -31,7 +31,7 @@ class SettingsMetadata(BaseModel):
     ] = datetime.date.today()
 
     modified_datetime: Annotated[
-        Optional[datetime.datetime | PastDate],  # Optional, but can be either type
+        datetime.datetime | PastDate | None,  # Optional, but can be either type
         Field(
             None,
             title="Settings Save Date and Time",
@@ -40,7 +40,7 @@ class SettingsMetadata(BaseModel):
     ] = None
 
     username: Annotated[
-        Optional[str],
+        str | None,
         Field(
             min_length=1,
             max_length=128,
@@ -79,7 +79,7 @@ class ModelWithMetadata(BaseModel):
     # noinspection PyNestedDecorators
     @model_validator(mode="before")
     @classmethod
-    def forward_username(cls, data: Any) -> Any:
+    def forward_username(cls, data: object) -> object:
         """Bring username into metadata.
 
         For simplicity, allow the user to pass username to the SystemSettings
@@ -93,21 +93,26 @@ class ModelWithMetadata(BaseModel):
 
         Parameters
         ----------
-        data : Any
+        data : object
             Unparsed kwargs dict passed to the SystemSettings constructor
 
         Returns
         -------
-        Any
+        object
             Kwargs dict modified to be passed to the SystemSettings constructor
         """
+        if not isinstance(data, dict):
+            return data
+
         if "metadata" not in data and "username" in data:
             # if the user passed in a dictionary for metadata, we will just forward it
             # otherwise, forward the "username" field to SettingsMetadata and return it
-            data["metadata"] = SettingsMetadata(username=data["username"])
+            username = data["username"]
+            if isinstance(username, str):
+                data["metadata"] = SettingsMetadata(username=username)
         return data
 
-    def update_modification_time(self):
+    def update_modification_time(self) -> None:
         """
         Update metadata modified_datetime field.
 
@@ -123,7 +128,7 @@ class ModelWithMetadata(BaseModel):
         logger.debug("Setting modification time for [%s] to %s", self, time)
         self.metadata.modified_datetime = time
 
-    def save_model(self, save_directory: pathlib.Path, filename: str):
+    def save_model(self, save_directory: pathlib.Path, filename: str) -> pathlib.Path:
         """Dump model to JSON and save it to disk.
 
         Parameters
