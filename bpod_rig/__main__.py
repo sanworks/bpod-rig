@@ -30,14 +30,13 @@ app.add_typer(test_app, name="test")
 
 @app.command()
 def init():
-    from bpod_rig.config.startup import CLIStartupChoiceAdapter, InitializationWorkflow
+    from bpod_rig.config.startup import CLIStartupChoiceAdapter, initialize_bpod_system
 
-    init_service = InitializationWorkflow(
+    result = initialize_bpod_system(
         choices=CLIStartupChoiceAdapter(),
         default_bpod_path=DEFAULT_BPOD_PATH,
         logger=logger,
     )
-    result = init_service.run()
     if result.state != startup.InitState.COMPLETED:
         logger.error("Initialization failed: %s", result.message)
         typer.Exit(code=-1)

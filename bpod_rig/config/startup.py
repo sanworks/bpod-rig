@@ -121,7 +121,7 @@ def initialize_bpod_system(
         initialized = check_system_is_initialized()
         # todo: verify integ of system file
         if not initialized:
-            if not _ensure_system_config_dir_exists():
+            if not _ensure_system_config_dir_exists(logger):
                 return InitResult(
                     state=InitState.FAILED,
                     message="Failed to create system configuration directory."
@@ -134,7 +134,7 @@ def initialize_bpod_system(
                     message="User aborted path selection",
                 )
 
-            copied_defaults = _initialize_system_config_dir(choices, bpod_path)
+            copied_defaults = _initialize_system_config_dir(choices, bpod_path, logger)
         else:
             bpod_path = get_bpod_dir_from_system()
             if bpod_path is None:
@@ -149,6 +149,7 @@ def initialize_bpod_system(
             system_paths = system_settings.BpodDir.create(base_dir=bpod_path)
             configuration_is_valid = system_paths.verify()
             if not configuration_is_valid:
+                logger.info("Bpod directory at %s failed verification.", bpod_path)
                 reinit = choices.choose_reinitialize_invalid_dir(bpod_path)
                 if reinit is None:
                     return InitResult(
@@ -163,9 +164,16 @@ def initialize_bpod_system(
                         bpod_path=bpod_path,
                     )
 
-                copied_defaults = _initialize_system_config_dir(choices, bpod_path)
+                # If the user has chosen to reinitialise the choice is to copy the data
+                choices.choose_copy_defaults = lambda bpod_path: True  # noqa: ARG005
+                copied_defaults = _initialize_system_config_dir(
+                    choices, bpod_path, logger
+                )
             else:
-                # System is already initialized and the directory is valid
+                logger.info(
+                    "Bpod has already been initialized and is valid at %s",
+                    bpod_path,
+                )
                 copied_defaults = False
 
         # TODO: figure this out
@@ -190,20 +198,32 @@ def initialize_bpod_system(
         )
 
 
-def _initialize_system_config_dir(choices: StartupChoicePort, bpod_path: Path) -> bool:
+def _initialize_system_config_dir(
+    choices: StartupChoicePort, bpod_path: Path, logger: logging.Logger
+) -> bool:
+    """Fill the directory with default files and folders, if the user chooses to."""
     create_default_directories(bpod_path)
     copy_default = choices.choose_copy_defaults(bpod_path)
     if copy_default:
+        logger.info("Chose to copy default files to %s", bpod_path)
         copy_default_files(bpod_path)
         return True
+    logger.info("Chose not to copy default files to %s", bpod_path)
     return False
 
 
-def _ensure_system_config_dir_exists() -> bool:
+def _ensure_system_config_dir_exists(logger: logging.Logger) -> bool:
     try:
-        SYSTEM_CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+        if not SYSTEM_CONFIG_DIR.exists():
+            logger.debug(
+                "System configuration directory not found. Creating at %s",
+                SYSTEM_CONFIG_DIR,
+            )
+            SYSTEM_CONFIG_DIR.mkdir(parents=True, exist_ok=False)
+        else:
+            logger.debug("System configuration directory found: %s", SYSTEM_CONFIG_DIR)
     except (IOError, OSError) as exc:
-        logger.error("Failed to create system configuration directory: %s", exc)
+        logger.exception("Failed to create system configuration directory: %s", exc)
         return False
     return True
 
