@@ -114,107 +114,98 @@ class CLIStartupChoiceAdapter(StartupChoicePort):
         )
 
 
-class InitializationWorkflow:
-    """Use case/workflow/operation to initialize the bpod-rig on a system."""
+def initialize_bpod_system(
+    choices: StartupChoicePort, default_bpod_path: Path, logger: BpodLogger
+) -> InitResult:
+    try:
+        initialized = check_system_is_initialized()
+        # todo: verify integ of system file
+        if not initialized:
+            if not _ensure_system_config_dir_exists():
+                return InitResult(
+                    state=InitState.FAILED,
+                    message="Failed to create system configuration directory."
+                    " Check permissions and available disk space.",
+                )
+            bpod_path = choices.choose_path_first_init(default_bpod_path)
+            if bpod_path is None:
+                return InitResult(
+                    state=InitState.ABORTED,
+                    message="User aborted path selection",
+                )
 
-    def __init__(
-        self,
-        choices: StartupChoicePort,  # dependency injection
-        default_bpod_path: Path,
-        logger: BpodLogger,
-    ):
-        self.choices = choices
-        self.default_bpod_path = default_bpod_path
-        self.logger = logger
+            copied_defaults = _initialize_system_config_dir(choices, bpod_path)
+        else:
+            bpod_path = get_bpod_dir_from_system()
+            if bpod_path is None:
+                return InitResult(
+                    state=InitState.FAILED,
+                    message=(
+                        "System is initialized but failed to read Bpod path from "
+                        "system configuration file."
+                    ),
+                )
 
-    def run(self) -> InitResult:
-        try:
-            initialized = check_system_is_initialized()
-            # todo: verify integ of system file
-            if not initialized:
-                if not self._ensure_system_config_dir_exists():
-                    return InitResult(
-                        state=InitState.FAILED,
-                        message="Failed to create system configuration directory."
-                        " Check permissions and available disk space.",
-                    )
-                bpod_path = self.choices.choose_path_first_init(self.default_bpod_path)
-                if bpod_path is None:
+            system_paths = system_settings.BpodDir.create(base_dir=bpod_path)
+            configuration_is_valid = system_paths.verify()
+            if not configuration_is_valid:
+                reinit = choices.choose_reinitialize_invalid_dir(bpod_path)
+                if reinit is None:
                     return InitResult(
                         state=InitState.ABORTED,
-                        message="User aborted path selection",
+                        message="User aborted reinitialize decision",
+                        bpod_path=bpod_path,
                     )
-
-                copied_defaults = self._initialize_system_config_dir(bpod_path)
-            else:
-                bpod_path = get_bpod_dir_from_system()
-                if bpod_path is None:
+                if not reinit:
                     return InitResult(
-                        state=InitState.FAILED,
-                        message=(
-                            "System is initialized but failed to read Bpod path from "
-                            "system configuration file."
-                        ),
+                        state=InitState.INITIALIZED_INVALID,
+                        message="Directory invalid and reinitialize declined",
+                        bpod_path=bpod_path,
                     )
 
-                system_paths = system_settings.BpodDir.create(base_dir=bpod_path)
-                configuration_is_valid = system_paths.verify()
-                if not configuration_is_valid:
-                    reinit = self.choices.choose_reinitialize_invalid_dir(bpod_path)
-                    if reinit is None:
-                        return InitResult(
-                            state=InitState.ABORTED,
-                            message="User aborted reinitialize decision",
-                            bpod_path=bpod_path,
-                        )
-                    if not reinit:
-                        return InitResult(
-                            state=InitState.INITIALIZED_INVALID,
-                            message="Directory invalid and reinitialize declined",
-                            bpod_path=bpod_path,
-                        )
+                copied_defaults = _initialize_system_config_dir(choices, bpod_path)
+            else:
+                # System is already initialized and the directory is valid
+                copied_defaults = False
 
-                    copied_defaults = self._initialize_system_config_dir(bpod_path)
-                else:
-                    # System is already initialized and the directory is valid
-                    copied_defaults = False
+        # TODO: figure this out
+        # self.logger.swap_stream(system_paths.log_dir)
+        initial_system_config = utils.init_system_configuration(bpod_path)
+        user_config_path = initial_system_config.save_system_configuration()  # noqa: F841
+        system_config_path = initial_system_config.save_system_configuration(  # noqa: F841
+            save_dir_override=SYSTEM_CONFIG_DIR
+        )
+        return InitResult(
+            state=InitState.COMPLETED,
+            message="Initialization successful.",
+            bpod_path=bpod_path,
+            copied_defaults=copied_defaults,
+            user_config_path=user_config_path,
+            system_config_path=system_config_path,
+        )
+    except Exception as exc:
+        return InitResult(
+            state=InitState.FAILED,
+            message="Unexpected error occurred: " + str(exc),
+        )
 
-            # TODO: figure this out
-            # self.logger.swap_stream(system_paths.log_dir)
-            initial_system_config = utils.init_system_configuration(bpod_path)
-            user_config_path = initial_system_config.save_system_configuration()  # noqa: F841
-            system_config_path = initial_system_config.save_system_configuration(  # noqa: F841
-                save_dir_override=SYSTEM_CONFIG_DIR
-            )
-            return InitResult(
-                state=InitState.COMPLETED,
-                message="Initialization successful.",
-                bpod_path=bpod_path,
-                copied_defaults=copied_defaults,
-                user_config_path=user_config_path,
-                system_config_path=system_config_path,
-            )
-        except Exception as exc:
-            return InitResult(
-                state=InitState.FAILED,
-                message="Unexpected error occurred: " + str(exc),
-            )
 
-    def _initialize_system_config_dir(self, bpod_path: Path) -> bool:
-        create_default_directories(bpod_path)
-        copy_default = self.choices.choose_copy_defaults(bpod_path)
-        if copy_default:
-            copy_default_files(bpod_path)
-            return True
-        return False
-
-    def _ensure_system_config_dir_exists(self) -> bool:
-        try:
-            SYSTEM_CONFIG_DIR.mkdir(parents=True, exist_ok=True)
-        except (IOError, OSError) as exc:
-            logger.error("Failed to create system configuration directory: %s", exc)
-            return False
+def _initialize_system_config_dir(choices: StartupChoicePort, bpod_path: Path) -> bool:
+    create_default_directories(bpod_path)
+    copy_default = choices.choose_copy_defaults(bpod_path)
+    if copy_default:
+        copy_default_files(bpod_path)
         return True
+    return False
+
+
+def _ensure_system_config_dir_exists() -> bool:
+    try:
+        SYSTEM_CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+    except (IOError, OSError) as exc:
+        logger.error("Failed to create system configuration directory: %s", exc)
+        return False
+    return True
 
 
 def create_default_directories(bpod_directory_path: Path) -> None:

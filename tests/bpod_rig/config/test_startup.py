@@ -67,12 +67,11 @@ class TestInitService:
         self.temp_dir.cleanup()
 
     def test_happy_path(self):
-        init_service = startup.InitializationWorkflow(
+        result = startup.initialize_bpod_system(
             choices=DefaultChoiceAdapter(),
             default_bpod_path=self.bpod_path,
             logger=get_logger(),
         )
-        result = init_service.run()
 
         expected_result = startup.InitResult(
             state=startup.InitState.COMPLETED,
