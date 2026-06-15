@@ -177,7 +177,8 @@ def initialize_bpod_system(
                 copied_defaults = False
 
         # TODO: figure this out
-        # self.logger.swap_stream(system_paths.log_dir)
+        bpod_dir = system_settings.BpodDir.create(base_dir=bpod_path)
+        logger.swap_stream(bpod_dir.log_dir)
         initial_system_config = utils.init_system_configuration(bpod_path)
         user_config_path = initial_system_config.save_system_configuration()  # noqa: F841
         system_config_path = initial_system_config.save_system_configuration(  # noqa: F841
