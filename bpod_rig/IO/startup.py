@@ -67,7 +67,7 @@ def create_default_directories(bpod_directory_path: Path) -> Path:
     return bpod_directory_path
 
 
-def copy_default_files(bpod_folder_path: Path, override: bool = False):
+def copy_default_files(bpod_folder_path: Path, *, override: bool = False) -> None:
     """Function to copy default files into their respective folders.
 
     Copies the default calibration and configuration files from the examples module

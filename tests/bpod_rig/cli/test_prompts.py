@@ -1,5 +1,6 @@
 import logging
 import tempfile
+from collections.abc import Generator
 from pathlib import Path
 from unittest.mock import patch
 
@@ -11,7 +12,7 @@ from bpod_rig.cli.prompts import app as prompt_app
 
 class TestCliIO:
     @pytest.fixture(autouse=True)
-    def setup_and_teardown(self):
+    def setup_and_teardown(self) -> Generator[None, None, None]:
         """Setup and teardown."""
         self.temp_dir = tempfile.TemporaryDirectory()
         self.temp_path = Path(self.temp_dir.name)
@@ -27,7 +28,7 @@ class TestCliIO:
         self.temp_file.unlink()
         self.temp_dir.cleanup()
 
-    def test_yes_no_prompt(self, caplog):
+    def test_yes_no_prompt(self, caplog: pytest.LogCaptureFixture) -> None:
         y1 = self.runner.invoke(
             prompt_app,
             ["yes-no-prompt-cli-runner", "--prompt", "Testing..."],
@@ -86,7 +87,7 @@ class TestCliIO:
             # assert early.return_value is None
             assert "aborted" in caplog.text
 
-    def test_prompt_for_path(self, caplog):
+    def test_prompt_for_path(self, caplog: pytest.LogCaptureFixture) -> None:
 
         exists = self.runner.invoke(
             prompt_app,

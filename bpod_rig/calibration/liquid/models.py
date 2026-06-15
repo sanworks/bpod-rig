@@ -144,7 +144,7 @@ class ValveData(BaseModel):
         self.coeffs = np.polyfit(self.amounts, self.durations, order).tolist()
 
     @field_serializer("lastdatemodified")
-    def serialize_datetime(self, dt: datetime.datetime, _info):
+    def serialize_datetime(self, dt: datetime.datetime) -> str:
         if isinstance(dt, str):  # if uncalibrated it is an empty string
             return dt
         return dt.isoformat(timespec="seconds")
@@ -168,7 +168,7 @@ class ValveManagerMetaData(BaseModel):
     )
 
     @field_serializer("modification_datetime")
-    def serialize_datetime(self, modification_datetime: datetime.datetime, _info):
+    def serialize_datetime(self, modification_datetime: datetime.datetime) -> str:
         return modification_datetime.isoformat(timespec="seconds")
 
 
@@ -211,7 +211,7 @@ class ValveDataManager(BaseModel):
         if valvename in self.valve_names:
             raise KeyError(f"Valve '{valvename}' already exists.")
         self.valves.append(ValveData(ValveName=valvename))
-        logger.debug(f"Created new valve: {valvename}")
+        logger.debug("Created new valve: %s", valvename)
 
     @property
     def n_valves(self) -> int:

@@ -8,7 +8,7 @@ class ProtocolManager:
 
     protocols: set[Path]
 
-    def __init__(self, protocol_dir: Path):
+    def __init__(self, protocol_dir: Path) -> None:
         if not protocol_dir.exists():
             raise FileNotFoundError(
                 f"Protocol directory {protocol_dir} does not exist."
@@ -16,7 +16,7 @@ class ProtocolManager:
         self.protocol_dir = protocol_dir
         self.load_protocols()
 
-    def load_protocols(self):
+    def load_protocols(self) -> None:
         """Load protocols from the protocol directory."""
         # Expect protocols to be in a subfolder with the same name as the protocol file
         self.protocols = set()

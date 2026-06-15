@@ -2,7 +2,7 @@
 
 import logging
 from pathlib import Path
-from typing import Annotated, Optional
+from typing import Annotated
 
 from pydantic import UUID4, Field, PastDate
 from pydantic_core import from_json
@@ -192,7 +192,7 @@ class SystemSettings(ModelWithMetadata):
     ]
 
     last_update_check: Annotated[
-        Optional[PastDate],
+        PastDate | None,
         Field(
             title="Last update check date and time",
             description="Last date and time that system checked for any updates"
@@ -201,7 +201,7 @@ class SystemSettings(ModelWithMetadata):
     ] = None
 
     phone_home_id: Annotated[
-        Optional[UUID4],
+        UUID4 | None,
         Field(
             title="System's Unique Phone-Home ID",
             description="UUID4 ID of the current system"
@@ -235,7 +235,7 @@ class SystemSettings(ModelWithMetadata):
     ]
 
     bpod_dirs: Annotated[
-        Optional[list[BpodPaths]],
+        list[BpodPaths] | None,
         Field(
             title="All Bpod Paths",
             description="List containing BpodPaths objects that contain"
@@ -251,7 +251,7 @@ class SystemSettings(ModelWithMetadata):
         current_version: str = "0.0.0",
         phone_home_opt_in: bool = False,
         debug: bool = False,
-        bpod_dirs: Optional[list[BpodPaths]] = None,
+        bpod_dirs: list[BpodPaths] | None = None,
         username: str | None = None,
         metadata: "SettingsMetadata | None" = None,
     ) -> "SystemSettings":
@@ -297,7 +297,7 @@ class SystemSettings(ModelWithMetadata):
             metadata=metadata or SettingsMetadata(username=username),
         )
 
-    def update_modification_time(self):
+    def update_modification_time(self) -> None:
         """Update time the SystemSettings object was modified.
 
         Override update_modification_time to also update the modified_datetime metadata
