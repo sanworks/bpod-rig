@@ -131,7 +131,7 @@ def initialize_bpod_system(
             if bpod_path is None:
                 return InitResult(
                     state=InitState.ABORTED,
-                    message="User aborted path selection",
+                    message="User aborted path selection.",
                 )
 
             copied_defaults = _initialize_system_config_dir(choices, bpod_path, logger)
@@ -154,13 +154,13 @@ def initialize_bpod_system(
                 if reinit is None:
                     return InitResult(
                         state=InitState.ABORTED,
-                        message="User aborted reinitialize decision",
+                        message="User aborted reinitialize decision.",
                         bpod_path=bpod_path,
                     )
                 if not reinit:
                     return InitResult(
                         state=InitState.INITIALIZED_INVALID,
-                        message="Directory invalid and reinitialize declined",
+                        message="Directory invalid and reinitialize declined.",
                         bpod_path=bpod_path,
                     )
 
