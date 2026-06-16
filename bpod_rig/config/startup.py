@@ -117,6 +117,25 @@ class CLIStartupChoiceAdapter(StartupChoiceProtocol):
 def initialize_bpod_system(
     choices: StartupChoiceProtocol, default_bpod_path: Path, logger: BpodLogger
 ) -> InitResult:
+    """Initialize the Bpod system on this machine.
+
+
+    Parameters
+    ----------
+    choices : StartupChoiceProtocol
+        An object that implements the StartupChoiceProtocol to handle
+        user choices during initialization.
+    default_bpod_path : pathlib.Path
+        The default path to the Bpod directory to suggest during initialization.
+    logger : BpodLogger
+        A logger instance to use for logging during initialization.
+
+    Returns
+    -------
+    InitResult
+        An object representing the outcome of the initialization process, including
+        the final state and any messages,
+    """
     try:
         initialized = check_system_is_initialized()
         # todo: verify integ of system file
