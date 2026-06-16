@@ -6,6 +6,8 @@ from enum import Enum, auto
 from pathlib import Path
 from typing import Protocol
 
+from pydantic import ValidationError
+
 from bpod_rig.cli.prompts import prompt_for_path, yes_no_prompt
 from bpod_rig.config import system_settings, utils
 from bpod_rig.defaults import (
@@ -73,6 +75,17 @@ class StartupChoiceProtocol(Protocol):
         """
         ...
 
+    def choose_reinitialize_invalid_system_config(
+        self, invalid_path: Path
+    ) -> bool | None:
+        """
+        When the system configuration file is found but fails to load, ask the user if
+        they want to reinitialize.
+        Return True if they want to reinitialize, False if they want to keep the
+        existing config, or None if they abort.
+        """
+        ...
+
     def choose_reinitialize_invalid_dir(self, invalid_path: Path) -> bool | None:
         """
         When the system is initialized but the Bpod directory fails verification, ask
@@ -108,6 +121,13 @@ class CLIStartupChoiceAdapter(StartupChoiceProtocol):
             f"The Bpod directory at {invalid_path} failed verification. Reinitialize?"
         )
 
+    def choose_reinitialize_invalid_system_config(
+        self, invalid_path: Path
+    ) -> bool | None:
+        return yes_no_prompt(
+            f"The system configuration file at {invalid_path} is invalid. Reinitialize?"
+        )
+
     def choose_copy_defaults(self, bpod_path: Path) -> bool | None:
         return yes_no_prompt(
             f"Copy default protocols and calibration files to {bpod_path}?"
@@ -138,7 +158,6 @@ def initialize_bpod_system(
     """
     try:
         initialized = check_system_is_initialized()
-        # todo: verify integ of system file
         if not initialized:
             exists = _create_system_config_dir_if_not_exists(logger)
             if not exists:
@@ -147,6 +166,26 @@ def initialize_bpod_system(
                     message="Failed to create system configuration directory."
                     " Check permissions, available disk space, and/or logs.",
                 )
+            if check_system_config_exists():
+                reinit = choices.choose_reinitialize_invalid_system_config(
+                    SYSTEM_CONFIG_FILE
+                )
+                if reinit is None:
+                    return InitResult(
+                        state=InitState.ABORTED,
+                        message="User aborted reinitialize decision "
+                        "for invalid system config.",
+                        system_config_path=SYSTEM_CONFIG_FILE,
+                    )
+                if not reinit:
+                    return InitResult(
+                        # TODO: this is a different state to the other invalid
+                        state=InitState.INITIALIZED_INVALID,
+                        message="System configuration file is invalid "
+                        "and user declined reinitialization.",
+                        system_config_path=SYSTEM_CONFIG_FILE,
+                    )
+
             bpod_path = choices.choose_override_path_first_init(default_bpod_path)
             if bpod_path is None:
                 return InitResult(
@@ -339,6 +378,23 @@ def get_bpod_dir_from_system() -> Path | None:
     return sys_settings.paths.base_dir
 
 
+def check_system_config_exists() -> bool:
+    """Checks whether the system configuration file exists.
+
+    Returns
+    -------
+    bool
+        True if the system configuration file exists, False otherwise.
+    """
+    if not SYSTEM_CONFIG_DIR.exists():
+        return False
+    logger.debug("System configuration directory found: %s", SYSTEM_CONFIG_DIR)
+    if not SYSTEM_CONFIG_FILE.exists():
+        return False
+    logger.debug("System configuration file found: %s", SYSTEM_CONFIG_FILE)
+    return True
+
+
 def check_system_is_initialized() -> bool:
     """Checks whether Bpod has been initialized on this system before.
 
@@ -353,9 +409,17 @@ def check_system_is_initialized() -> bool:
     bool
         True if system is initialized, False otherwise
     """
-    if SYSTEM_CONFIG_DIR.exists():
-        logger.debug("System configuration directory found: %s", SYSTEM_CONFIG_DIR)
-        if SYSTEM_CONFIG_FILE.exists():
-            logger.debug("System configuration file found: %s", SYSTEM_CONFIG_FILE)
-            return True
-    return False
+    if not check_system_config_exists():
+        return False
+
+    try:
+        _ = system_settings.load_system_configuration(SYSTEM_CONFIG_FILE)
+    except ValidationError as exc:
+        logger.error(
+            "System configuration file is malformed: %s. Error: %s",
+            SYSTEM_CONFIG_FILE,
+            exc,
+        )
+        return False
+
+    return True

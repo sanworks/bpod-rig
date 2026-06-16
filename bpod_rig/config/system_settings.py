@@ -5,7 +5,6 @@ from pathlib import Path
 from typing import Annotated, Optional
 
 from pydantic import UUID4, Field, PastDate
-from pydantic_core import from_json
 
 from bpod_rig.config.base import ModelWithMetadata, SettingsMetadata
 from bpod_rig.config.bpod_settings import BpodPaths
@@ -368,8 +367,4 @@ def load_system_configuration(config_file_path: Path) -> SystemSettings:
 
 
     """
-    logger.debug("Attempting to read, parse, and validate: %s", config_file_path)
-
-    file_content_json = json_handler.read_json(config_file_path)
-    json_object = from_json(file_content_json, allow_partial=False)
-    return SystemSettings.model_validate(json_object)
+    return SystemSettings.model_validate_json(config_file_path.read_text())

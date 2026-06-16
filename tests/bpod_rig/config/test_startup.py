@@ -7,7 +7,7 @@ from typing import Generator, cast
 
 import pytest
 
-from bpod_rig.config import startup
+from bpod_rig.config import startup, system_settings
 from bpod_rig.log import BpodLogger, get_log_config
 
 
@@ -49,26 +49,37 @@ def temp_setup(monkeypatch: pytest.MonkeyPatch) -> Generator[TempSetup, None, No
     temp_dir.cleanup()
 
 
+@dataclass
 class DefaultChoiceAdapter(startup.StartupChoiceProtocol):
+    override_path: Path | None = None
+    reinitialize_system_config: bool = True
+    reinitialize: bool = True
+    copy_defaults: bool = True
+
     def choose_override_path_first_init(self, default_path: Path) -> Path:
+        if self.override_path is not None:
+            return self.override_path
         return default_path
 
+    def choose_reinitialize_invalid_system_config(
+        self, invalid_path: Path
+    ) -> bool | None:
+        return self.reinitialize_system_config
+
     def choose_reinitialize_invalid_dir(self, invalid_path: Path) -> bool | None:
-        return True
+        return self.reinitialize
 
     def choose_copy_defaults(self, bpod_path: Path) -> bool | None:
-        return True
+        return self.copy_defaults
 
 
 class TestCreateDefaultDirectories:
-
     def test_folder_creation(self, temp_setup: TempSetup):
         startup.create_default_directories(temp_setup.bpod_path)
         assert temp_setup.bpod_path.exists()
 
 
 class TestInitService:
-
     def test_happy_path(self, temp_setup: TempSetup):
         result = startup.initialize_bpod_system(
             choices=DefaultChoiceAdapter(),
@@ -89,20 +100,31 @@ class TestInitService:
         assert temp_setup.bpod_path.joinpath("Config/config.json").exists()
         assert temp_setup.system_path.joinpath("config.json").exists()
 
-    def test_malformed_system_config(self, temp_setup: TempSetup):
+    def test_malformed_system_config_overriden(self, temp_setup: TempSetup):
         # Create a malformed system config file
         temp_setup.system_path.mkdir(parents=True, exist_ok=True)
         malformed_config_path = temp_setup.system_path.joinpath("config.json")
         malformed_config_path.write_text("{ malformed json }")
-
         result = startup.initialize_bpod_system(
             choices=DefaultChoiceAdapter(),
             default_bpod_path=temp_setup.bpod_path,
             logger=get_logger(),
         )
 
-        assert result.state == startup.InitState.FAILED
-        # assert "Malformed system config" in result.message  # fails
+        assert result.state == startup.InitState.COMPLETED
+
+    def test_malformed_system_config_not_overridden(self, temp_setup: TempSetup):
+        # Create a malformed system config file
+        temp_setup.system_path.mkdir(parents=True, exist_ok=True)
+        malformed_config_path = temp_setup.system_path.joinpath("config.json")
+        malformed_config_path.write_text("{ malformed json }")
+        result = startup.initialize_bpod_system(
+            choices=DefaultChoiceAdapter(reinitialize_system_config=False),
+            default_bpod_path=temp_setup.bpod_path,
+            logger=get_logger(),
+        )
+
+        assert result.state == startup.InitState.INITIALIZED_INVALID
 
     def test_log_swap_stream(self, temp_setup: TempSetup):
         # Test that the logger's stream is swapped to the file handler
@@ -123,4 +145,35 @@ class TestInitService:
         assert logger.file_handler.log_dir == temp_setup.bpod_path.joinpath("Logs")
 
 
-class TestHelperFunctions: ...
+class TestHelperFunctions:
+    def test_happy_system_config_load(self, temp_setup: TempSetup):
+        temp_setup.system_path.mkdir(parents=True, exist_ok=True)
+        valid_config_path = temp_setup.system_path.joinpath("config.json")
+        system_config = system_settings.SystemSettings.create(
+            system_settings.BpodDir.create(temp_setup.bpod_path)
+        )
+        valid_config_path.write_text(system_config.model_dump_json())
+
+        assert startup.check_system_is_initialized()
+
+    def test_nonexistent_system_config_load(self, temp_setup: TempSetup):
+        assert not startup.check_system_is_initialized(), "Folder shouldn't exist"
+        temp_setup.system_path.mkdir(parents=True, exist_ok=True)
+        assert not startup.check_system_is_initialized(), "File shouldn't exist"
+
+    def test_malformed_system_config_load(self, temp_setup: TempSetup):
+        # Create a malformed system config file
+        temp_setup.system_path.mkdir(parents=True, exist_ok=True)
+        malformed_config_path = temp_setup.system_path.joinpath("config.json")
+        malformed_config_path.write_text(
+            '{"key": "value",}'
+        )  # Invalid JSON due to trailing comma
+
+        assert not startup.check_system_is_initialized()
+
+    def test_invalid_system_config_load(self, temp_setup: TempSetup):
+        # Create a system config file with missing required fields
+        temp_setup.system_path.mkdir(parents=True, exist_ok=True)
+        invalid_config_path = temp_setup.system_path.joinpath("config.json")
+        invalid_config_path.write_text("{}")  # Empty JSON, missing required fields
+        assert not startup.check_system_is_initialized()
