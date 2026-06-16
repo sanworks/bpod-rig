@@ -65,7 +65,7 @@ class InitResult:
 class StartupChoiceProtocol(Protocol):
     """Each of the possible decisions during system initialization."""
 
-    def choose_path_first_init(self, default_path: Path) -> Path | None:
+    def choose_override_path_first_init(self, default_path: Path) -> Path | None:
         """
         When the system is not initialized, ask the user if they want to override the
         default path and if so, prompt them to enter a path.
@@ -91,7 +91,7 @@ class StartupChoiceProtocol(Protocol):
 
 
 class CLIStartupChoiceAdapter(StartupChoiceProtocol):
-    def choose_path_first_init(self, default_path: Path) -> Path | None:
+    def choose_override_path_first_init(self, default_path: Path) -> Path | None:
         override = yes_no_prompt(
             f"Bpod has not been initialized. Override default path {default_path}?"
         )
@@ -127,7 +127,7 @@ def initialize_bpod_system(
                     message="Failed to create system configuration directory."
                     " Check permissions and available disk space.",
                 )
-            bpod_path = choices.choose_path_first_init(default_bpod_path)
+            bpod_path = choices.choose_override_path_first_init(default_bpod_path)
             if bpod_path is None:
                 return InitResult(
                     state=InitState.ABORTED,

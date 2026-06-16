@@ -19,7 +19,7 @@ def get_logger() -> BpodLogger:
 
 
 class DefaultChoiceAdapter(startup.StartupChoiceProtocol):
-    def choose_path_first_init(self, default_path: Path) -> Path:
+    def choose_override_path_first_init(self, default_path: Path) -> Path:
         return default_path
 
     def choose_reinitialize_invalid_dir(self, invalid_path: Path) -> bool | None:
