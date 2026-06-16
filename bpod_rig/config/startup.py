@@ -121,11 +121,12 @@ def initialize_bpod_system(
         initialized = check_system_is_initialized()
         # todo: verify integ of system file
         if not initialized:
-            if not _ensure_system_config_dir_exists(logger):
+            exists = _create_system_config_dir_if_not_exists(logger)
+            if not exists:
                 return InitResult(
                     state=InitState.FAILED,
                     message="Failed to create system configuration directory."
-                    " Check permissions and available disk space.",
+                    " Check permissions, available disk space, and/or logs.",
                 )
             bpod_path = choices.choose_override_path_first_init(default_bpod_path)
             if bpod_path is None:
@@ -213,7 +214,7 @@ def _initialize_system_config_dir(
     return False
 
 
-def _ensure_system_config_dir_exists(logger: logging.Logger) -> bool:
+def _create_system_config_dir_if_not_exists(logger: logging.Logger) -> bool:
     try:
         if not SYSTEM_CONFIG_DIR.exists():
             logger.debug(
