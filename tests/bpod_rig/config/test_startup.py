@@ -51,6 +51,11 @@ def temp_setup(monkeypatch: pytest.MonkeyPatch) -> Generator[TempSetup, None, No
 
 @dataclass
 class ConfigurableChoiceAdapter(startup.StartupChoiceProtocol):
+    """Adapter to provide configurable choices for testing purposes.
+
+    The default values should always lead to sucessful initialization.
+    """
+
     override_path: Path | None = None
     reinitialize_system_config: bool = True
     reinitialize: bool = True
