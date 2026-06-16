@@ -50,7 +50,7 @@ def temp_setup(monkeypatch: pytest.MonkeyPatch) -> Generator[TempSetup, None, No
 
 
 @dataclass
-class DefaultChoiceAdapter(startup.StartupChoiceProtocol):
+class ConfigurableChoiceAdapter(startup.StartupChoiceProtocol):
     override_path: Path | None = None
     reinitialize_system_config: bool = True
     reinitialize: bool = True
@@ -82,7 +82,7 @@ class TestCreateDefaultDirectories:
 class TestInitService:
     def test_happy_path(self, temp_setup: TempSetup):
         result = startup.initialize_bpod_system(
-            choices=DefaultChoiceAdapter(),
+            choices=ConfigurableChoiceAdapter(),
             default_bpod_path=temp_setup.bpod_path,
             logger=get_logger(),
         )
@@ -106,7 +106,7 @@ class TestInitService:
         malformed_config_path = temp_setup.system_path.joinpath("config.json")
         malformed_config_path.write_text("{ malformed json }")
         result = startup.initialize_bpod_system(
-            choices=DefaultChoiceAdapter(),
+            choices=ConfigurableChoiceAdapter(),
             default_bpod_path=temp_setup.bpod_path,
             logger=get_logger(),
         )
@@ -119,7 +119,7 @@ class TestInitService:
         malformed_config_path = temp_setup.system_path.joinpath("config.json")
         malformed_config_path.write_text("{ malformed json }")
         result = startup.initialize_bpod_system(
-            choices=DefaultChoiceAdapter(reinitialize_system_config=False),
+            choices=ConfigurableChoiceAdapter(reinitialize_system_config=False),
             default_bpod_path=temp_setup.bpod_path,
             logger=get_logger(),
         )
@@ -136,7 +136,7 @@ class TestInitService:
         assert logger.file_handler.log_dir.is_relative_to(Path(tempfile.gettempdir()))
 
         result = startup.initialize_bpod_system(
-            choices=DefaultChoiceAdapter(),
+            choices=ConfigurableChoiceAdapter(),
             default_bpod_path=temp_setup.bpod_path,
             logger=logger,
         )
