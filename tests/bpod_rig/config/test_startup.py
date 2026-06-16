@@ -18,7 +18,7 @@ def get_logger() -> BpodLogger:
     return logger
 
 
-class DefaultChoiceAdapter(startup.StartupChoicePort):
+class DefaultChoiceAdapter(startup.StartupChoiceProtocol):
     def choose_path_first_init(self, default_path: Path) -> Path:
         return default_path
 

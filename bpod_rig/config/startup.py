@@ -62,7 +62,7 @@ class InitResult:
     """The path to the saved system configuration file, if applicable."""
 
 
-class StartupChoicePort(Protocol):
+class StartupChoiceProtocol(Protocol):
     """Each of the possible decisions during system initialization."""
 
     def choose_path_first_init(self, default_path: Path) -> Path | None:
@@ -90,7 +90,7 @@ class StartupChoicePort(Protocol):
         ...
 
 
-class CLIStartupChoiceAdapter(StartupChoicePort):
+class CLIStartupChoiceAdapter(StartupChoiceProtocol):
     def choose_path_first_init(self, default_path: Path) -> Path | None:
         override = yes_no_prompt(
             f"Bpod has not been initialized. Override default path {default_path}?"
@@ -115,7 +115,7 @@ class CLIStartupChoiceAdapter(StartupChoicePort):
 
 
 def initialize_bpod_system(
-    choices: StartupChoicePort, default_bpod_path: Path, logger: BpodLogger
+    choices: StartupChoiceProtocol, default_bpod_path: Path, logger: BpodLogger
 ) -> InitResult:
     try:
         initialized = check_system_is_initialized()
@@ -200,7 +200,7 @@ def initialize_bpod_system(
 
 
 def _initialize_system_config_dir(
-    choices: StartupChoicePort, bpod_path: Path, logger: logging.Logger
+    choices: StartupChoiceProtocol, bpod_path: Path, logger: logging.Logger
 ) -> bool:
     """Fill the directory with default files and folders, if the user chooses to."""
     create_default_directories(bpod_path)
