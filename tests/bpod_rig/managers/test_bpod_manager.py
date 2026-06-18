@@ -58,6 +58,9 @@ class TestBpodManager:
         assert self.bpm._all_local_bpods is not None
 
         current_bpod = self.bpm.select_bpod()
+        assert current_bpod is not None
+
+        assert self.bpm.current_bpod is not None
         assert self.bpm.current_bpod is current_bpod
         assert self.bpm.current_bpod is self.bpm._all_local_bpods["abc123"]
         assert self.bpm.current_bpod is not self.bpm._all_local_bpods["xyz456"]
@@ -65,6 +68,7 @@ class TestBpodManager:
         assert self.bpm.current_bpod.name == "Bpod 1"
 
         self.bpm.select_bpod(serial="xyz456")
+        assert self.bpm.current_bpod is not None
         assert self.bpm.current_bpod is self.bpm._all_local_bpods["xyz456"]
         assert self.bpm.current_bpod.serial_number == "xyz456"
         assert self.bpm.current_bpod.port == "COM3"
