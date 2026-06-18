@@ -1,7 +1,8 @@
 import logging
 from typing import TYPE_CHECKING, TypeAlias, cast
 
-from bpod_core.bpod import BpodInfo, discover_bpod
+from bpod_core.bpod import discover_bpod
+from bpod_core.bpod.structs import BpodInfo
 
 if TYPE_CHECKING:
     from bpod_rig.log import BpodLogger

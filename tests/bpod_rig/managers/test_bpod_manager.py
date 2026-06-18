@@ -1,7 +1,7 @@
 from collections.abc import Generator
 
 import pytest
-from bpod_core.bpod import BpodInfo
+from bpod_core.bpod.structs import BpodInfo
 
 from bpod_rig.managers import BpodManager
 
