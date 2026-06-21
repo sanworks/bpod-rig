@@ -53,7 +53,7 @@ def temp_setup(monkeypatch: pytest.MonkeyPatch) -> Generator[TempSetup, None, No
 class ConfigurableChoiceAdapter(startup.StartupChoiceProtocol):
     """Adapter to provide configurable choices for testing purposes.
 
-    The default values should always lead to sucessful initialization.
+    The default values should always lead to successful initialization.
     """
 
     override_path: Path | None = None
@@ -105,7 +105,7 @@ class TestInitService:
         assert temp_setup.bpod_path.joinpath("Config/config.json").exists()
         assert temp_setup.system_path.joinpath("config.json").exists()
 
-    def test_malformed_system_config_overriden(self, temp_setup: TempSetup):
+    def test_malformed_system_config_overridden(self, temp_setup: TempSetup):
         # Create a malformed system config file
         temp_setup.system_path.mkdir(parents=True, exist_ok=True)
         malformed_config_path = temp_setup.system_path.joinpath("config.json")
