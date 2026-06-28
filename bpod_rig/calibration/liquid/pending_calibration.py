@@ -1,13 +1,13 @@
-import logging
 from typing import Any, cast
 
 import bpod_core.bpod
 from bpod_core.fsm import StateMachine
 from pydantic import Field
 
+from bpod_rig import log
 from bpod_rig.calibration.liquid.models import ValveData, ValveDataManager
 
-logger = logging.getLogger(__name__)
+logger = log.get_logger(__name__)
 
 
 class PendingValve(ValveData):
@@ -319,10 +319,6 @@ def run_calibration(
     # Build the state machine
     fsm, test_set = pending_manager.build_statemachine()
     if verbose:
-        root_logger = logging.getLogger()
-        if not root_logger.hasHandlers():
-            logging.basicConfig(level=logging.INFO)
-
         logger.info("Running liquid calibration:")
         logger.info("\t%s pulses.", pending_manager.n_pulses)
         logger.info("\t%s between each pulse.", pending_manager.pulse_interval)
