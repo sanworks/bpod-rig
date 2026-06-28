@@ -1,8 +1,9 @@
-import logging
-from typing import TYPE_CHECKING, TypeAlias, cast
+from typing import TYPE_CHECKING, TypeAlias
 
 from bpod_core.bpod import discover_bpod
 from bpod_core.bpod.structs import BpodInfo
+
+from bpod_rig import log
 
 if TYPE_CHECKING:
     from bpod_rig.log import BpodLogger
@@ -13,7 +14,7 @@ SerialNumber: TypeAlias = str
 
 class BpodManager:
     def __init__(self) -> None:
-        self.logger: BpodLogger = cast("BpodLogger", logging.getLogger(__name__))
+        self.logger: BpodLogger = log.get_logger(self.__class__.__name__)
         self._all_local_bpods: dict[SerialNumber, BpodInfo] | None = None
         # self.remote_bpods: dict[SerialNumber, BpodInfo] | None = None
 
