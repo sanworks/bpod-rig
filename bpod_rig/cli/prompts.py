@@ -5,7 +5,9 @@ from typing import Annotated
 # import click
 import typer
 
-logger = logging.getLogger(__name__)
+from bpod_rig import log
+
+logger = log.get_logger(__name__)
 
 app = typer.Typer()
 

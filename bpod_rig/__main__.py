@@ -14,7 +14,7 @@ from bpod_rig.config import utils
 from bpod_rig.config.system_settings import BpodDir
 from bpod_rig.defaults import DEFAULT_BPOD_PATH, SYSTEM_CONFIG_DIR, SYSTEM_CONFIG_FILE
 from bpod_rig.IO import startup
-from bpod_rig.log import BpodLogger, get_log_config
+from bpod_rig.log import BpodLogger, get_log_config, get_logger
 
 DEBUG = True
 
@@ -22,7 +22,7 @@ DEBUG = True
 logging_config = get_log_config(debug=DEBUG)
 dictConfig(logging_config)
 logging.setLoggerClass(BpodLogger)
-logger: BpodLogger = cast("BpodLogger", logging.getLogger(__name__))
+logger: BpodLogger = get_logger(__name__)
 
 app = typer.Typer(no_args_is_help=True)
 app.add_typer(protocols_app, name="protocols")

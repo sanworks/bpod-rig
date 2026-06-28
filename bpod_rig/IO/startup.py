@@ -1,8 +1,8 @@
 """Module to create the default Bpod user directory and associated subdirs."""
 
-import logging
 from pathlib import Path
 
+from bpod_rig import log
 from bpod_rig.config import system_settings
 from bpod_rig.defaults import (
     DEFAULT_SUBDIRS,
@@ -11,7 +11,7 @@ from bpod_rig.defaults import (
 )
 from bpod_rig.examples.copy import copy_examples
 
-logger = logging.getLogger(__name__)
+logger = log.get_logger(__name__)
 
 
 def create_default_directories(bpod_directory_path: Path) -> Path:
