@@ -5,12 +5,13 @@ import shutil
 import tempfile
 from collections.abc import Callable
 from pathlib import Path
+from typing import Any, cast
 
 from bpod_rig.defaults import LOGFILE_PREFIX, TIME_FORMAT
 
 # logger = logging.getLogger(__name__)
 
-LOGGING_CONFIG = {
+LOGGING_CONFIG: dict[str, Any] = {
     "version": 1,
     "disable_existing_loggers": True,
     "formatters": {
@@ -200,3 +201,9 @@ class BpodLogger(logging.Logger):
             raise AttributeError(
                 "There is no DynamicFileHandler instance present for this logger!"
             )
+
+
+def get_logger(name: str) -> BpodLogger:
+    """Get a logger with a specific name and case its type to BpodLogger."""
+    return cast("BpodLogger", logging.getLogger(name))
+
