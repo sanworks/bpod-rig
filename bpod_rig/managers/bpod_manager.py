@@ -25,13 +25,18 @@ class BpodManager:
         self._get_local_bpods()
 
     def select_bpod(
-        self, serial: SerialNumber | None = None, index: int = 0
+        self, serial: SerialNumber | None = None, index: int | None = None
     ) -> BpodInfo:
-        """Returns a BpodInfo instance.
+        """Returns a BpodInfo instance requested by the user.
 
-        Function will return the BpodInfo instance with the given serial number or
-        index. serial will always take precedence over index. If no parameter is
-        provided, the first BpodInfo instance will be returned.
+        If there is only one Bpod found, no identifiers are required.
+
+        If there are multiple Bpods, an identifier is required. If an identifier is not
+        provided when required, an error will be raised.
+
+        If identifiers are provided, they must exist or an error will be raised. If
+        both a serial number and index are provided, the serial will always take
+        precedence.
 
         Parameters
         ----------
@@ -42,7 +47,14 @@ class BpodManager:
 
         Returns
         -------
-        BpodInfo instance
+            BpodInfo instance
+
+        Raises
+        ------
+            ValueError
+                Raised if no Bpod is found, an identifier is not provided when required,
+                or the identifier does not exist
+
 
         """
         if self._all_local_bpods is None:
@@ -54,11 +66,16 @@ class BpodManager:
             if serial in serials:
                 self.current_bpod = self._all_local_bpods[serial]  # type: ignore
             else:
-                raise KeyError(f"Bpod {serial} not found!")
-        else:
-            if index > len(serials) or index < 0:
+                raise ValueError(f"Bpod {serial} not found!")
+        elif index is not None:
+            if 0 > index > len(serials):
                 raise IndexError(f"Index {index} out of range!")
             self.current_bpod = self._all_local_bpods[serials[index]]  # type: ignore
+        else:
+            if len(serials) > 1:
+                raise IndexError(f"{len(serials)} Bpods have been found! A serial"
+                                 f" number or index is required!")
+            self.current_bpod = self._all_local_bpods[serials[0]] # type: ignore
 
         return self.current_bpod
 
