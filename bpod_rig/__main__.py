@@ -2,7 +2,7 @@
 
 import logging
 from logging.config import dictConfig
-from typing import Annotated, cast
+from typing import Annotated
 
 import typer
 from pydantic import ValidationError

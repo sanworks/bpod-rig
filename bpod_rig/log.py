@@ -204,4 +204,3 @@ class BpodLogger(logging.Logger):
 def get_logger(name: str) -> BpodLogger:
     """Get a logger with a specific name and case its type to BpodLogger."""
     return cast("BpodLogger", logging.getLogger(name))
-
