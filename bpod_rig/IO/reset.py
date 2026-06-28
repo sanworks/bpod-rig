@@ -1,11 +1,10 @@
 # Module to delete all Bpod directories
-import logging
 import shutil
 from collections.abc import Iterable
 from pathlib import Path
 
-from bpod_rig.cli import prompts
 from bpod_rig import log
+from bpod_rig.cli import prompts
 
 logger = log.get_logger(__name__)
 
