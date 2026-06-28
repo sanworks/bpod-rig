@@ -47,6 +47,11 @@ exclude-newer = "2 weeks"
 exclude-newer-package = { bpod-core = false }
 required-version = ">=0.11.15"
 
+[tool.pyright]
+venvPath = "."
+venv = ".venv"
+
+
 [tool.ruff]
 # Exclude a variety of commonly ignored directories.
 exclude = [
