@@ -5,17 +5,14 @@ from bpod_core.bpod.structs import BpodInfo
 
 from bpod_rig.managers import BpodManager
 
-bpod_info_1 = BpodInfo(
-    serial_number="abc123",
-    port="COM2",
-    name="Bpod 1"
-)
+bpod_info_1 = BpodInfo(serial_number="abc123", port="COM2", name="Bpod 1")
 
 bpod_info_2 = BpodInfo(
     serial_number="xyz456",
     port="COM3",
     name="Bpod 2",
 )
+
 
 def mock_discover_bpod(num_bpods: int = 2) -> Generator[BpodInfo]:
     if num_bpods > 2:
@@ -43,7 +40,7 @@ class TestBpodManager:
             num_bpods = marker.args[0]
             monkeypatch.setattr(
                 "bpod_rig.managers.bpod_manager.discover_bpod",
-                lambda: mock_discover_bpod(num_bpods)
+                lambda: mock_discover_bpod(num_bpods),
             )
 
         self.bpm = BpodManager()
@@ -89,7 +86,6 @@ class TestBpodManager:
         compare_bpod_info(self.bpm.current_bpod, bpod_info_1)
         compare_bpod_info(returned_bpod, bpod_info_1)
 
-
     @pytest.mark.finds_bpods(2)
     def test_select_multiple_bpods(self) -> None:
 
@@ -112,7 +108,6 @@ class TestBpodManager:
         assert self.bpm.current_bpod is not None
         compare_bpod_info(self.bpm.current_bpod, bpod_info_2)
         compare_bpod_info(returned_bpod, bpod_info_2)
-
 
     @pytest.mark.finds_bpods(2)
     def test_select_bpod_errors(self, caplog: pytest.LogCaptureFixture) -> None:
