@@ -22,6 +22,7 @@ class BpodManager:
         self.refresh()
 
     def refresh(self) -> None:
+        self.logger.info("Looking for Bpods...")
         self._get_local_bpods()
 
     def select_bpod(
@@ -51,30 +52,35 @@ class BpodManager:
 
         Raises
         ------
+            IndexError
+                Raised if an invalid index is provided
             ValueError
                 Raised if no Bpod is found, an identifier is not provided when required,
                 or the identifier does not exist
 
-
         """
         if self._all_local_bpods is None:
+            self.logger.debug("No local Bpods found!")
             raise ValueError("No local Bpods found!")
 
         serials: list[SerialNumber] = list(self._all_local_bpods.keys())
 
         if serial is not None:
             if serial in serials:
+                self.logger.info("Bpod with serial %s found!", serial)
                 self.current_bpod = self._all_local_bpods[serial]  # type: ignore
             else:
                 raise ValueError(f"Bpod {serial} not found!")
         elif index is not None:
             if 0 > index > len(serials):
                 raise IndexError(f"Index {index} out of range!")
+            self.logger.info("Bpod with index %d found!", index)
             self.current_bpod = self._all_local_bpods[serials[index]]  # type: ignore
         else:
             if len(serials) > 1:
                 raise ValueError(f"{len(serials)} Bpods have been found! A serial"
                                  f" number or index is required!")
+            self.logger.info("Only one Bpod found!")
             self.current_bpod = self._all_local_bpods[serials[0]] # type: ignore
 
         return self.current_bpod
