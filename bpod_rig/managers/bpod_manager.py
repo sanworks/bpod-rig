@@ -73,7 +73,7 @@ class BpodManager:
             self.current_bpod = self._all_local_bpods[serials[index]]  # type: ignore
         else:
             if len(serials) > 1:
-                raise IndexError(f"{len(serials)} Bpods have been found! A serial"
+                raise ValueError(f"{len(serials)} Bpods have been found! A serial"
                                  f" number or index is required!")
             self.current_bpod = self._all_local_bpods[serials[0]] # type: ignore
 
