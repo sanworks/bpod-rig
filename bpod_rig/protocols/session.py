@@ -1,11 +1,13 @@
 """
 Bpod protocol session management.
 """
+
 import atexit
 import pdb
 import signal
 import sys
 import traceback
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from logging import getLogger
 from multiprocessing import Process
@@ -15,16 +17,10 @@ from typing import Any, Protocol
 logger = getLogger(__name__)
 
 
-class ClosableResource(Protocol):
-    """Protocol for resources that can be cleaned up."""
-
-    def close(self) -> None:
-        """Close the resource."""
-        ...
-
-
 @dataclass
 class SessionContext:
+    """A context object that holds information unavailble through the session folder."""
+
     session_folder: Path
     """Path to the session folder"""
     protocol_path: Path
@@ -33,10 +29,10 @@ class SessionContext:
     """Handles for communication between the main process and the protocol process"""
     debug: bool = False
     """Whether to run the protocol in debug mode"""
-    _open_resources: list[ClosableResource] = field(default_factory=list, init=False)
+    _open_resources: list[Callable] = field(default_factory=list, init=False)
     """List of open resources (COM ports, files, etc.) for cleanup"""
 
-    def register_resource(self, resource: ClosableResource) -> None:
+    def register_resource(self, resource: Callable) -> None:
         """Register a resource (COM port, file, etc.) for automatic cleanup on exit."""
         self._open_resources.append(resource)
 
@@ -44,9 +40,8 @@ class SessionContext:
         """Close all registered resources. Called automatically on protocol exit."""
         for resource in self._open_resources:
             try:
-                if hasattr(resource, "close"):
-                    resource.close()
-                    logger.info("Closed resource: %s", resource)
+                logger.info("Closing resource: %s", resource.__class__)
+                resource()
             except Exception:  # noqa PERF203
                 logger.exception("Error closing resource %s", resource)
 
@@ -72,6 +67,7 @@ def _reset_context() -> None:
 @dataclass
 class BpodSession:
     """Bpod session object providing access to hardware and session data."""
+
     session_folder: Path
 
 
