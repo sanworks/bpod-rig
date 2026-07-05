@@ -1,8 +1,13 @@
 """
 Bpod protocol session management.
+
+This module manages the running of a protocol within a protocol session.
+
+
 """
 
 import atexit
+import multiprocessing as mp
 import pdb
 import signal
 import sys
@@ -10,11 +15,32 @@ import traceback
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from logging import getLogger
-from multiprocessing import Process
+from multiprocessing.synchronize import Event as mp_Event_type
 from pathlib import Path
-from typing import Any, Protocol
+from types import FrameType
+from typing import TypedDict
 
 logger = getLogger(__name__)
+
+MULTIPROCESSING_START_METHOD = "spawn"
+# spawn is a bit slower but more robust
+mp.set_start_method(MULTIPROCESSING_START_METHOD, force=True)
+
+
+class IPCHandles(TypedDict):
+    errors: mp.Queue
+    user_log: mp.Queue
+    control_state: mp_Event_type
+    protocol_run_state: mp_Event_type
+
+
+def create_ipc_handles() -> IPCHandles:
+    return IPCHandles(
+        errors=mp.Queue(),
+        user_log=mp.Queue(),
+        control_state=mp.Event(),
+        protocol_run_state=mp.Event(),
+    )
 
 
 @dataclass
@@ -25,12 +51,14 @@ class SessionContext:
     """Path to the session folder"""
     protocol_path: Path
     """Path to the protocol file"""
-    ipc_handles: dict[str, Any]
+    ipc_handles: IPCHandles
     """Handles for communication between the main process and the protocol process"""
     debug: bool = False
     """Whether to run the protocol in debug mode"""
     _open_resources: list[Callable] = field(default_factory=list, init=False)
     """List of open resources (COM ports, files, etc.) for cleanup"""
+    _cleaned_up: bool = field(default=False, init=False)
+    """Whether resources have already been cleaned up."""
 
     def register_resource(self, resource: Callable) -> None:
         """Register a resource (COM port, file, etc.) for automatic cleanup on exit."""
@@ -38,12 +66,17 @@ class SessionContext:
 
     def cleanup_resources(self) -> None:
         """Close all registered resources. Called automatically on protocol exit."""
+        if self._cleaned_up:
+            return
+
+        self._cleaned_up = True
         for resource in self._open_resources:
             try:
                 logger.info("Closing resource: %s", resource.__class__)
                 resource()
             except Exception:  # noqa PERF203
                 logger.exception("Error closing resource %s", resource)
+        self._open_resources.clear()
 
 
 _CONTEXT: SessionContext | None = None
@@ -64,21 +97,54 @@ def _reset_context() -> None:
 
 
 # Public facing API for Bpod session management
-@dataclass
 class BpodSession:
     """Bpod session object providing access to hardware and session data."""
 
-    session_folder: Path
+    protocol_path: Path
+    """Path to original protocol file."""
+    _ipc_handles: IPCHandles
+
+    def __init__(self, session_folder: Path) -> None:
+        self.session_folder = session_folder
+        """Path to the session folder"""
+
+    def handle_pause_condition(self) -> None:
+        """Waits if the protocol manager has paused the protocol."""
+        event = self._ipc_handles.get("protocol_run_state")
+        if event is not None:
+            logger.info("Waiting for protocol run state to be cleared...")
+            event.wait()
+            logger.info("Protocol run state cleared.")
+
+    def log_user_message(self, message: str) -> None:
+        """Logs a user message to the protocol manager."""
+        self._ipc_handles["user_log"].put(message)
+
+    @classmethod
+    def from_context(cls, context: SessionContext) -> "BpodSession":
+        """Creates a BpodSession from a SessionContext."""
+        session = cls(session_folder=context.session_folder)
+        session.protocol_path = context.protocol_path
+        session._ipc_handles = context.ipc_handles
+        return session
 
 
-def get_session(session_folder_override: Path | None = None) -> BpodSession:
+@dataclass
+class GetSessionOverrides:
+    """Overrides for get_session function."""
+
+    session_folder_override: Path | None = None
+    """The default session folder path generated during protocol selection."""
+
+
+def get_session(overrides: GetSessionOverrides | None = None) -> BpodSession:
     """
     Returns the current Bpod session.
 
     Parameters
     ----------
-    session_folder_override : Path, optional
-        If provided, overrides the default session folder path generated during protocol selection.
+    overrides : GetSessionOverrides, optional
+        Object containing overrides for the session run..
 
     Returns
     -------
@@ -89,9 +155,10 @@ def get_session(session_folder_override: Path | None = None) -> BpodSession:
     It retrieves the context and builds the BpodSession object that provides access
     to hardware and session data.
     """
-
     context = get_active_session_context()
-    bpod_system = BpodSession(session_folder=context.session_folder)
+    bpod_system = BpodSession.from_context(context)
+    if overrides:
+        raise NotImplementedError("Overrides are not yet implemented.")
     return bpod_system
 
 
@@ -101,21 +168,22 @@ def get_session(session_folder_override: Path | None = None) -> BpodSession:
 def start_protocol_process(
     session_folder: Path,
     protocol_path: Path,
-    ipc_handles: dict[str, Any],  # IPC Event, Queue, etc.
+    ipc_handles: IPCHandles,  # IPC Event, Queue, etc.
     *,
     debug: bool = False,
-) -> None:
+) -> mp.Process:
     context = SessionContext(
         session_folder=session_folder,
         protocol_path=protocol_path,
         ipc_handles=ipc_handles,
         debug=debug,
     )
-    proc = Process(
+    proc = mp.Process(
         target=run_protocol,
         args=(context,),
     )
     proc.start()
+    return proc
 
 
 def run_protocol(session: SessionContext) -> None:
@@ -147,7 +215,7 @@ def run_protocol(session: SessionContext) -> None:
     atexit.register(session.cleanup_resources)
 
     # Handle kill signals (SIGTERM, SIGINT/Ctrl+C)
-    def signal_handler(signum: int, _) -> None:  # noqa: ANN001
+    def signal_handler(signum: int, _: FrameType | None) -> None:
         logger.info("Caught signal %d, cleaning up resources...", signum)
         session.cleanup_resources()
         sys.exit(1)
@@ -205,3 +273,4 @@ def run_protocol(session: SessionContext) -> None:
         # Always cleanup (normal exit or exception)
         logger.info("Protocol finished, cleaning up resources...")
         session.cleanup_resources()
+        _reset_context()
