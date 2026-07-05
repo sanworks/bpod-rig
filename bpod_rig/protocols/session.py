@@ -6,19 +6,23 @@ This module manages the running of a protocol within a protocol session.
 
 """
 
+from __future__ import annotations
+
 import atexit
 import multiprocessing as mp
 import pdb
 import signal
 import sys
 import traceback
-from collections.abc import Callable
 from dataclasses import dataclass, field
 from logging import getLogger
-from multiprocessing.synchronize import Event as mp_Event_type
-from pathlib import Path
-from types import FrameType
-from typing import TypedDict
+from typing import TYPE_CHECKING, TypedDict
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+    from multiprocessing.synchronize import Event as mp_Event_type
+    from pathlib import Path
+    from types import FrameType
 
 logger = getLogger(__name__)
 
@@ -45,7 +49,10 @@ def create_ipc_handles() -> IPCHandles:
 
 @dataclass
 class SessionContext:
-    """A context object that holds information unavailble through the session folder."""
+    """A context object that holds information unavailble through the session folder.
+
+    Passed to the protocol process to enable building of the BpodSession object.
+    """
 
     session_folder: Path
     """Path to the session folder"""
@@ -59,6 +66,14 @@ class SessionContext:
     """List of open resources (COM ports, files, etc.) for cleanup"""
     _cleaned_up: bool = field(default=False, init=False)
     """Whether resources have already been cleaned up."""
+
+    @property
+    def config_folder(self) -> Path:
+        """Path to the config folder within the session folder."""
+        path = self.session_folder / "config"
+        path.mkdir(exist_ok=True)
+        # TODO: make this not jank
+        return path
 
     def register_resource(self, resource: Callable) -> None:
         """Register a resource (COM port, file, etc.) for automatic cleanup on exit."""
@@ -100,13 +115,11 @@ def _reset_context() -> None:
 class BpodSession:
     """Bpod session object providing access to hardware and session data."""
 
+    session_folder: Path
+    """Path to the session folder where data is being saved."""
     protocol_path: Path
     """Path to original protocol file."""
     _ipc_handles: IPCHandles
-
-    def __init__(self, session_folder: Path) -> None:
-        self.session_folder = session_folder
-        """Path to the session folder"""
 
     def handle_pause_condition(self) -> None:
         """Waits if the protocol manager has paused the protocol."""
@@ -121,9 +134,10 @@ class BpodSession:
         self._ipc_handles["user_log"].put(message)
 
     @classmethod
-    def from_context(cls, context: SessionContext) -> "BpodSession":
+    def from_context(cls, context: SessionContext) -> BpodSession:
         """Creates a BpodSession from a SessionContext."""
-        session = cls(session_folder=context.session_folder)
+        session = cls()
+        session.session_folder = context.session_folder
         session.protocol_path = context.protocol_path
         session._ipc_handles = context.ipc_handles
         return session
@@ -237,9 +251,9 @@ def run_protocol(session: SessionContext) -> None:
     }
 
     try:
-        code = compile(
-            session.protocol_path.read_text(), str(session.protocol_path), "exec"
-        )
+        code_text = session.protocol_path.read_text()
+        code = compile(code_text, str(session.protocol_path), "exec")
+        session.config_folder.joinpath(session.protocol_path.name).write_text(code_text)
 
         # Execute the protocol code in the context of the session
         # Given that we're already executing a user define protocol,

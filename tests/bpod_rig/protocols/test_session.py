@@ -69,9 +69,7 @@ for i in range(10):
         session_folder=session_folder,
         protocol_path=protocol_path,
         ipc_handles=ipc_handles,
-        debug=False,
     )
-    # proc.start()
     sleep(pause)
     ipc_handles["protocol_run_state"].clear()  # Pause the protocol
     sleep(pause)
