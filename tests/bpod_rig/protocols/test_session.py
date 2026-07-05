@@ -28,7 +28,7 @@ def test_start_protocol_process(tmp_path: Path) -> None:
     session_folder = tmp_path / "session"
     session_folder.mkdir()
 
-    ipc_handles = {}  # Placeholder for IPC handles
+    ipc_handles = session.create_ipc_handles()
 
     proc = session.start_protocol_process(
         session_folder=session_folder,
