@@ -1,5 +1,6 @@
 import datetime
 from pathlib import Path
+from typing import TypedDict
 
 import pytest
 from pydantic import ValidationError
@@ -17,7 +18,7 @@ class TestMetadataModel:
         assert bm.modified_datetime is None
         assert bm.username == "BpodUser"
 
-    def test_good_manual_vals(self):
+    def test_good_manual_vals(self) -> None:
         """Tests creating a SettingsMetadata model with valid manual values."""
         past_creation_date = datetime.date(2025, 1, 1)
         past_save_datetime = datetime.datetime(2025, 2, 1)
@@ -33,7 +34,7 @@ class TestMetadataModel:
         assert bm.modified_datetime == past_save_datetime
         assert bm.username == new_user
 
-    def test_validator_failure(self):
+    def test_validator_failure(self) -> None:
         """Tests that pydantic validators raise ValidationErrors for bad data."""
         with pytest.raises(ValidationError):
             future_creation_date = datetime.date(3000, 1, 1)
@@ -54,7 +55,7 @@ class TestMetadataModel:
 
 class TestSystemPathsModel:
     @pytest.fixture
-    def paths(self, tmp_path):
+    def paths(self, tmp_path: Path) -> dict[str, Path]:
         """Fixture to provide a common set of path objects for tests."""
         working_dir = tmp_path
         bpod_dir = working_dir.joinpath("Bpod")
@@ -65,14 +66,14 @@ class TestSystemPathsModel:
             "data_dir": bpod_dir.joinpath("Data"),
         }
 
-    def test_default_factory(self, paths):
+    def test_default_factory(self, paths: dict[str, Path]) -> None:
         """Tests that the default directory paths are constructed correctly."""
         sp = BpodDir.create(base_dir=paths["bpod_dir"])
         assert sp.data_dir == paths["data_dir"]
         assert sp.base_config_dir == paths["config_dir"]
         assert sp.protocol_dir == paths["protocol_dir"]
 
-    def test_pass_username(self, paths):
+    def test_pass_username(self, paths: dict[str, Path]) -> None:
         """Tests that a username can be passed through to the metadata."""
         paths["bpod_dir"].mkdir(exist_ok=True)
         paths["data_dir"].mkdir(exist_ok=True)
@@ -91,7 +92,7 @@ class TestSystemPathsModel:
         )
         assert sp2.metadata.username != "beepbop"
 
-    def test_not_paths(self):
+    def test_not_paths(self) -> None:
         """Tests that non-path inputs for directories raise validation errors."""
         with pytest.raises(TypeError):
             BpodDir.create(base_dir=1234321)  # type: ignore
@@ -100,9 +101,17 @@ class TestSystemPathsModel:
         assert isinstance(sp.base_dir, Path)
 
 
+class BpodPathsDict(TypedDict):
+    base_dir: Path
+    bpod_id: str
+    bpod_dir: Path
+    config_dir: Path
+    calibration_dir: Path
+
+
 class TestBpodPathsModel:
     @pytest.fixture
-    def paths(self, tmp_path: Path):
+    def paths(self, tmp_path: Path) -> BpodPathsDict:
         """Fixture to provide a common set of Bpod-specific path objects."""
         working_dir = tmp_path
         base_dir = working_dir.joinpath("Bpods")
@@ -116,7 +125,7 @@ class TestBpodPathsModel:
             "calibration_dir": bpod_dir.joinpath("Calibration"),
         }
 
-    def test_id_validation(self, paths):
+    def test_id_validation(self, paths: BpodPathsDict) -> None:
         """Tests validation for the bpod_id field."""
         # No ID, fails validation
         with pytest.raises(TypeError):
@@ -133,7 +142,7 @@ class TestBpodPathsModel:
         bp = BpodPaths.create(bpod_id=paths["bpod_id"], parent_dir=paths["base_dir"])
         assert bp.bpod_id == paths["bpod_id"]
 
-    def test_default_factory(self, paths):
+    def test_default_factory(self, paths: BpodPathsDict) -> None:
         """Tests that the Bpod-specific paths are constructed correctly."""
         bp = BpodPaths.create(bpod_id=paths["bpod_id"], parent_dir=paths["base_dir"])
         assert bp.unique_bpod_dir == paths["bpod_dir"]
@@ -144,22 +153,21 @@ class TestBpodPathsModel:
 
 class TestSystemSettingsModel:
     @pytest.fixture
-    def paths(self, tmp_path):
+    def paths(self, tmp_path: Path) -> dict[str, BpodDir]:
         """Fixture to provide a common set of path objects for tests."""
         working_dir = tmp_path
         bpod_dir = working_dir.joinpath("Bpod")
         system_paths = BpodDir.create(base_dir=bpod_dir)
         return {"system_paths": system_paths}
 
-    def test_default(self, paths):
+    def test_default(self, paths: dict[str, BpodDir]) -> None:
         """Tests that the default system settings are constructed correctly."""
-        paths = paths["system_paths"]
-        settings = SystemSettings.create(paths=paths)
+        settings = SystemSettings.create(paths=paths["system_paths"])
 
         assert settings.current_version == "0.0.0"
         assert settings.last_update_check is None
         assert settings.phone_home_id is None
         assert not settings.phone_home_opt_in
         assert not settings.debug
-        assert settings.paths == paths
+        assert settings.paths == paths["system_paths"]
         assert settings.bpod_dirs is None

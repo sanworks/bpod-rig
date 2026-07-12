@@ -27,7 +27,7 @@ def yes_no_prompt_cli_runner(
 
 
 def verify_path(
-    unverified_path: str, prompt_for_file: bool = False, must_exist: bool = True
+    unverified_path: str, *, prompt_for_file: bool = False, must_exist: bool = True
 ) -> Path:
     """Verify that the user provides a valid path.
 
@@ -95,12 +95,15 @@ def verify_path(
 
 
 def prompt_for_path(
-    prompt: str, is_file: bool = False, must_exist: bool = True
+    prompt: str, *, is_file: bool = False, must_exist: bool = True
 ) -> Path | None:
     logger.debug("Asking user to select a path: %s", prompt)
     try:
         return typer.prompt(
-            prompt, value_proc=lambda path: verify_path(path, is_file, must_exist)
+            prompt,
+            value_proc=lambda path: verify_path(
+                path, prompt_for_file=is_file, must_exist=must_exist
+            ),
         )
     except typer.Abort:
         logger.debug("User aborted before answering!")

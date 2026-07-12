@@ -18,10 +18,10 @@ from bpod_rig.log import BpodLogger, get_log_config
 DEBUG = True
 
 # Set up logging here
-logging_config = get_log_config(DEBUG)
+logging_config = get_log_config(debug=DEBUG)
 dictConfig(logging_config)
 logging.setLoggerClass(BpodLogger)
-logger: BpodLogger = cast(BpodLogger, logging.getLogger(__name__))
+logger: BpodLogger = cast("BpodLogger", logging.getLogger(__name__))
 
 app = typer.Typer(no_args_is_help=True)
 app.add_typer(protocols_app, name="protocols")
@@ -65,8 +65,8 @@ def init_old():
         # Create the system configuration directory
         try:
             SYSTEM_CONFIG_DIR.mkdir(exist_ok=True, parents=True)
-        except (IOError, OSError) as e:
-            logger.error(
+        except OSError as e:
+            logger.exception(
                 "Unable to create the system configuration directory: %s Exiting...",
                 SYSTEM_CONFIG_DIR,
                 exc_info=e,
@@ -81,7 +81,7 @@ def init_old():
         try:
             bpod_path = startup.get_bpod_dir_from_system()
         except ValidationError as e:
-            logger.error(
+            logger.exception(
                 "Configuration file at %s failed to validate! "
                 "Cannot read the Bpod Directory from existing configuration!",
                 SYSTEM_CONFIG_FILE,
@@ -153,7 +153,7 @@ def init_old():
         logger.debug("System paths at %s verified", bpod_path)
     else:
         logger.error("No valid Bpod directory! Shutting down.")
-        raise
+        raise RuntimeError("Bpod directory verification failed after initialization!")
 
     logger.swap_stream(system_paths.log_dir)
 
@@ -183,7 +183,7 @@ def run(
         str | None,
         typer.Option(..., help="Additional arguments for the protocol"),
     ] = None,
-):
+) -> None:
     """Run a protocol on the Bpod Rig.
 
     A protocol can be specified by its name if in protocol folder, or by a path to the
@@ -192,7 +192,7 @@ def run(
     raise NotImplementedError()
 
 
-def main():
+def main() -> None:
     app()
 
 

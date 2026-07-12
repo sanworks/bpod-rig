@@ -75,7 +75,7 @@ def protocol_folder(
 class TestFindProtocolFile:
     """Test suite for finding protocol files."""
 
-    def test_basic_find(self, protocol_folder):
+    def test_basic_find(self, protocol_folder: Path) -> None:
         """Test finding a unique protocol at the root level."""
         expected_path = protocol_folder / "Protocol_unique1" / "Protocol_unique1.py"
 
@@ -84,7 +84,7 @@ class TestFindProtocolFile:
 
         assert result_path == expected_path
 
-    def test_no_match_fail(self, protocol_folder):
+    def test_no_match_fail(self, protocol_folder: Path) -> None:
         """Test that an error is raised when no match is found."""
         manager = ProtocolManager(protocol_folder)
         with pytest.raises(
@@ -92,7 +92,7 @@ class TestFindProtocolFile:
         ):
             manager.find_protocol_file("Protocol_noMatch")
 
-    def test_invalid_match_fail(self, protocol_folder):
+    def test_invalid_match_fail(self, protocol_folder: Path) -> None:
         """Test that an error is raised when a file matches but is invalid."""
         manager = ProtocolManager(protocol_folder)
         with pytest.raises(
@@ -100,7 +100,7 @@ class TestFindProtocolFile:
         ):
             manager.find_protocol_file("Protocol_invalid1")
 
-    def test_subfolder_find(self, protocol_folder):
+    def test_subfolder_find(self, protocol_folder: Path) -> None:
         """Test finding a protocol in a subfolder."""
         expected_path = (
             protocol_folder / "subfolderB" / "Protocol_unique3" / "Protocol_unique3.py"
@@ -111,7 +111,7 @@ class TestFindProtocolFile:
 
         assert result_path == expected_path
 
-    def test_ambiguous_match_unix(self, protocol_folder):
+    def test_ambiguous_match_unix(self, protocol_folder: Path) -> None:
         """Test with a UNIX-style path to resolve ambiguity."""
         expected_path = (
             protocol_folder
@@ -125,7 +125,7 @@ class TestFindProtocolFile:
 
         assert result_path == expected_path
 
-    def test_ambiguous_match_win(self, protocol_folder):
+    def test_ambiguous_match_win(self, protocol_folder: Path) -> None:
         """Test with a Windows-style path to resolve ambiguity."""
         expected_path = (
             protocol_folder
@@ -139,7 +139,7 @@ class TestFindProtocolFile:
 
         assert result_path == expected_path
 
-    def test_ambiguous_match_subfolder(self, protocol_folder):
+    def test_ambiguous_match_subfolder(self, protocol_folder: Path) -> None:
         """Test with a subfolder path that has multiple matches."""
         expected_path = (
             protocol_folder
@@ -153,37 +153,37 @@ class TestFindProtocolFile:
 
         assert result_path == expected_path
 
-    def test_ambiguous_match_fail(self, protocol_folder):
+    def test_ambiguous_match_fail(self, protocol_folder: Path) -> None:
         """Test that an error is raised when there are multiple matches."""
         manager = ProtocolManager(protocol_folder)
         with pytest.raises(
-            ValueError, match="Multiple protocols found.*Protocol_matching1"
+            ValueError, match=r"Multiple protocols found.*Protocol_matching1"
         ):
             manager.find_protocol_file("Protocol_matching1")
 
-    def test_subfolder_ambiguous_match_fail(self, protocol_folder):
+    def test_subfolder_ambiguous_match_fail(self, protocol_folder: Path) -> None:
         """Test that an error is raised for multiple matches across subfolders."""
         manager = ProtocolManager(protocol_folder)
         with pytest.raises(
-            ValueError, match="Multiple protocols found.*Protocol_matching2"
+            ValueError, match=r"Multiple protocols found.*Protocol_matching2"
         ):
             manager.find_protocol_file("Protocol_matching2")
 
 
 class TestProtocolManager:
-    def test_initialization(self, protocol_folder):
+    def test_initialization(self, protocol_folder: Path) -> None:
         """Test that the ProtocolManager initializes without error."""
         manager = ProtocolManager(protocol_folder)
         assert manager.protocol_dir == protocol_folder
 
-    def test_nonexistent_directory(self):
+    def test_nonexistent_directory(self) -> None:
         """Test that initializing with a nonexistent directory raises an error."""
         non_existent_path = Path("/path/does/not/exist")
         with pytest.raises(
-            FileNotFoundError, match="Protocol directory .* does not exist."
+            FileNotFoundError, match=r"Protocol directory .* does not exist."
         ):
             ProtocolManager(non_existent_path)
 
-    def test_load_protocols(self, protocol_folder):
+    def test_load_protocols(self, protocol_folder: Path) -> None:
         manager = ProtocolManager(protocol_folder)
         assert len(manager.protocols) == 7
