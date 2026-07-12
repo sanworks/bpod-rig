@@ -29,13 +29,13 @@ def test_start_protocol_process(tmp_path: Path) -> None:
     session_folder.mkdir()
 
     ipc_handles = session.create_ipc_handles()
-
-    proc = session.start_protocol_process(
+    context = session.SessionContext(
         session_folder=session_folder,
         protocol_path=protocol_path,
         ipc_handles=ipc_handles,
         debug=False,
     )
+    proc = session.run_protocol_in_new_process(context)
 
     sleep(pause)
     proc.join()
@@ -65,11 +65,13 @@ for i in range(10):
     session_folder = tmp_path / "session"
     session_folder.mkdir()
     ipc_handles = session.create_ipc_handles()
-    proc = session.start_protocol_process(
+    context = session.SessionContext(
         session_folder=session_folder,
         protocol_path=protocol_path,
         ipc_handles=ipc_handles,
     )
+
+    proc = session.run_protocol_in_new_process(context)
     sleep(pause)
     ipc_handles["protocol_run_state"].clear()  # Pause the protocol
     sleep(pause)

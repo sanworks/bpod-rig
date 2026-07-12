@@ -9,6 +9,7 @@ This module manages the running of a protocol within a protocol session.
 from __future__ import annotations
 
 import atexit
+import datetime
 import multiprocessing as mp
 import pdb
 import signal
@@ -17,6 +18,8 @@ import traceback
 from dataclasses import dataclass, field
 from logging import getLogger
 from typing import TYPE_CHECKING, TypedDict
+
+from pydantic import BaseModel, Field
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -44,6 +47,46 @@ def create_ipc_handles() -> IPCHandles:
         user_log=mp.Queue(),
         protocol_run_state=mp.Event(),
     )
+
+
+@dataclass
+class MainProcessSessionContext:
+    """Context of a running session held by the main process.
+
+    The process actively running the protocol holds SessionContext.
+    """
+
+    context: SessionContext
+    process: mp.Process
+    ipc_handles: IPCHandles
+
+
+class SessionFolder(BaseModel):
+    """A model representing a session folder."""
+
+    session_path: Path = Field(..., description="Path to the session folder")
+    protocol_path: Path = Field(..., description="Path to the protocol file")
+    start_time: datetime.datetime = Field(
+        default_factory=datetime.datetime.now, description="Start time of the session"
+    )
+
+    @property
+    def config_path(self) -> Path:
+        """Path to the config folder within the session folder."""
+        return self.session_path / "session-config"
+
+    @property
+    def data_path(self) -> Path:
+        """Path to the data folder within the session folder."""
+        return self.session_path / "data"
+
+    def initialize(self) -> None:
+        """Prepare the session folder for a new session."""
+        self.session_path.mkdir(parents=True, exist_ok=False)
+        self.config_path.mkdir(parents=True)
+        self.data_path.mkdir(parents=True)
+
+        # Write configuration files
 
 
 @dataclass
@@ -176,26 +219,43 @@ def get_session(overrides: GetSessionOverrides | None = None) -> BpodSession:
     return bpod_system
 
 
-# Magic that starts a new process for the protocol and sets up IPC handles
+def create_session_folder(
+    bpod_data_folder: Path, subject_name: str, protocol_name: str
+) -> Path:
+    subject_folder = bpod_data_folder.joinpath(subject_name)
+
+    current_time_str = datetime.datetime.now().isoformat(timespec="seconds")
+    session_time_str = current_time_str.replace("-", "").replace(":", "")
+    session_name = f"{subject_name}-{protocol_name}-{session_time_str}"
+
+    protocol_folder = subject_folder.joinpath(session_name)
+    protocol_folder.mkdir(parents=False, exist_ok=False)
+    return protocol_folder
 
 
-def start_protocol_process(
-    session_folder: Path,
-    protocol_path: Path,
-    ipc_handles: IPCHandles,  # IPC Event, Queue, etc.
-    *,
-    debug: bool = False,
-) -> mp.Process:
-    """Runs a protocol in a separate process.
+def start_session(session_folder: Path, protocol_path: Path) -> MainProcessSessionContext:
 
-    This function is called by the GUI/CLI to start a protocol.
-    """
+    # Prepare context
+    ipc_handles = create_ipc_handles()
     context = SessionContext(
         session_folder=session_folder,
         protocol_path=protocol_path,
         ipc_handles=ipc_handles,
-        debug=debug,
     )
+
+    # Run the process
+    proc = run_protocol_in_new_process(context)
+    return MainProcessSessionContext(
+        context=context, process=proc, ipc_handles=ipc_handles
+    )
+
+
+# Magic that starts a new process for the protocol and sets up IPC handles
+def run_protocol_in_new_process(context: SessionContext) -> mp.Process:
+    """Runs a protocol in a separate process.
+
+    This function is called by the GUI/CLI to start a protocol.
+    """
     proc = mp.Process(
         target=run_protocol,
         args=(context,),
