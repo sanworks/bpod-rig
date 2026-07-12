@@ -40,7 +40,6 @@ def init() -> None:
     if result.state != startup.InitState.COMPLETED:
         logger.error("Initialization failed: %s", result.message)
         typer.Exit(code=-1)
-        # raise RuntimeError(f"Initialization failed: {result.message}")
 
 
 @app.command()
