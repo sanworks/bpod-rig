@@ -279,7 +279,7 @@ def _create_system_config_dir_if_not_exists(logger: logging.Logger) -> bool:
                 "System configuration directory not found. Creating at %s",
                 SYSTEM_CONFIG_DIR,
             )
-            SYSTEM_CONFIG_DIR.mkdir(parents=True, exist_ok=False)
+            SYSTEM_CONFIG_DIR.mkdir(parents=False, exist_ok=False)
         else:
             logger.debug("System configuration directory found: %s", SYSTEM_CONFIG_DIR)
     except OSError as exc:
