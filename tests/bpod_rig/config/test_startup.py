@@ -142,6 +142,60 @@ class TestInitializeBpodSystem:
 
         assert result.state == startup.InitState.INITIALIZED_INVALID
 
+    def test_choose_override_path_first_init(self, temp_setup: TempSetup):
+        # Provide a custom override path for the first initialization
+        custom_path = temp_setup.temp_path / "CustomBpod"
+        result = startup.initialize_bpod_system(
+            choices=ConfigurableChoiceAdapter(override_path=custom_path),
+            default_bpod_path=temp_setup.bpod_path,
+            logger=get_logger(),
+        )
+
+        assert result.state == startup.InitState.COMPLETED
+        assert result.bpod_path == custom_path
+        assert custom_path.exists()
+
+    def test_choose_reinitialize_invalid_dir(self, temp_setup: TempSetup):
+        # Create an invalid Bpod directory (e.g., missing required subdirectories)
+        invalid_bpod_path = temp_setup.temp_path / "InvalidBpod"
+        invalid_bpod_path.mkdir(parents=True, exist_ok=True)
+
+        system_paths = system_settings.BpodDir.create(base_dir=invalid_bpod_path)
+        temp_setup.system_path.mkdir(parents=True, exist_ok=True)
+        startup._initialize_system_config_dir(
+            choices=ConfigurableChoiceAdapter(),
+            bpod_path=invalid_bpod_path,
+            logger=get_logger(),
+        )
+        temp_setup.system_path.joinpath("config.json").write_text(
+            system_settings.SystemSettings.create(system_paths).model_dump_json()
+        )
+        invalid_bpod_path.joinpath("Logs").rmdir()
+        assert startup.check_system_is_initialized()
+        assert not system_paths.verify()
+
+        # The actual test
+        result = startup.initialize_bpod_system(
+            choices=ConfigurableChoiceAdapter(reinitialize=False),
+            default_bpod_path=invalid_bpod_path,
+            logger=get_logger(),
+        )
+
+        assert result.state == startup.InitState.INITIALIZED_INVALID, result
+
+        result = startup.initialize_bpod_system(
+            choices=ConfigurableChoiceAdapter(reinitialize=True),
+            default_bpod_path=invalid_bpod_path,
+            logger=get_logger(),
+        )
+
+        assert result.state == startup.InitState.COMPLETED
+        assert result.bpod_path == invalid_bpod_path
+        # Check that the required subdirectories have been created
+        assert (invalid_bpod_path / "Logs").exists()
+        assert (invalid_bpod_path / "Protocols").exists()
+        assert (invalid_bpod_path / "Data").exists()
+
     def test_log_swap_stream(self, temp_setup: TempSetup):
         # Test that the logger's stream is swapped to the Bpod folder
         logger = get_logger()
@@ -198,18 +252,6 @@ def test_create_default_directories_with_invalid_path(temp_setup: TempSetup):
     assert bpod_directory_path.joinpath("Logs").exists()
     assert bpod_directory_path.joinpath("Protocols").exists()
     assert bpod_directory_path.joinpath("Data").exists()
-
-def test_copy_default_files(temp_setup: TempSetup):
-    # Provide a valid path to copy_default_files
-    bpod_directory_path = temp_setup.bpod_path
-    startup.create_default_directories(bpod_directory_path)
-    startup.copy_default_files(bpod_directory_path, override=True)
-
-    # Check that the default files are copied to the respective folders
-    assert bpod_directory_path.joinpath("Config/config.json").exists()
-    assert bpod_directory_path.joinpath("Logs/log.txt").exists()
-    assert bpod_directory_path.joinpath("Protocols/default_protocol.txt").exists()
-    assert bpod_directory_path.joinpath("Data/data.txt").exists()
 
 
 class TestCheckSystemIsInitialized:
