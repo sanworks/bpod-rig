@@ -55,6 +55,12 @@ class ConfigurableChoiceAdapter(startup.StartupChoiceProtocol):
     """Adapter to provide configurable choices for testing purposes.
 
     The default values should always lead to successful initialization.
+
+    Example usage:
+
+        adapter = ConfigurableChoiceAdapter(
+            override_path=Path("/custom/path"),
+            )
     """
 
     override_path: Path | None = None
@@ -83,9 +89,13 @@ class TestCreateDefaultDirectories:
     def test_folder_creation(self, temp_setup: TempSetup):
         startup.create_default_directories(temp_setup.bpod_path)
         assert temp_setup.bpod_path.exists()
+        assert temp_setup.bpod_path.joinpath("Config").exists()
+        assert temp_setup.bpod_path.joinpath("Logs").exists()
+        assert temp_setup.bpod_path.joinpath("Protocols").exists()
+        assert temp_setup.bpod_path.joinpath("Data").exists()
 
 
-class TestInitService:
+class TestInitializeBpodSystem:
     def test_happy_path(self, temp_setup: TempSetup):
         result = startup.initialize_bpod_system(
             choices=ConfigurableChoiceAdapter(),
@@ -133,7 +143,7 @@ class TestInitService:
         assert result.state == startup.InitState.INITIALIZED_INVALID
 
     def test_log_swap_stream(self, temp_setup: TempSetup):
-        # Test that the logger's stream is swapped to the file handler
+        # Test that the logger's stream is swapped to the Bpod folder
         logger = get_logger()
         if logger.file_handler is None or logger.file_handler.log_dir is None:
             raise RuntimeError(
@@ -151,7 +161,58 @@ class TestInitService:
         assert logger.file_handler.log_dir == temp_setup.bpod_path.joinpath("Logs")
 
 
-class TestHelperFunctions:
+def test_create_system_config_dir_if_not_exists(
+    temp_setup: TempSetup, monkeypatch: pytest.MonkeyPatch
+):
+
+    # temp_setup creates a valid system, should identify that
+    assert startup._create_system_config_dir_if_not_exists(get_logger())
+
+    # System config directory is created if it doesn't exist
+    temp_setup.system_path.rmdir()
+    assert startup._create_system_config_dir_if_not_exists(get_logger())
+    assert temp_setup.system_path.exists()
+
+    # Invalid path returns False
+    if temp_setup.system_path.exists():
+        temp_setup.system_path.rmdir()
+    inaccessible_path = Path("/root/invalid_path_for_testing")
+    monkeypatch.setattr(startup, "SYSTEM_CONFIG_DIR", inaccessible_path)
+    monkeypatch.setattr(
+        startup, "SYSTEM_CONFIG_FILE", inaccessible_path.joinpath("config.json")
+    )
+    assert not startup._create_system_config_dir_if_not_exists(get_logger())
+
+
+def test_create_default_directories_with_invalid_path(temp_setup: TempSetup):
+    # Provide an invalid path to create_default_directories
+    invalid_path = Path("/root/invalid_path_for_testing")
+    with pytest.raises(PermissionError):
+        startup.create_default_directories(invalid_path)
+
+    bpod_directory_path = temp_setup.bpod_path
+    # Provide a valid path to create_default_directories
+    startup.create_default_directories(bpod_directory_path)
+    assert bpod_directory_path.exists()
+    assert bpod_directory_path.joinpath("Config").exists()
+    assert bpod_directory_path.joinpath("Logs").exists()
+    assert bpod_directory_path.joinpath("Protocols").exists()
+    assert bpod_directory_path.joinpath("Data").exists()
+
+def test_copy_default_files(temp_setup: TempSetup):
+    # Provide a valid path to copy_default_files
+    bpod_directory_path = temp_setup.bpod_path
+    startup.create_default_directories(bpod_directory_path)
+    startup.copy_default_files(bpod_directory_path, override=True)
+
+    # Check that the default files are copied to the respective folders
+    assert bpod_directory_path.joinpath("Config/config.json").exists()
+    assert bpod_directory_path.joinpath("Logs/log.txt").exists()
+    assert bpod_directory_path.joinpath("Protocols/default_protocol.txt").exists()
+    assert bpod_directory_path.joinpath("Data/data.txt").exists()
+
+
+class TestCheckSystemIsInitialized:
     def test_happy_system_config_load(self, temp_setup: TempSetup):
         temp_setup.system_path.mkdir(parents=True, exist_ok=True)
         valid_config_path = temp_setup.system_path.joinpath("config.json")
