@@ -179,7 +179,6 @@ def initialize_bpod_system(  # noqa: PLR0911
                     )
                 if not reinit:
                     return InitResult(
-                        # TODO: this is a different state to the other invalid
                         state=InitState.INITIALIZED_INVALID,
                         message="System configuration file is invalid "
                         "and user declined reinitialization.",
@@ -226,7 +225,6 @@ def initialize_bpod_system(  # noqa: PLR0911
                 )
                 copied_defaults = False
 
-        # TODO: figure this out
         bpod_dir = system_settings.BpodDir.create(base_dir=bpod_path)
         logger.swap_stream(bpod_dir.log_dir)
         initial_system_config = utils.init_system_configuration(bpod_path)
