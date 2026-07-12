@@ -34,15 +34,14 @@ mp.set_start_method(MULTIPROCESSING_START_METHOD, force=True)
 class IPCHandles(TypedDict):
     errors: mp.Queue
     user_log: mp.Queue
-    control_state: mp_Event_type
     protocol_run_state: mp_Event_type
+    """When set, protocol should run. When cleared, protocol should pause."""
 
 
 def create_ipc_handles() -> IPCHandles:
     return IPCHandles(
         errors=mp.Queue(),
         user_log=mp.Queue(),
-        control_state=mp.Event(),
         protocol_run_state=mp.Event(),
     )
 
@@ -111,7 +110,7 @@ def _reset_context() -> None:
     _CONTEXT = None
 
 
-# Public facing API for Bpod session management
+# USER API
 class BpodSession:
     """Bpod session object providing access to hardware and session data."""
 
@@ -151,9 +150,10 @@ class GetSessionOverrides:
     """The default session folder path generated during protocol selection."""
 
 
+# USER API
 def get_session(overrides: GetSessionOverrides | None = None) -> BpodSession:
     """
-    Returns the current Bpod session.
+    Returns the current Bpod session for the protocol.
 
     Parameters
     ----------
@@ -186,6 +186,10 @@ def start_protocol_process(
     *,
     debug: bool = False,
 ) -> mp.Process:
+    """Runs a protocol in a separate process.
+
+    This function is called by the GUI/CLI to start a protocol.
+    """
     context = SessionContext(
         session_folder=session_folder,
         protocol_path=protocol_path,
@@ -203,6 +207,8 @@ def start_protocol_process(
 def run_protocol(session: SessionContext) -> None:
     """
     Runs a protocol in the given session folder with automatic resource cleanup.
+
+    This function should be run inside a subprocess.
 
     This function uses multiple layers of cleanup to ensure COM ports and other
     resources are closed even if the protocol crashes:
@@ -245,6 +251,8 @@ def run_protocol(session: SessionContext) -> None:
 
     # Define namespace of the protocol so that it can access
     # the session context and other variables
+    # Sort of a trick to make the protocol code think it's running as __main__ while
+    # still having access to the session context and being cleaned up.
     namespace = {
         "__name__": "__main__",
         "__file__": str(session.protocol_path),
