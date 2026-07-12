@@ -196,15 +196,6 @@ def initialize_bpod_system(  # noqa: PLR0911
             copied_defaults = _initialize_system_config_dir(choices, bpod_path, logger)
         else:
             bpod_path = get_bpod_dir_from_system()
-            if bpod_path is None:
-                return InitResult(
-                    state=InitState.FAILED,
-                    message=(
-                        "System is initialized but failed to read Bpod path from "
-                        "system configuration file."
-                    ),
-                )
-
             system_paths = system_settings.BpodDir.create(base_dir=bpod_path)
             configuration_is_valid = system_paths.verify()
             if not configuration_is_valid:
@@ -362,7 +353,7 @@ def copy_default_files(bpod_folder_path: Path, *, override: bool = False) -> Non
     copy_examples("settings", settings_dir, override_contents=override)
 
 
-def get_bpod_dir_from_system() -> Path | None:
+def get_bpod_dir_from_system() -> Path:
     """Attempts to get the Bpod directory path from the system configuration file.
 
     Checks to see if the system configuration directory exists, if so, check to see
