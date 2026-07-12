@@ -49,8 +49,8 @@ class InitResult:
     """The final state of the initialization process."""
     message: list[str] | str
     """
-    An optional message providing additional information about the initialization 
-    result.
+    An optional message providing additional information about the
+    initialization result.
     """
     details: dict | None = None
     """Any additional details about the initialization result."""
@@ -134,7 +134,7 @@ class CLIStartupChoiceAdapter(StartupChoiceProtocol):
         )
 
 
-def initialize_bpod_system(
+def initialize_bpod_system(  # noqa: PLR0911
     choices: StartupChoiceProtocol, default_bpod_path: Path, logger: BpodLogger
 ) -> InitResult:
     """Initialize the Bpod system on this machine.
@@ -239,8 +239,8 @@ def initialize_bpod_system(
         bpod_dir = system_settings.BpodDir.create(base_dir=bpod_path)
         logger.swap_stream(bpod_dir.log_dir)
         initial_system_config = utils.init_system_configuration(bpod_path)
-        user_config_path = initial_system_config.save_system_configuration()  # noqa: F841
-        system_config_path = initial_system_config.save_system_configuration(  # noqa: F841
+        user_config_path = initial_system_config.save_system_configuration()
+        system_config_path = initial_system_config.save_system_configuration(
             save_dir_override=SYSTEM_CONFIG_DIR
         )
         return InitResult(
@@ -282,8 +282,11 @@ def _create_system_config_dir_if_not_exists(logger: logging.Logger) -> bool:
             SYSTEM_CONFIG_DIR.mkdir(parents=True, exist_ok=False)
         else:
             logger.debug("System configuration directory found: %s", SYSTEM_CONFIG_DIR)
-    except (IOError, OSError) as exc:
-        logger.exception("Failed to create system configuration directory: %s", exc)
+    except OSError as exc:
+        logger.exception(
+            "Failed to create system configuration directory: %s",
+            exc_info=exc,
+        )
         return False
     return True
 
@@ -335,7 +338,7 @@ def create_default_directories(bpod_directory_path: Path) -> None:
         logger.info("Bpod user directory initialized to %s", bpod_directory_path)
 
 
-def copy_default_files(bpod_folder_path: Path, override: bool = False):
+def copy_default_files(bpod_folder_path: Path, *, override: bool = False) -> None:
     """Function to copy default files into their respective folders.
 
     Copies the default calibration and configuration files from the examples module
@@ -415,10 +418,10 @@ def check_system_is_initialized() -> bool:
     try:
         _ = system_settings.load_system_configuration(SYSTEM_CONFIG_FILE)
     except ValidationError as exc:
-        logger.error(
+        logger.exception(
             "System configuration file is malformed: %s. Error: %s",
             SYSTEM_CONFIG_FILE,
-            exc,
+            exc_info=exc,
         )
         return False
 

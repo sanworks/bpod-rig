@@ -11,6 +11,7 @@ from bpod_rig.cli.prompts import prompt_for_path, yes_no_prompt
 from bpod_rig.cli.protocols import app as protocols_app
 from bpod_rig.cli.test import app as test_app
 from bpod_rig.config import startup, utils
+from bpod_rig.config.startup import CLIStartupChoiceAdapter, initialize_bpod_system
 from bpod_rig.config.system_settings import BpodDir
 from bpod_rig.defaults import DEFAULT_BPOD_PATH, SYSTEM_CONFIG_DIR, SYSTEM_CONFIG_FILE
 from bpod_rig.log import BpodLogger, get_log_config
@@ -29,8 +30,7 @@ app.add_typer(test_app, name="test")
 
 
 @app.command()
-def init():
-    from bpod_rig.config.startup import CLIStartupChoiceAdapter, initialize_bpod_system
+def init() -> None:
 
     result = initialize_bpod_system(
         choices=CLIStartupChoiceAdapter(),
@@ -44,7 +44,7 @@ def init():
 
 
 @app.command()
-def init_old():
+def init_old() -> None:
     """Initialize the Bpod Rig on this system."""
     ### Everything below is subject to change and is for testing purposes only
     logger.info("Starting bpod-rig!")
@@ -71,7 +71,7 @@ def init_old():
                 SYSTEM_CONFIG_DIR,
                 exc_info=e,
             )
-            return -1
+            typer.Exit(code=-1)
     else:
         logger.debug(
             "System configuration directory is already initialized."
@@ -98,7 +98,7 @@ def init_old():
         )
         if override_directory is None:
             logger.info("User aborted when overriding default path! Exiting...")
-            return -1
+            typer.Exit(code=-1)
         if override_directory:
             logger.debug("User is going to override the path!")
             bpod_path = prompt_for_path(
@@ -106,7 +106,8 @@ def init_old():
             )
             if bpod_path is None:
                 logger.info("User aborted when overriding default path! Exiting...")
-                return -1
+                typer.Exit(code=-1)
+                return
         else:
             # If the user does not want to overwrite the default directory
             bpod_path = DEFAULT_BPOD_PATH
@@ -163,7 +164,7 @@ def init_old():
         save_dir_override=SYSTEM_CONFIG_DIR
     )
 
-    return 0
+    typer.Exit(code=0)
 
 
 @app.command()

@@ -1,9 +1,10 @@
 import logging
 import tempfile
+from collections.abc import Generator
 from dataclasses import dataclass
 from logging.config import dictConfig
 from pathlib import Path
-from typing import Generator, cast
+from typing import cast
 
 import pytest
 
@@ -12,10 +13,10 @@ from bpod_rig.log import BpodLogger, get_log_config
 
 
 def get_logger() -> BpodLogger:
-    logging_config = get_log_config(True)
+    logging_config = get_log_config(debug=True)
     dictConfig(logging_config)
     logging.setLoggerClass(BpodLogger)
-    logger: BpodLogger = cast(BpodLogger, logging.getLogger(__name__))
+    logger: BpodLogger = cast("BpodLogger", logging.getLogger(__name__))
     return logger
 
 

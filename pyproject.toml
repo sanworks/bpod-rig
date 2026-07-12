@@ -159,9 +159,10 @@ dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 
 [tool.ruff.lint.per-file-ignores]
 "!tests/**.py" = [
-    "PT", # flake8-pytest-style
+    "PT",     # flake8-pytest-style
 ]
 "tests/**.py" = [
+    "ANN201", # Missing type annotation for return in public function
     "ARG001", # Unused function argument
     "ARG002", # Unused method argument
     "PERF",   # Perflint
