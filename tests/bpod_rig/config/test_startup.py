@@ -214,6 +214,23 @@ class TestInitializeBpodSystem:
         assert result.state == startup.InitState.COMPLETED
         assert logger.file_handler.log_dir == temp_setup.bpod_path.joinpath("Logs")
 
+    def test_existing_valid_system_config(self, temp_setup: TempSetup):
+        # Create a valid system config file
+        result = startup.initialize_bpod_system(
+            choices=ConfigurableChoiceAdapter(),
+            default_bpod_path=temp_setup.bpod_path,
+            logger=get_logger(),
+        )
+        assert result.state == startup.InitState.COMPLETED
+
+        # Test skip result
+        result = startup.initialize_bpod_system(
+            choices=ConfigurableChoiceAdapter(),
+            default_bpod_path=temp_setup.bpod_path,
+            logger=get_logger(),
+        )
+        assert result.state == startup.InitState.SKIPPED
+        assert result.message == "Bpod is already initialized and valid."
 
 def test_create_system_config_dir_if_not_exists(
     temp_setup: TempSetup, monkeypatch: pytest.MonkeyPatch

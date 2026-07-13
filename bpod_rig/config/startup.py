@@ -34,11 +34,13 @@ class InitState(Enum):
     INITIALIZED_INVALID = auto()
     """The system has been initialized but the Bpod directory is invalid."""
     ABORTED = auto()
-    """The initialization process was aborted by the user."""
+    """Process was aborted by the user."""
     COMPLETED = auto()
-    """The initialization process completed successfully."""
+    """Process completed successfully, new Bpod directory created."""
+    SKIPPED = auto()
+    """Process was skipped because the system was already initialized and valid."""
     FAILED = auto()
-    """The initialization process failed."""
+    """Process failed."""
 
 
 @dataclass
@@ -50,7 +52,7 @@ class InitResult:
     message: list[str] | str
     """
     An optional message providing additional information about the
-    initialization result.
+    initialization result (to be displayed to the user).
     """
     details: dict | None = None
     """Any additional details about the initialization result."""
@@ -223,7 +225,13 @@ def initialize_bpod_system(  # noqa: PLR0911
                     "Bpod has already been initialized and is valid at %s",
                     bpod_path,
                 )
-                copied_defaults = False
+                bpod_dir = system_settings.BpodDir.create(base_dir=bpod_path)
+                logger.swap_stream(bpod_dir.log_dir)
+                return InitResult(
+                    state=InitState.SKIPPED,
+                    message="Bpod is already initialized and valid.",
+                    bpod_path=bpod_path,
+                )
 
         bpod_dir = system_settings.BpodDir.create(base_dir=bpod_path)
         logger.swap_stream(bpod_dir.log_dir)

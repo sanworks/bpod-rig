@@ -6,6 +6,7 @@ from typing import Annotated, cast
 
 import typer
 from pydantic import ValidationError
+from rich import print
 
 from bpod_rig.cli.prompts import prompt_for_path, yes_no_prompt
 from bpod_rig.cli.protocols import app as protocols_app
@@ -37,9 +38,16 @@ def init() -> None:
         default_bpod_path=DEFAULT_BPOD_PATH,
         logger=logger,
     )
-    if result.state != startup.InitState.COMPLETED:
-        logger.error("Initialization failed: %s", result.message)
-        typer.Exit(code=-1)
+    if result.state not in (startup.InitState.COMPLETED, startup.InitState.SKIPPED):
+        logger.error(
+            "Initialization failed: %s",
+            result,
+        )
+        print(f"[red]✖ Initialization failed: {result.message}[/red]")
+        raise typer.Exit(code=-1)
+
+    print(f"[green]✔ {result.message}[/green]")
+    print(f"  [dim]Bpod directory is: {result.bpod_path}[/dim]")
 
 
 @app.command()
