@@ -232,6 +232,7 @@ class TestInitializeBpodSystem:
         assert result.state == startup.InitState.SKIPPED
         assert result.message == "Bpod is already initialized and valid."
 
+
 def test_create_system_config_dir_if_not_exists(
     temp_setup: TempSetup, monkeypatch: pytest.MonkeyPatch
 ):
