@@ -16,8 +16,8 @@ check-types:
 check: check-format check-ruff check-types
 
 # Run tests
-test:
-    uv run pytest
+test ARGS='.':
+    uv run pytest {{ ARGS }}
 
 # Automatically format files
 format:

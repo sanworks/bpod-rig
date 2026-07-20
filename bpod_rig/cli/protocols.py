@@ -17,8 +17,8 @@ def list_protocols() -> None:
     raise NotImplementedError("Protocol searcher required.")
 
 
-@app.command()
-def open(  # noqa: A001
+@app.command(name="open")
+def open_protocol(
     protocol: Annotated[str | None, typer.Option()] = None,
     *,
     open_file: Annotated[bool, typer.Option()] = False,

@@ -11,14 +11,14 @@ from bpod_rig.config.system_settings import BpodDir, SystemSettings
 
 
 class TestMetadataModel:
-    def test_default(self):  # NOQA N802
+    def test_default(self):
         """Tests the default values of the SettingsMetadata model."""
         bm = SettingsMetadata()
         assert bm.creation_date == datetime.date.today()
         assert bm.modified_datetime is None
         assert bm.username == "BpodUser"
 
-    def test_good_manual_vals(self) -> None:
+    def test_good_manual_vals(self):
         """Tests creating a SettingsMetadata model with valid manual values."""
         past_creation_date = datetime.date(2025, 1, 1)
         past_save_datetime = datetime.datetime(2025, 2, 1)
@@ -34,7 +34,7 @@ class TestMetadataModel:
         assert bm.modified_datetime == past_save_datetime
         assert bm.username == new_user
 
-    def test_validator_failure(self) -> None:
+    def test_validator_failure(self):
         """Tests that pydantic validators raise ValidationErrors for bad data."""
         with pytest.raises(ValidationError):
             future_creation_date = datetime.date(3000, 1, 1)
@@ -66,14 +66,14 @@ class TestSystemPathsModel:
             "data_dir": bpod_dir.joinpath("Data"),
         }
 
-    def test_default_factory(self, paths: dict[str, Path]) -> None:
+    def test_default_factory(self, paths: dict[str, Path]):
         """Tests that the default directory paths are constructed correctly."""
         sp = BpodDir.create(base_dir=paths["bpod_dir"])
         assert sp.data_dir == paths["data_dir"]
         assert sp.base_config_dir == paths["config_dir"]
         assert sp.protocol_dir == paths["protocol_dir"]
 
-    def test_pass_username(self, paths: dict[str, Path]) -> None:
+    def test_pass_username(self, paths: dict[str, Path]):
         """Tests that a username can be passed through to the metadata."""
         paths["bpod_dir"].mkdir(exist_ok=True)
         paths["data_dir"].mkdir(exist_ok=True)
@@ -92,7 +92,7 @@ class TestSystemPathsModel:
         )
         assert sp2.metadata.username != "beepbop"
 
-    def test_not_paths(self) -> None:
+    def test_not_paths(self):
         """Tests that non-path inputs for directories raise validation errors."""
         with pytest.raises(TypeError):
             BpodDir.create(base_dir=1234321)  # type: ignore
@@ -125,7 +125,7 @@ class TestBpodPathsModel:
             "calibration_dir": bpod_dir.joinpath("Calibration"),
         }
 
-    def test_id_validation(self, paths: BpodPathsDict) -> None:
+    def test_id_validation(self, paths: BpodPathsDict):
         """Tests validation for the bpod_id field."""
         # No ID, fails validation
         with pytest.raises(TypeError):
@@ -142,7 +142,7 @@ class TestBpodPathsModel:
         bp = BpodPaths.create(bpod_id=paths["bpod_id"], parent_dir=paths["base_dir"])
         assert bp.bpod_id == paths["bpod_id"]
 
-    def test_default_factory(self, paths: BpodPathsDict) -> None:
+    def test_default_factory(self, paths: BpodPathsDict):
         """Tests that the Bpod-specific paths are constructed correctly."""
         bp = BpodPaths.create(bpod_id=paths["bpod_id"], parent_dir=paths["base_dir"])
         assert bp.unique_bpod_dir == paths["bpod_dir"]
@@ -160,7 +160,7 @@ class TestSystemSettingsModel:
         system_paths = BpodDir.create(base_dir=bpod_dir)
         return {"system_paths": system_paths}
 
-    def test_default(self, paths: dict[str, BpodDir]) -> None:
+    def test_default(self, paths: dict[str, BpodDir]):
         """Tests that the default system settings are constructed correctly."""
         settings = SystemSettings.create(paths=paths["system_paths"])
 

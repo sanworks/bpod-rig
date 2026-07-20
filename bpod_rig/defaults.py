@@ -18,3 +18,8 @@ DEFAULT_BPOD_PATH = platformdirs.user_documents_path() / DEFAULT_DIR_NAME
 # Logging
 TIME_FORMAT = "%Y-%m-%d-%H-%M-%S"
 LOGFILE_PREFIX = "bpod"
+
+if __name__ == "__main__":
+    print(f"System config dir: {SYSTEM_CONFIG_DIR}")
+    print(f"System config file: {SYSTEM_CONFIG_FILE}")
+    print(f"Default Bpod path: {DEFAULT_BPOD_PATH}")
