@@ -8,7 +8,7 @@ import logging
 from typing import Annotated
 
 import typer
-from rich import print
+from rich import print  # noqa: A004
 
 from bpod_rig.config import get_settings
 from bpod_rig.protocols import manager, session
@@ -27,11 +27,11 @@ def run(
         ),
     ],
     subject: Annotated[str, typer.Argument(..., help="Subject identifier")],
-    port: Annotated[str | None, typer.Option(..., help="COM port for the Bpod")] = None,
-    serial_number: Annotated[
+    port: Annotated[str | None, typer.Option(..., help="COM port for the Bpod")] = None,  # noqa
+    serial_number: Annotated[  # noqa
         int | None, typer.Option(..., help="Serial number of the Bpod")
     ] = None,
-    protocol_args: Annotated[
+    protocol_args: Annotated[  # noqa
         str | None,
         typer.Option(..., help="Additional arguments for the protocol"),
     ] = None,

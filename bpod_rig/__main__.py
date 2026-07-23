@@ -2,7 +2,7 @@
 
 import logging
 from logging.config import dictConfig
-from typing import Annotated, cast
+from typing import cast
 
 import typer
 from rich import print  # noqa: A004

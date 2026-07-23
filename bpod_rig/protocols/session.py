@@ -233,7 +233,9 @@ def create_session_folder(
     return protocol_folder
 
 
-def start_session(session_folder: Path, protocol_path: Path) -> MainProcessSessionContext:
+def start_session(
+    session_folder: Path, protocol_path: Path
+) -> MainProcessSessionContext:
 
     # Prepare context
     ipc_handles = create_ipc_handles()

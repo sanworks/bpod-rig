@@ -43,7 +43,7 @@ def test_start_protocol_process(tmp_path: Path) -> None:
     assert proc.exitcode == 0
 
     session_file = session_folder / "test_file.txt"
-    assert session_file.exists()
+    assert session_file.exists(), "Protocol did not create the expected test file."
 
 
 def test_pause_and_resume_protocol_process(tmp_path: Path) -> None:
@@ -56,7 +56,7 @@ for i in range(10):
     bpod_session.handle_pause_condition()
     print(f"Running iteration {i}")
     import time
-    time.sleep(.1)
+    time.sleep(.05)
     test_file_path = bpod_session.session_folder / f"test_file_{i}.txt"
     with open(test_file_path, "w") as f:
         f.write("This is a test file after pause and resume.")
@@ -72,14 +72,14 @@ for i in range(10):
     )
 
     proc = session.run_protocol_in_new_process(context)
-    sleep(pause)
+    sleep(0.2)
     ipc_handles["protocol_run_state"].clear()  # Pause the protocol
-    sleep(pause)
+    sleep(0.1)
     n_files = len(list(session_folder.glob("test_file_*.txt")))
     assert n_files < 10, (
         "Protocol should not have completed all iterations while paused."
     )
-    sleep(pause)
+    sleep(0.1)
     assert len(list(session_folder.glob("test_file_*.txt"))) == n_files, (
         "No new files should be created while paused."
     )
