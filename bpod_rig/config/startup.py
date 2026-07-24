@@ -416,7 +416,7 @@ def check_system_is_initialized() -> bool:
         logger.exception(
             "System configuration file is malformed: %s. Error: %s",
             SYSTEM_CONFIG_FILE,
-            exc_info=exc,
+            exc,
         )
         return False
 
