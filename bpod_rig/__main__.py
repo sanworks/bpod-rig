@@ -51,11 +51,10 @@ def init() -> int:
         # Create the system configuration directory
         try:
             SYSTEM_CONFIG_DIR.mkdir(exist_ok=True, parents=True)
-        except OSError as e:
+        except OSError:
             logger.exception(
                 "Unable to create the system configuration directory: %s Exiting...",
                 SYSTEM_CONFIG_DIR,
-                exc_info=e,
             )
             return -1
     else:
@@ -66,12 +65,11 @@ def init() -> int:
         # System has already been initialized
         try:
             bpod_path = startup.get_bpod_dir_from_system()
-        except ValidationError as e:
+        except ValidationError:
             logger.exception(
                 "Configuration file at %s failed to validate! "
                 "Cannot read the Bpod Directory from existing configuration!",
                 SYSTEM_CONFIG_FILE,
-                exc_info=e,
             )
             raise
 
