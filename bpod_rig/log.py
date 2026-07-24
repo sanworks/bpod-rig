@@ -11,7 +11,7 @@ from bpod_rig.defaults import LOGFILE_PREFIX, TIME_FORMAT
 
 LOGGING_CONFIG: dict[str, Any] = {
     "version": 1,
-    "disable_existing_loggers": True,
+    "disable_existing_loggers": False,
     "formatters": {
         "time": {
             "format": "%(asctime)s.%(msecs)d - [%(levelname)s] %(name)s: %(message)s",
