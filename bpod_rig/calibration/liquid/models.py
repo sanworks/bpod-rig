@@ -1,12 +1,13 @@
 """Data models for liquid calibration."""
 
 import datetime
-import logging
 
 import numpy as np
 from pydantic import BaseModel, ConfigDict, Field, field_serializer
 
-logger = logging.getLogger(__name__)
+from bpod_rig import log
+
+logger = log.get_logger(__name__)
 
 
 class ValveData(BaseModel):

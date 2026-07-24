@@ -249,7 +249,7 @@ def initialize_bpod_system(  # noqa: PLR0911
             system_config_path=system_config_path,
         )
     except Exception as exc:
-        logger.exception("Unexpected error during initialization: %s")
+        logger.exception("Unexpected error during initialization")
         return InitResult(
             state=InitState.FAILED,
             message="Unexpected error occurred: " + str(exc),
@@ -283,10 +283,10 @@ def _create_system_config_dir_if_not_exists(logger: logging.Logger) -> bool:
             SYSTEM_CONFIG_DIR.mkdir(parents=False, exist_ok=False)
         else:
             logger.debug("System configuration directory found: %s", SYSTEM_CONFIG_DIR)
-    except OSError as exc:
+    except OSError:
         logger.exception(
             "Failed to create system configuration directory: %s",
-            exc_info=exc,
+            SYSTEM_CONFIG_DIR,
         )
         return False
     return True
@@ -412,11 +412,10 @@ def check_system_is_initialized() -> bool:
 
     try:
         _ = system_settings.load_system_configuration(SYSTEM_CONFIG_FILE)
-    except ValidationError as exc:
+    except ValidationError:
         logger.exception(
-            "System configuration file is malformed: %s. Error: %s",
+            "System configuration file is malformed: %s.",
             SYSTEM_CONFIG_FILE,
-            exc_info=exc,
         )
         return False
 

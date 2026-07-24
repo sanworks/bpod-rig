@@ -1,12 +1,12 @@
 # Module to delete all Bpod directories
-import logging
 import shutil
 from collections.abc import Iterable
 from pathlib import Path
 
+from bpod_rig import log
 from bpod_rig.cli import prompts
 
-logger = logging.getLogger(__name__)
+logger = log.get_logger(__name__)
 
 
 def reset_all(directories: Iterable[Path | str], *, force: bool = False) -> bool:
