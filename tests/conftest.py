@@ -9,7 +9,7 @@ To run hardware tests with specific rig:
 """
 
 import logging
-from typing import Generator
+from collections.abc import Generator
 
 import pytest
 from bpod_core.bpod import Bpod
@@ -67,7 +67,7 @@ def bpod_device(request: pytest.FixtureRequest) -> Generator[Bpod, None, None]:
 
         bpod_instance = Bpod(serial_number=serial_number, port=port)
     except Exception as e:
-        logger.error("Failed to connect to Bpod rig in fixture!", exc_info=e)
+        logger.exception("Failed to connect to Bpod rig in fixture!", exc_info=e)
         pytest.exit("Connection to Bpod rig unsuccessful!")
     yield bpod_instance
     bpod_instance.close()
