@@ -26,6 +26,7 @@ extensions = [
     'sphinx.ext.intersphinx',
     'sphinx.ext.napoleon',
     'sphinx.ext.autodoc',
+    'sphinx.ext.autosectionlabel',
     'sphinx.ext.autosummary',
     'sphinx_copybutton',
     'sphinx_autodoc_typehints',
@@ -42,6 +43,8 @@ typehints_defaults = None
 typehints_use_rtype = False
 typehints_use_signature = False
 typehints_use_signature_return = False
+
+autosectionlabel_prefix_document = True
 
 intersphinx_mapping = {
     'python': ('https://docs.python.org/3.10/', None),
