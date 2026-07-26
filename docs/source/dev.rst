@@ -37,9 +37,10 @@ or if you have ssh setup
 
 4. Create and checkout a feature branch
 
+.. code-block:: console
+
     $ git checkout -b [FEATURE BRANCH NAME]
 
-.. code-block:: console
 
 Create Virtual Environment
 **************************
