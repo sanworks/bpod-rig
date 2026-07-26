@@ -12,6 +12,13 @@ Python software suite for Bpod, built around `International Brain Lab <https://i
    installation
 
 .. toctree::
+   :caption: Development
+   :maxdepth: 3
+   :hidden:
+
+   dev
+
+.. toctree::
    :caption: Links
    :hidden:
 
