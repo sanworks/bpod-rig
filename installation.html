@@ -1,0 +1,208 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>bpod-rig Installation &mdash; bpod-rig 0.0.2 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="_static/dark_mode_css/general.css?v=c0a7eb24" />
+      <link rel="stylesheet" type="text/css" href="_static/dark_mode_css/dark.css?v=70edf1c7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=e3a6060d"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="_static/copybutton.js?v=f281be69"></script>
+      <script src="_static/dark_mode_js/default_dark.js?v=fd565c74"></script>
+      <script src="_static/dark_mode_js/theme_switcher.js?v=358d3910"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Development Setup" href="dev.html" />
+    <link rel="prev" title="bpod-rig" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            bpod-rig
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">bpod-rig Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#requirements">Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#bpod-installation-directory">bpod Installation Directory</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#virtual-environment">Virtual Environment</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#creation">Creation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#installing-bpod-rig">Installing bpod-rig</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#test-installation">Test Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#troubleshooting">Troubleshooting</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#i-can-t-connect-to-a-bpod-on-linux">I can’t connect to a Bpod on Linux</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Development</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="dev.html">Development Setup</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Links</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/sanworks/bpod-rig">bpod-rig on GitHub</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://me.austin2118ace.com/img/confusion.gif">PyPI</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">bpod-rig</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">bpod-rig Installation</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/installation.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="bpod-rig-installation">
+<h1>bpod-rig Installation<a class="headerlink" href="#bpod-rig-installation" title="Link to this heading"></a></h1>
+<section id="requirements">
+<h2>Requirements<a class="headerlink" href="#requirements" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">bpod-rig</span></code> requires <strong>Python 3.10 or later</strong>. It is supported on Linux, macOS, and Windows.</p>
+<p>See <em>pyproject.toml</em> for specific packages required by <code class="docutils literal notranslate"><span class="pre">bpod-rig</span></code></p>
+</section>
+<section id="bpod-installation-directory">
+<h2>bpod Installation Directory<a class="headerlink" href="#bpod-installation-directory" title="Link to this heading"></a></h2>
+<p>Before beginning, create a folder to serve as the <strong>bpod Installation Directory</strong>. This will serve as the location
+for the <a class="reference internal" href="#virtual-environment"><span class="std std-ref">Virtual Environment</span></a>, system configuration files, and anything else you want or need for your bpod
+installation!</p>
+<p>We will refer to the <strong>bpod Installation Directory</strong> as the <code class="docutils literal notranslate"><span class="pre">BID</span></code></p>
+</section>
+<section id="virtual-environment">
+<h2>Virtual Environment<a class="headerlink" href="#virtual-environment" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">bpod-rig</span></code> is designed to be installed and run within an isolated Python virtual environment. This allows a single machine
+to have as many <code class="docutils literal notranslate"><span class="pre">bpod-rig</span></code> installations as needed or desired! There are many ways to create and manage virtual
+environments. We recommend <a class="reference external" href="https://docs.astral.sh/uv/">Astral’s uv</a> for virtual environment creation and management.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>The use of a virtual environment is not required, but is <strong>highly</strong> recommended.</p>
+</div>
+<div class="admonition attention">
+<p class="admonition-title">Attention</p>
+<p>At this time, we will not be explicitly supporting the use of conda/miniconda/Anaconda. Technically,
+it should still work, but use it at your own risk!</p>
+</div>
+<section id="creation">
+<h3>Creation<a class="headerlink" href="#creation" title="Link to this heading"></a></h3>
+<p>Navigate to your <strong>bpod Installation Directory (BID)</strong> and run the following:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>uv<span class="w"> </span>venv<span class="w"> </span>bpod-rig<span class="w"> </span>--python<span class="w"> </span><span class="m">3</span>.14
+</pre></div>
+</div>
+</section>
+<section id="installing-bpod-rig">
+<h3>Installing bpod-rig<a class="headerlink" href="#installing-bpod-rig" title="Link to this heading"></a></h3>
+<p>To install <code class="docutils literal notranslate"><span class="pre">bpod-rig</span></code> and its dependencies:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>bpod-rig
+</pre></div>
+</div>
+</section>
+</section>
+<section id="test-installation">
+<h2>Test Installation<a class="headerlink" href="#test-installation" title="Link to this heading"></a></h2>
+<p>WIP</p>
+</section>
+<section id="troubleshooting">
+<h2>Troubleshooting<a class="headerlink" href="#troubleshooting" title="Link to this heading"></a></h2>
+<section id="i-can-t-connect-to-a-bpod-on-linux">
+<h3>I can’t connect to a Bpod on Linux<a class="headerlink" href="#i-can-t-connect-to-a-bpod-on-linux" title="Link to this heading"></a></h3>
+<p>If you’re experiencing “Permission denied” errors, slow or unreliable connections,
+missing data, or timeout errors when trying to connect to your Bpod on Linux, you likely
+need to install additional udev rules.</p>
+<p>By default, Linux restricts access to USB serial devices to root and members of the
+<code class="docutils literal notranslate"><span class="pre">dialout</span></code> group for security reasons. Additionally, system services like
+<a class="reference external" href="https://modemmanager.org/">ModemManager</a>  automatically probe serial devices to
+detect modems, which can interfere with normal communication. Bpod devices use
+<a class="reference external" href="https://www.pjrc.com/teensy/">Teensy microcontrollers</a>, which appear as USB serial
+devices that are subject to these restrictions.</p>
+<p>Installing the <a class="reference external" href="https://www.pjrc.com/teensy/00-teensy.rules">Teensy udev rules</a>
+should solve these issues by:</p>
+<ul class="simple">
+<li><p>Granting all users read/write access to Teensy devices without requiring <code class="docutils literal notranslate"><span class="pre">dialout</span></code>
+group membership</p></li>
+<li><p>Preventing <a class="reference external" href="https://modemmanager.org/">ModemManager</a>  from probing and interfering
+with the connection</p></li>
+<li><p>Configuring serial ports with appropriate low-level settings (raw mode, no echo)</p></li>
+</ul>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="bpod-rig" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="dev.html" class="btn btn-neutral float-right" title="Development Setup" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Sanworks.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
