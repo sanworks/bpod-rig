@@ -1,13 +1,13 @@
-import logging
-from typing import Any
+from typing import Any, cast
 
-from bpod_rig.calibration.liquid.models import ValveDataManager, ValveData
 import bpod_core.bpod
 from bpod_core.fsm import StateMachine
 from pydantic import Field
 
+from bpod_rig import log
+from bpod_rig.calibration.liquid.models import ValveData, ValveDataManager
 
-logger = logging.getLogger(__name__)
+logger = log.get_logger(__name__)
 
 
 class PendingValve(ValveData):
@@ -28,8 +28,8 @@ class PendingValve(ValveData):
         "(e.g., 'StateMachine', 'PortArray').",
     )
 
-    def __init__(self, **data):
-        super().__init__(**data)
+    def __init__(self, **data: object) -> None:
+        super().__init__(**cast("dict[str, Any]", data))  # TODO: this is ugly
         if self.name.startswith("PA"):
             self.valve_controller = "PortArray"
         elif self.name.startswith("Valve"):
@@ -98,7 +98,7 @@ class PendingMeasurementsManager:
     pulse_set_pause: float = 0.5
     """time (s) between each set of pulses"""
 
-    def __init__(self, valvemanager: ValveDataManager):
+    def __init__(self, valvemanager: ValveDataManager) -> None:
         self._valvemanager = valvemanager
         self.valves = [
             PendingValve(ValveName=valve.name) for valve in valvemanager.valves
@@ -217,7 +217,7 @@ def add_valve_states(
     duration: float,
     next_valve: PendingValve | float,
     interval_delay_duration: float,
-):
+) -> None:
     """Add the pending valve to a state machine.
 
     Parameters
@@ -296,6 +296,7 @@ def add_valve_states(
 def run_calibration(
     bpodsystem: bpod_core.bpod.Bpod,
     pending_manager: PendingMeasurementsManager,
+    *,
     verbose: bool = False,
 ) -> dict[str, float]:
     """Run a calibration sequence using Bpod state machine.
@@ -318,22 +319,16 @@ def run_calibration(
     # Build the state machine
     fsm, test_set = pending_manager.build_statemachine()
     if verbose:
-        root_logger = logging.getLogger()
-        if not root_logger.hasHandlers():
-            logging.basicConfig(level=logging.INFO)
-
         logger.info("Running liquid calibration:")
         logger.info("\t%s pulses.", pending_manager.n_pulses)
         logger.info("\t%s between each pulse.", pending_manager.pulse_interval)
         logger.info("\t%s between each pulse set.", pending_manager.pulse_set_pause)
         for valvename in test_set:
             logger.info("- %s: duration %s ms", valvename, test_set[valvename])
-
-    bpodsystem.send_state_machine(fsm)
     logger.debug("Running calibration state machine.")
     # Run the state machine
     for _ in range(pending_manager.n_pulses):
-        bpodsystem.run_state_machine()
+        bpodsystem.run(fsm)
     if verbose:
         logger.info("Calibration state machine completed.")
 

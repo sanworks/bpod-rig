@@ -1,15 +1,14 @@
-import logging
 import pathlib
 import shutil
 
-from bpod_rig import examples
+from bpod_rig import examples, log
 
-logger = logging.getLogger(__name__)
+logger = log.get_logger(__name__)
 
 
 def copy_examples(
-    source_key: str, destination: pathlib.Path, override_contents: bool = False
-):
+    source_key: str, destination: pathlib.Path, *, override_contents: bool = False
+) -> None:
     source_modules = examples.__all__
 
     if source_key not in source_modules:
@@ -34,6 +33,6 @@ def copy_examples(
             try:
                 logger.debug("Attempting to copy %s to %s...", file, destination)
                 shutil.copy2(file, destination)
-            except Exception as e:  # NOQA PERF203
-                logger.error("Error copying %s!", file)
-                raise e
+            except Exception:  # noqa: PERF203
+                logger.exception("Error copying %s!", file)
+                raise

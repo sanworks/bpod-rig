@@ -3,9 +3,9 @@
 import datetime
 from pathlib import Path
 
-from bpod_rig.examples import calibration as example_folder
 from bpod_rig.calibration.liquid.models import ValveDataManager
 from bpod_rig.calibration.liquid.utils import create_empty_valve_data_manager
+from bpod_rig.examples import calibration as example_folder
 
 
 def add_dummy_measurements(valvemanager: ValveDataManager) -> None:
@@ -51,7 +51,7 @@ def create_default_json() -> str:
     )
 
 
-def main():
+def main() -> None:
     """Create the example liquid calibration JSON in the example folder."""
     example_json = create_default_json()
     example_path = Path(example_folder.__path__[0]) / "LiquidCalibration.json"

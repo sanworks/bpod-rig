@@ -1,52 +1,32 @@
 """Module implementing the Pydantic models for any system settings."""
 
-import logging
 from pathlib import Path
-from typing import Annotated, Optional
+from typing import Annotated
 
 from pydantic import UUID4, Field, PastDate
-from pydantic_core import from_json
 
-from bpod_rig.IO import json_handler
-from bpod_rig.config.base import ModelWithMetadata
+from bpod_rig import log
+from bpod_rig.config.base import ModelWithMetadata, SettingsMetadata
 from bpod_rig.config.bpod_settings import BpodPaths
 from bpod_rig.defaults import (
-    DEFAULT_PROTOCOL_DIR_NAME,
-    DEFAULT_DATA_DIR_NAME,
     DEFAULT_CONFIG_DIR_NAME,
+    DEFAULT_DATA_DIR_NAME,
+    DEFAULT_LOG_DIR_NAME,
+    DEFAULT_PROTOCOL_DIR_NAME,
     SYSTEM_CONFIG_DIR,
 )
+from bpod_rig.IO import json_handler
 
-logger = logging.getLogger(__name__)
-
-
-def system_path_factory(data: dict, addition: str) -> Path | None:
-    """
-    Function to dynamically create SystemPath subpaths at validation time.
-
-    Function creates a path in the below form:
-        {base_dir}/[addition]
-    Path components in {} are retrieved from the dictionary of pre-validated data.
-
-    Parameters
-    ----------
-    data : dict
-        Dictionary containing all previously validated fields
-    addition : str
-        Addition to join to the end of the path.
-
-    Returns
-    -------
-    pathlib.Path
-        Combined path in above form.
-    """
-    if "base_dir" not in data:
-        return None
-
-    return data["base_dir"].joinpath(addition)
+logger = log.get_logger(__name__)
 
 
 class BpodDir(ModelWithMetadata):
+    """Bpod directory structure with required subdirectories.
+
+    Use the `create()` class method to construct instances with automatic
+    subdirectory path generation from the base directory.
+    """
+
     base_dir: Annotated[
         Path,
         Field(
@@ -62,52 +42,98 @@ class BpodDir(ModelWithMetadata):
     ]
 
     protocol_dir: Annotated[
-        Optional[Path],
+        Path,
         Field(
             title="Bpod Protocol Directory",
             description="Local directory where Bpod protocols are stored."
             " The Protocol explorer will list all valid protocols found"
             " in this directory.",
-            default_factory=lambda data: system_path_factory(
-                data, DEFAULT_PROTOCOL_DIR_NAME
-            ),
         ),
-    ] = None
+    ]
 
     data_dir: Annotated[
-        Optional[Path],
+        Path,
         Field(
             title="Bpod Data Directory",
             description="Local directory where data from protocol runs are stored.",
-            default_factory=lambda data: system_path_factory(
-                data, DEFAULT_DATA_DIR_NAME
-            ),
         ),
-    ] = None
+    ]
 
     base_config_dir: Annotated[
-        Optional[Path],
+        Path,
         Field(
             title="Bpod Configuration Directory",
             description="Local directory where Bpod configuration files are stored.",
-            default_factory=lambda data: system_path_factory(
-                data, DEFAULT_CONFIG_DIR_NAME
-            ),
         ),
-    ] = None
+    ]
 
     log_dir: Annotated[
-        Optional[Path],
+        Path,
         Field(
             title="Bpod Log Directory",
             description="Local directory where Bpod logs are stored.",
-            # default_factory=lambda data: system_path_factory(
-            #     data,
-            #     DEFAULT_LOG_DIR_NAME
-            # ),
-            # TODO: Add log folder to initial configuration; until then this is optional
         ),
-    ] = None
+    ]
+
+    @classmethod
+    def create(
+        cls,
+        base_dir: Path | str,
+        *,
+        protocol_dir: Path | str | None = None,
+        data_dir: Path | str | None = None,
+        base_config_dir: Path | str | None = None,
+        log_dir: Path | str | None = None,
+        username: str | None = None,
+        metadata: "SettingsMetadata | None" = None,
+    ) -> "BpodDir":
+        """Factory method to create BpodDir with automatic subdirectory paths.
+
+        This is the recommended way to create BpodDir instances. It automatically
+        generates subdirectory paths based on the base_dir if not explicitly provided.
+
+        Parameters
+        ----------
+        base_dir : Path | str
+            Base Bpod directory
+        protocol_dir : Path | str | None, optional
+            Override for protocol directory (default: base_dir/Protocols)
+        data_dir : Path | str | None, optional
+            Override for data directory (default: base_dir/Data)
+        base_config_dir : Path | str | None, optional
+            Override for config directory (default: base_dir/Config)
+        log_dir : Path | str | None, optional
+            Optional log directory
+        username : str | None, optional
+            Username for metadata
+        metadata : SettingsMetadata | None, optional
+            Pre-constructed metadata object
+
+        Returns
+        -------
+        BpodDir
+            Fully initialized BpodDir instance with all subdirectory paths populated
+
+        Examples
+        --------
+        >>> bpod_dir = BpodDir.create(base_dir="/home/user/Bpod")
+        >>> bpod_dir.protocol_dir
+        PosixPath('/home/user/Bpod/Protocols')
+        """
+        base_dir = Path(base_dir)
+        protocol_dir = Path(protocol_dir or base_dir / DEFAULT_PROTOCOL_DIR_NAME)
+        data_dir = Path(data_dir or base_dir / DEFAULT_DATA_DIR_NAME)
+        base_config_dir = Path(base_config_dir or base_dir / DEFAULT_CONFIG_DIR_NAME)
+        log_dir = Path(log_dir or base_dir / DEFAULT_LOG_DIR_NAME)
+
+        return cls(
+            base_dir=base_dir,
+            protocol_dir=protocol_dir,
+            data_dir=data_dir,
+            base_config_dir=base_config_dir,
+            log_dir=log_dir,
+            metadata=metadata or SettingsMetadata(username=username or None),
+        )
 
     def verify(self) -> bool:
         dir_verified = True
@@ -162,10 +188,10 @@ class SystemSettings(ModelWithMetadata):
             title="Current bpod-rig version",
             description="Currently installed version of the bpod-rig repository",
         ),
-    ] = "0.0.0"
+    ]
 
     last_update_check: Annotated[
-        Optional[PastDate],
+        PastDate | None,
         Field(
             title="Last update check date and time",
             description="Last date and time that system checked for any updates"
@@ -174,7 +200,7 @@ class SystemSettings(ModelWithMetadata):
     ] = None
 
     phone_home_id: Annotated[
-        Optional[UUID4],
+        UUID4 | None,
         Field(
             title="System's Unique Phone-Home ID",
             description="UUID4 ID of the current system"
@@ -189,16 +215,15 @@ class SystemSettings(ModelWithMetadata):
             description="Whether or not the user has opted"
             " in to the phone-home telemetry.",
         ),
-    ] = False
+    ]
 
     debug: Annotated[
         bool,
         Field(
-            False,
             title="Debug Enabled",
             description="Set to True to enable debug information output.",
         ),
-    ] = False
+    ]
 
     paths: Annotated[
         BpodDir,
@@ -209,7 +234,7 @@ class SystemSettings(ModelWithMetadata):
     ]
 
     bpod_dirs: Annotated[
-        Optional[list[BpodPaths]],
+        list[BpodPaths] | None,
         Field(
             title="All Bpod Paths",
             description="List containing BpodPaths objects that contain"
@@ -217,7 +242,61 @@ class SystemSettings(ModelWithMetadata):
         ),
     ] = None
 
-    def update_modification_time(self):
+    @classmethod
+    def create(
+        cls,
+        paths: BpodDir,
+        *,
+        current_version: str = "0.0.0",
+        phone_home_opt_in: bool = False,
+        debug: bool = False,
+        bpod_dirs: list[BpodPaths] | None = None,
+        username: str | None = None,
+        metadata: "SettingsMetadata | None" = None,
+    ) -> "SystemSettings":
+        """Factory method to create SystemSettings with automatic metadata handling.
+
+        This is the recommended way to create SystemSettings instances.
+
+        Parameters
+        ----------
+        paths : BpodDir
+            System paths configuration
+        current_version : str, optional
+            Currently installed version (default: "0.0.0")
+        phone_home_opt_in : bool, optional
+            Whether user opted into telemetry (default: False)
+        debug : bool, optional
+            Enable debug output (default: False)
+        bpod_dirs : Optional[list[BpodPaths]], optional
+            List of Bpod-specific paths (default: None)
+        username : str | None, optional
+            Username for metadata
+        metadata : SettingsMetadata | None, optional
+            Pre-constructed metadata object
+
+        Returns
+        -------
+        SystemSettings
+            Fully initialized SystemSettings instance
+
+        Examples
+        --------
+        >>> bpod_dir = BpodDir.create(base_dir="/home/user/Bpod")
+        >>> settings = SystemSettings.create(paths=bpod_dir, username="TestUser")
+        >>> settings.metadata.username
+        'TestUser'
+        """
+        return cls(
+            paths=paths,
+            current_version=current_version,
+            phone_home_opt_in=phone_home_opt_in,
+            debug=debug,
+            bpod_dirs=bpod_dirs,
+            metadata=metadata or SettingsMetadata(username=username),
+        )
+
+    def update_modification_time(self) -> None:
         """Update time the SystemSettings object was modified.
 
         Override update_modification_time to also update the modified_datetime metadata
@@ -288,8 +367,4 @@ def load_system_configuration(config_file_path: Path) -> SystemSettings:
 
 
     """
-    logger.debug("Attempting to read, parse, and validate: %s", config_file_path)
-
-    file_content_json = json_handler.read_json(config_file_path)
-    json_object = from_json(file_content_json, allow_partial=False)
-    return SystemSettings.model_validate(json_object)
+    return SystemSettings.model_validate_json(config_file_path.read_text())

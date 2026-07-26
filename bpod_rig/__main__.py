@@ -1,17 +1,37 @@
 """main entry point for bpod-rig."""
 
 import logging
+from logging.config import dictConfig
+from typing import Annotated
+
+import typer
+from pydantic import ValidationError
+
+from bpod_rig.cli.prompts import prompt_for_path, yes_no_prompt
+from bpod_rig.cli.protocols import app as protocols_app
+from bpod_rig.cli.test import app as test_app
 from bpod_rig.config import utils
 from bpod_rig.config.system_settings import BpodDir
 from bpod_rig.defaults import DEFAULT_BPOD_PATH, SYSTEM_CONFIG_DIR, SYSTEM_CONFIG_FILE
-from bpod_rig.IO import startup, cli_io
-from pydantic import ValidationError
+from bpod_rig.IO import startup
+from bpod_rig.log import BpodLogger, get_log_config, get_logger
 
-logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger(__name__)
+DEBUG = True
+
+# Set up logging here
+logging_config = get_log_config(debug=DEBUG)
+dictConfig(logging_config)
+logging.setLoggerClass(BpodLogger)
+logger: BpodLogger = get_logger(__name__)
+
+app = typer.Typer(no_args_is_help=True)
+app.add_typer(protocols_app, name="protocols")
+app.add_typer(test_app, name="test")
 
 
-def main():
+@app.command()
+def init() -> int:
+    """Initialize the Bpod Rig on this system."""
     ### Everything below is subject to change and is for testing purposes only
     logger.info("Starting bpod-rig!")
     # Let's put this in a BpodSystem class later
@@ -23,19 +43,18 @@ def main():
     ### Has Bpod been initialized on this system before? ###
     system_initialized = startup.check_system_is_initialized()
     if not system_initialized:
-        logging.info("Initializing Bpod Rig...")
-        logging.debug(
+        logger.info("Initializing Bpod Rig...")
+        logger.debug(
             "System is not initialized. Creating system config dir [%s]",
             SYSTEM_CONFIG_DIR,
         )
         # Create the system configuration directory
         try:
             SYSTEM_CONFIG_DIR.mkdir(exist_ok=True, parents=True)
-        except (IOError, OSError) as e:
-            logger.error(
+        except OSError:
+            logger.exception(
                 "Unable to create the system configuration directory: %s Exiting...",
                 SYSTEM_CONFIG_DIR,
-                exc_info=e,
             )
             return -1
     else:
@@ -46,19 +65,18 @@ def main():
         # System has already been initialized
         try:
             bpod_path = startup.get_bpod_dir_from_system()
-        except ValidationError as e:
-            logger.error(
+        except ValidationError:
+            logger.exception(
                 "Configuration file at %s failed to validate! "
                 "Cannot read the Bpod Directory from existing configuration!",
                 SYSTEM_CONFIG_FILE,
-                exc_info=e,
             )
             raise
 
     if bpod_path is None:
         # This is the first time initializing the system; override default path?
         logger.info("Creating Bpod directory...")
-        override_directory = cli_io.yes_no_prompt(
+        override_directory = yes_no_prompt(
             f"Bpod has not been initialized on this system! "
             f"Would you like to override the default path {DEFAULT_BPOD_PATH}?"
         )
@@ -67,8 +85,8 @@ def main():
             return -1
         if override_directory:
             logger.debug("User is going to override the path!")
-            bpod_path = cli_io.prompt_for_path(
-                "Please enter the path to create the Bpod directory"
+            bpod_path = prompt_for_path(
+                "Please enter the path to create the Bpod directory", must_exist=False
             )
             if bpod_path is None:
                 logger.info("User aborted when overriding default path! Exiting...")
@@ -82,7 +100,7 @@ def main():
     ## Verify Bpod Folder Structure ##
 
     # Instantiate BpodDir object to generate subdirectories
-    system_paths = BpodDir(base_dir=bpod_path)
+    system_paths = BpodDir.create(base_dir=bpod_path)
     if system_initialized:
         # Let's only verify the directory if Bpod has already been
         # initialized on this system
@@ -96,7 +114,7 @@ def main():
                 "improper file path!",
                 bpod_path,
             )
-            reinitialize = cli_io.yes_no_prompt(
+            reinitialize = yes_no_prompt(
                 f"Would you like to (re)initialize {bpod_path} as the base"
                 f" Bpod directory?"
             )
@@ -104,11 +122,11 @@ def main():
     if reinitialize or not system_initialized:
         # We will (re) create the Bpod directories if the system isn't initialized
         # or something went wrong and we need to reinitialize
-        logging.info("Initializing Bpod directory at %s", bpod_path)
+        logger.info("Initializing Bpod directory at %s", bpod_path)
         bpod_path = startup.create_default_directories(bpod_path)
         bpod_dir_verified = True
 
-        copy_default = cli_io.yes_no_prompt(
+        copy_default = yes_no_prompt(
             f"Would you like to copy the default protocols"
             f" and calibration files to {bpod_path}"
         )
@@ -116,10 +134,12 @@ def main():
             startup.copy_default_files(bpod_path)
 
     if bpod_dir_verified:
-        logging.debug("System paths at %s verified", bpod_path)
+        logger.debug("System paths at %s verified", bpod_path)
     else:
         logger.error("No valid Bpod directory! Shutting down.")
-        raise
+        raise RuntimeError("Bpod directory verification failed after initialization!")
+
+    logger.swap_stream(system_paths.log_dir)
 
     initial_system_config = utils.init_system_configuration(bpod_path)
     user_config_path = initial_system_config.save_system_configuration()  # noqa: F841
@@ -128,6 +148,36 @@ def main():
     )
 
     return 0
+
+
+@app.command()
+def run(
+    protocol: Annotated[
+        str,
+        typer.Argument(
+            ..., help="Name of the protocol file, or path to the protocol file"
+        ),
+    ],
+    subject: Annotated[str, typer.Argument(..., help="Subject identifier")],
+    port: Annotated[str | None, typer.Option(..., help="COM port for the Bpod")] = None,
+    serial_number: Annotated[
+        int | None, typer.Option(..., help="Serial number of the Bpod")
+    ] = None,
+    protocol_args: Annotated[
+        str | None,
+        typer.Option(..., help="Additional arguments for the protocol"),
+    ] = None,
+) -> None:
+    """Run a protocol on the Bpod Rig.
+
+    A protocol can be specified by its name if in protocol folder, or by a path to the
+    protocol file.
+    """
+    raise NotImplementedError()
+
+
+def main() -> None:
+    app()
 
 
 if __name__ == "__main__":

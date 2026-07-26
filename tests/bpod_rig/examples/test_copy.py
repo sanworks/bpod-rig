@@ -1,12 +1,15 @@
 import pathlib
-import pytest
 import shutil
 import tempfile
+from collections.abc import Generator
+
+import pytest
+
 from bpod_rig.examples import calibration, copy, settings
 
 
 @pytest.fixture()
-def temp_dirs():
+def temp_dirs() -> Generator[pathlib.Path, None, None]:
     temp_dest_dir = pathlib.Path(tempfile.mkdtemp())
 
     yield temp_dest_dir
@@ -15,7 +18,7 @@ def temp_dirs():
 
 
 class TestCopyExamples:
-    def test_copy(self, temp_dirs):
+    def test_copy(self, temp_dirs: pathlib.Path) -> None:
         calibration_dir = temp_dirs.joinpath("calibration")
         settings_dir = temp_dirs.joinpath("settings")
         calibration_dir.mkdir()
@@ -38,11 +41,11 @@ class TestCopyExamples:
         for file in expected_settings_files:
             assert file in settings_contents
 
-    def test_invalid_key(self):
+    def test_invalid_key(self) -> None:
         with pytest.raises(ValueError):
             copy.copy_examples("invalid_key", pathlib.Path())
 
-    def test_invalid_path(self, temp_dirs):
+    def test_invalid_path(self, temp_dirs: pathlib.Path) -> None:
         with pytest.raises(FileNotFoundError):
             copy.copy_examples("calibration", temp_dirs.joinpath("~~(__^·>"))
             # The directory ~~(__^·> (mouse) does not exist!

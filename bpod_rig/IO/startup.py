@@ -1,17 +1,17 @@
 """Module to create the default Bpod user directory and associated subdirs."""
 
-import logging
 from pathlib import Path
 
-from bpod_rig.examples.copy import copy_examples
+from bpod_rig import log
 from bpod_rig.config import system_settings
 from bpod_rig.defaults import (
     DEFAULT_SUBDIRS,
     SYSTEM_CONFIG_DIR,
     SYSTEM_CONFIG_FILE,
 )
+from bpod_rig.examples.copy import copy_examples
 
-logger = logging.getLogger(__name__)
+logger = log.get_logger(__name__)
 
 
 def create_default_directories(bpod_directory_path: Path) -> Path:
@@ -67,7 +67,7 @@ def create_default_directories(bpod_directory_path: Path) -> Path:
     return bpod_directory_path
 
 
-def copy_default_files(bpod_folder_path: Path, override: bool = False):
+def copy_default_files(bpod_folder_path: Path, *, override: bool = False) -> None:
     """Function to copy default files into their respective folders.
 
     Copies the default calibration and configuration files from the examples module
