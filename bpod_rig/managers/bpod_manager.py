@@ -98,7 +98,11 @@ class BpodManager:
             for i, (sn, info) in enumerate(self._all_local_bpods.items())
         ]
 
-        return f"The following Bpods are available:\n {info}"
+        return (
+            f"\nThe following Bpods are available:\n"
+            f"===================================\n"
+            f"{''.join(info)}"
+        )
 
     def _get_local_bpods(self) -> dict[SerialNumber, BpodInfo] | None:
         local_bpods = list(discover_bpod())
