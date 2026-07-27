@@ -130,3 +130,35 @@ class TestBpodManager:
         with pytest.raises(IndexError):
             self.bpm.select_bpod(index=-99)
             assert "out of range" in caplog.messages
+
+    def test_format_no_bpods(self) -> None:
+        string_rep = str(self.bpm)
+        assert string_rep == "No local Bpods found to list!"
+
+    @pytest.mark.finds_bpods(1)
+    def test_format_one_bpod(self) -> None:
+        string_rep = str(self.bpm)
+        assert string_rep == (
+            "\nThe following Bpods are available:\n"
+            "===================================\n"
+            "[0]: Local Bpod\n"
+            "Name: Bpod 1 | Serial Number: serial123\n"
+            "Port: COM2 | Location: \n"
+            "\n"
+        )
+
+    @pytest.mark.finds_bpods(2)
+    def test_format_two_bpods(self) -> None:
+        string_rep = str(self.bpm)
+        assert string_rep == (
+            "\nThe following Bpods are available:\n"
+            "===================================\n"
+            "[0]: Local Bpod\n"
+            "Name: Bpod 1 | Serial Number: serial123\n"
+            "Port: COM2 | Location: \n"
+            "\n"
+            "[1]: Local Bpod\n"
+            "Name: Bpod 2 | Serial Number: serial456\n"
+            "Port: COM3 | Location: \n"
+            "\n"
+        )
