@@ -5,10 +5,14 @@ from bpod_core.bpod.structs import BpodInfo
 
 from bpod_rig.managers import BpodManager
 
-bpod_info_1 = BpodInfo(serial_number="abc123", port="COM2", name="Bpod 1")
+bpod_info_1 = BpodInfo(
+    serial_number="serial123",
+    port="COM2",
+    name="Bpod 1"
+)
 
 bpod_info_2 = BpodInfo(
-    serial_number="xyz456",
+    serial_number="serial456",
     port="COM3",
     name="Bpod 2",
 )
@@ -55,7 +59,7 @@ class TestBpodManager:
     @pytest.mark.finds_bpods(2)
     def test_discover_bpods(self) -> None:
         assert self.bpm._all_local_bpods is not None
-        assert list(self.bpm._all_local_bpods.keys()) == ["abc123", "xyz456"]
+        assert list(self.bpm._all_local_bpods.keys()) == ["serial123", "serial456"]
         # Is the value returned correctly?
         assert self.bpm._get_local_bpods() is self.bpm._all_local_bpods
 
@@ -81,20 +85,24 @@ class TestBpodManager:
 
         # Reset current bpod and test select by serial
         self.bpm.current_bpod = None
-        returned_bpod = self.bpm.select_bpod(serial="abc123")
+        returned_bpod = self.bpm.select_bpod(serial="serial123")
         assert self.bpm.current_bpod is not None
         compare_bpod_info(self.bpm.current_bpod, bpod_info_1)
         compare_bpod_info(returned_bpod, bpod_info_1)
 
     @pytest.mark.finds_bpods(2)
-    def test_select_multiple_bpods(self) -> None:
+    def test_select_multiple_bpods(self, caplog: pytest.LogCaptureFixture) -> None:
 
-        returned_bpod = self.bpm.select_bpod(serial="abc123")
+        with pytest.raises(ValueError):
+            self.bpm.select_bpod()
+            assert "A serial number or index is required!" in caplog.messages
+
+        returned_bpod = self.bpm.select_bpod(serial="serial123")
         assert self.bpm.current_bpod is not None
         compare_bpod_info(self.bpm.current_bpod, bpod_info_1)
         compare_bpod_info(returned_bpod, bpod_info_1)
 
-        returned_bpod = self.bpm.select_bpod(serial="xyz456")
+        returned_bpod = self.bpm.select_bpod(serial="serial456")
         assert self.bpm.current_bpod is not None
         compare_bpod_info(self.bpm.current_bpod, bpod_info_2)
         compare_bpod_info(returned_bpod, bpod_info_2)
