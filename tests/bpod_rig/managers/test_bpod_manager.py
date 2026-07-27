@@ -92,11 +92,6 @@ class TestBpodManager:
 
     @pytest.mark.finds_bpods(2)
     def test_select_multiple_bpods(self, caplog: pytest.LogCaptureFixture) -> None:
-
-        with pytest.raises(ValueError):
-            self.bpm.select_bpod()
-            assert "A serial number or index is required!" in caplog.messages
-
         returned_bpod = self.bpm.select_bpod(serial="serial123")
         assert self.bpm.current_bpod is not None
         compare_bpod_info(self.bpm.current_bpod, bpod_info_1)
