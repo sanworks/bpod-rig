@@ -5,17 +5,9 @@ from bpod_core.bpod.structs import BpodInfo
 
 from bpod_rig.managers import BpodManager
 
-bpod_info_1 = BpodInfo(
-    serial_number="serial123",
-    port="COM2",
-    name="Bpod 1"
-)
+bpod_info_1 = BpodInfo(serial_number="serial123", port="COM2", name="Bpod 1")
 
-bpod_info_2 = BpodInfo(
-    serial_number="serial456",
-    port="COM3",
-    name="Bpod 2",
-)
+bpod_info_2 = BpodInfo(serial_number="serial456", port="COM3", name="Bpod 2")
 
 
 def mock_discover_bpod(num_bpods: int = 2) -> Generator[BpodInfo]:
