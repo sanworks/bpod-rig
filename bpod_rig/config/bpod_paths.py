@@ -8,6 +8,96 @@ from pydantic import Field
 from bpod_rig.config.base import ModelWithMetadata, SettingsMetadata
 
 
+class BpodPaths_2(ModelWithMetadata):
+    """Path configuration for a unique bpod-rig install
+
+    Use the `create()` class method to construct instances with automatic
+    subdirectory path generation from the parent directory and bpod_id.
+    """
+
+    base_dir: Annotated[
+        Path,
+        Field(
+            ...,
+            title="Local Bpod Directory",
+            description="Local Bpod base directory where other folders are stored."
+                        " There is not any data directly stored in this directory",
+            examples=[
+                r"C:\Users\BpodUser\Documents\Bpod",
+                "/home/BpodUser/Documents/Bpod",
+            ],
+        ),
+    ]
+
+    protocol_dir: Annotated[
+        Path,
+        Field(
+            title="Bpod Protocol Directory",
+            description="Local directory where Bpod protocols are stored."
+                        " The Protocol explorer will list all valid protocols found"
+                        " in this directory.",
+        ),
+    ]
+
+    data_dir: Annotated[
+        Path,
+        Field(
+            title="Bpod Data Directory",
+            description="Local directory where data from protocol runs are stored.",
+        ),
+    ]
+
+    base_config_dir: Annotated[
+        Path,
+        Field(
+            title="Bpod Configuration Directory",
+            description="Local directory where Bpod configuration files are stored.",
+        ),
+    ]
+
+    log_dir: Annotated[
+        Path,
+        Field(
+            title="Bpod Log Directory",
+            description="Local directory where Bpod logs are stored.",
+        ),
+    ]
+
+    calibration_dir: Annotated[
+        Path,
+        Field(
+            title="Bpod Calibration Directory",
+            description="Local directory where Bpod calibration files are stored.",
+        ),
+    ]
+
+    calibration_files: Annotated[
+        dict[str, Path],
+        Field(
+            default_factory=dict,
+            title="Bpod calibration files",
+            description="Dictionary of calibration files found in the calibration "
+                        "directory for this Bpod.",
+        ),
+    ]
+
+    log_dir: Annotated[
+        Path,
+        Field(
+            title="Bpod Log Directory",
+            description="Local directory where Bpod logs are stored.",
+        ),
+    ]
+
+    bpods_dir: Annotated[
+        Path,
+        Field(
+            title="Bpod Config Directory",
+            description="Local directory where configuration files for unique Bpods are "
+                        "stored.",
+        ),
+    ]
+
 class BpodPaths(ModelWithMetadata):
     """Path configuration for a unique Bpod instance.
 
