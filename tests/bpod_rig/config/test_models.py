@@ -6,7 +6,7 @@ import pytest
 from pydantic import ValidationError
 
 from bpod_rig.config.base import SettingsMetadata
-from bpod_rig.config.bpod_settings import BpodPaths
+from bpod_rig.config.bpod_paths import BpodPaths
 from bpod_rig.config.system_settings import BpodDir, SystemSettings
 
 

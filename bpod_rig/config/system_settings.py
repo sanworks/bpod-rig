@@ -7,7 +7,7 @@ from pydantic import UUID4, Field, PastDate
 
 from bpod_rig import log
 from bpod_rig.config.base import ModelWithMetadata, SettingsMetadata
-from bpod_rig.config.bpod_settings import BpodPaths
+from bpod_rig.config.bpod_paths import BpodPaths
 from bpod_rig.defaults import (
     DEFAULT_CONFIG_DIR_NAME,
     DEFAULT_DATA_DIR_NAME,
