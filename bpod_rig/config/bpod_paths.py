@@ -6,7 +6,12 @@ from typing import Annotated
 from pydantic import Field
 
 from bpod_rig.config.base import ModelWithMetadata, SettingsMetadata
-
+from bpod_rig.defaults import (
+    DEFAULT_DATA_DIR_NAME,
+    DEFAULT_LOG_DIR_NAME,
+    DEFAULT_PROTOCOL_DIR_NAME,
+    SYSTEM_CONFIG_DIR, DEFAULT_BPODS_DIR_NAME, DEFAULT_CALIBRATION_DIR_NAME,
+)
 
 class BpodPaths_2(ModelWithMetadata):
     """Path configuration for a unique bpod-rig install
@@ -20,8 +25,7 @@ class BpodPaths_2(ModelWithMetadata):
         Field(
             ...,
             title="Local Bpod Directory",
-            description="Local Bpod base directory where other folders are stored."
-                        " There is not any data directly stored in this directory",
+            description="Local Bpod base directory where other folders are stored.",
             examples=[
                 r"C:\Users\BpodUser\Documents\Bpod",
                 "/home/BpodUser/Documents/Bpod",
@@ -47,19 +51,20 @@ class BpodPaths_2(ModelWithMetadata):
         ),
     ]
 
-    base_config_dir: Annotated[
-        Path,
-        Field(
-            title="Bpod Configuration Directory",
-            description="Local directory where Bpod configuration files are stored.",
-        ),
-    ]
-
     log_dir: Annotated[
         Path,
         Field(
             title="Bpod Log Directory",
             description="Local directory where Bpod logs are stored.",
+        ),
+    ]
+
+    bpods_dir: Annotated[
+        Path,
+        Field(
+            title="Bpod Config Directory",
+            description="Local directory where configuration files for unique Bpods are "
+                        "stored.",
         ),
     ]
 
@@ -81,22 +86,80 @@ class BpodPaths_2(ModelWithMetadata):
         ),
     ]
 
-    log_dir: Annotated[
-        Path,
-        Field(
-            title="Bpod Log Directory",
-            description="Local directory where Bpod logs are stored.",
-        ),
-    ]
 
-    bpods_dir: Annotated[
-        Path,
-        Field(
-            title="Bpod Config Directory",
-            description="Local directory where configuration files for unique Bpods are "
-                        "stored.",
-        ),
-    ]
+    @classmethod
+    def create(
+        cls,
+        base_dir: Path | str,
+        *,
+        protocol_dir: Path | str | None = None,
+        data_dir: Path | str | None = None,
+        log_dir: Path | str | None = None,
+        bpods_dir: Path | str | None = None,
+        calibration_dir: Path | str | None = None,
+        calibration_files: dict[str, Path] | None = None,
+        username: str | None = None,
+        metadata: "SettingsMetadata | None" = None,
+    ) -> "BpodPaths_2":
+        """Factory method to create BpodPaths with automatic subdirectory paths.
+
+        This is the recommended way to create BpodPaths instances. It automatically
+        generates subdirectory paths based on the parent_dir and bpod_id if not
+        explicitly provided.
+
+        Parameters
+        ----------
+        base_dir : Path | str
+            Parent directory for a bpod-rig specific folders and data
+        protocol_dir : Path | str | None, optional
+            Override for protocol directory (default: base_dir/Protocols)
+        data_dir : Path | str | None, optional
+            Override for data directory (default: base_dir/Data)
+        log_dir : Path | str | None, optional
+            Override for log directory (default: base_dir/Logs
+        bpods_dir : Path | str | None, optional
+            Override for settings directory (default: base_dir/Settings)
+        calibration_dir : Path | str | None, optional
+            Override for calibration directory (default: base_dir/Calibration)
+        calibration_files : dict[str, Path] | None, optional
+            Calibration files dictionary
+        username : str | None, optional
+            Username for metadata
+        metadata : SettingsMetadata | None, optional
+            Pre-constructed metadata object
+
+        Returns
+        -------
+        BpodPaths
+            Fully initialized BpodPaths instance with all subdirectory paths populated
+
+        Examples
+        --------
+        >>> paths = BpodPaths.create(base_dir="/home/user/Bpods")
+        """
+        if not isinstance(base_dir, Path):
+            base_dir = Path(base_dir)
+
+        protocol_dir = Path(protocol_dir or base_dir / DEFAULT_PROTOCOL_DIR_NAME)
+        data_dir = Path(data_dir or base_dir / DEFAULT_DATA_DIR_NAME)
+        log_dir = Path(log_dir or base_dir / DEFAULT_LOG_DIR_NAME)
+        bpods_dir = Path(bpods_dir or base_dir / DEFAULT_BPODS_DIR_NAME)
+        calibration_dir = Path(calibration_dir or base_dir / DEFAULT_CALIBRATION_DIR_NAME)
+        calibration_files = (
+            {} if calibration_files is None else dict(calibration_files)
+        )  # shallow copy to ensure immutability
+        metadata = metadata or SettingsMetadata(username=username or None)
+
+        return cls(
+            base_dir=base_dir,
+            protocol_dir=protocol_dir,
+            data_dir=data_dir,
+            log_dir=log_dir,
+            bpods_dir=bpods_dir,
+            calibration_dir=calibration_dir,
+            calibration_files=calibration_files,
+            metadata=metadata,
+        )
 
 class BpodPaths(ModelWithMetadata):
     """Path configuration for a unique Bpod instance.

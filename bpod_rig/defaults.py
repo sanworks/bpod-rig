@@ -9,6 +9,8 @@ DEFAULT_PROTOCOL_DIR_NAME = "Protocols"
 DEFAULT_DATA_DIR_NAME = "Data"
 DEFAULT_CONFIG_DIR_NAME = "Config"
 DEFAULT_LOG_DIR_NAME = "Logs"
+DEFAULT_BPODS_DIR_NAME = "Bpods"
+DEFAULT_CALIBRATION_DIR_NAME = "Calibration"
 
 # Defaults or unchanging paths
 SYSTEM_CONFIG_DIR = platformdirs.user_config_path(DEFAULT_DIR_NAME, "sanworks")
