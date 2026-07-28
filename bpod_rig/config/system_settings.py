@@ -7,12 +7,10 @@ from pydantic import UUID4, Field, PastDate
 
 from bpod_rig import log
 from bpod_rig.config.base import ModelWithMetadata, SettingsMetadata
-from bpod_rig.config.bpod_paths import BpodPaths
+from bpod_rig.config.bpod_paths import BpodPaths_2
 from bpod_rig.defaults import (
     DEFAULT_CONFIG_DIR_NAME,
-    DEFAULT_DATA_DIR_NAME,
     DEFAULT_LOG_DIR_NAME,
-    DEFAULT_PROTOCOL_DIR_NAME,
     SYSTEM_CONFIG_DIR,
 )
 from bpod_rig.IO import json_handler
@@ -121,8 +119,7 @@ class BpodDir(ModelWithMetadata):
         PosixPath('/home/user/Bpod/Protocols')
         """
         base_dir = Path(base_dir)
-        protocol_dir = Path(protocol_dir or base_dir / DEFAULT_PROTOCOL_DIR_NAME)
-        data_dir = Path(data_dir or base_dir / DEFAULT_DATA_DIR_NAME)
+
         base_config_dir = Path(base_config_dir or base_dir / DEFAULT_CONFIG_DIR_NAME)
         log_dir = Path(log_dir or base_dir / DEFAULT_LOG_DIR_NAME)
 
@@ -226,31 +223,21 @@ class SystemSettings(ModelWithMetadata):
     ]
 
     paths: Annotated[
-        BpodDir,
+        BpodPaths_2,
         Field(
             title="System Paths Model",
             description="Model containing validated bpod system paths",
         ),
     ]
 
-    bpod_dirs: Annotated[
-        list[BpodPaths] | None,
-        Field(
-            title="All Bpod Paths",
-            description="List containing BpodPaths objects that contain"
-            " the folder structure for each unique Bpod",
-        ),
-    ] = None
-
     @classmethod
     def create(
         cls,
-        paths: BpodDir,
+        paths: BpodPaths_2,
         *,
         current_version: str = "0.0.0",
         phone_home_opt_in: bool = False,
         debug: bool = False,
-        bpod_dirs: list[BpodPaths] | None = None,
         username: str | None = None,
         metadata: "SettingsMetadata | None" = None,
     ) -> "SystemSettings":
@@ -260,7 +247,7 @@ class SystemSettings(ModelWithMetadata):
 
         Parameters
         ----------
-        paths : BpodDir
+        paths : BpodPaths_2
             System paths configuration
         current_version : str, optional
             Currently installed version (default: "0.0.0")
@@ -282,8 +269,8 @@ class SystemSettings(ModelWithMetadata):
 
         Examples
         --------
-        >>> bpod_dir = BpodDir.create(base_dir="/home/user/Bpod")
-        >>> settings = SystemSettings.create(paths=bpod_dir, username="TestUser")
+        >>> bpod_paths = BpodPaths_2.create("/home/user/Bpod")
+        >>> settings = SystemSettings.create(paths=bpod_paths, username="TestUser")
         >>> settings.metadata.username
         'TestUser'
         """
@@ -292,7 +279,6 @@ class SystemSettings(ModelWithMetadata):
             current_version=current_version,
             phone_home_opt_in=phone_home_opt_in,
             debug=debug,
-            bpod_dirs=bpod_dirs,
             metadata=metadata or SettingsMetadata(username=username),
         )
 
@@ -309,11 +295,6 @@ class SystemSettings(ModelWithMetadata):
         super().update_modification_time()
         # Update the SystemSettings save time
 
-        if self.bpod_dirs:
-            for bpod_dir in self.bpod_dirs:
-                bpod_dir.update_modification_time()
-        # Update the save time for each bpod_dir
-
         if self.paths:
             self.paths.update_modification_time()
         # Update the save time for the system paths
@@ -328,7 +309,7 @@ class SystemSettings(ModelWithMetadata):
         ----------
         save_dir_override : Path, optional
             Optional Path to override the default save directory. If not provided,
-            system_settings.paths.base_config_dir will be used.
+            system_settings.paths.base_dir will be used.
 
         Returns
         -------
@@ -339,7 +320,7 @@ class SystemSettings(ModelWithMetadata):
         self.update_modification_time()
 
         if save_dir_override is None:
-            save_dir = self.paths.base_config_dir
+            save_dir = self.paths.base_dir
         else:
             save_dir = save_dir_override
         logger.debug("Save directory for SystemSettings set to %s: ", save_dir)
