@@ -12,7 +12,7 @@ from bpod_rig.cli.test import app as test_app
 from bpod_rig.config import startup
 from bpod_rig.config.startup import CLIStartupChoiceAdapter, initialize_bpod_system
 from bpod_rig.defaults import DEFAULT_BPOD_PATH
-from bpod_rig.log import BpodLogger, get_log_config
+from bpod_rig.log import BpodLogger, get_log_config, get_logger
 
 DEBUG = True
 
@@ -20,11 +20,12 @@ DEBUG = True
 logging_config = get_log_config(debug=DEBUG)
 dictConfig(logging_config)
 logging.setLoggerClass(BpodLogger)
-logger: BpodLogger = cast("BpodLogger", logging.getLogger(__name__))
+logger: BpodLogger = get_logger(__name__)
 
 app = typer.Typer(no_args_is_help=True)
 app.add_typer(protocols_app, name="protocols")
 app.add_typer(test_app, name="test")
+
 
 
 @app.command()
