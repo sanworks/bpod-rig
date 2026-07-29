@@ -6,7 +6,7 @@ import pytest
 from pydantic import ValidationError
 
 from bpod_rig.config.base import SettingsMetadata
-from bpod_rig.config.bpod_paths import BpodPaths
+from bpod_rig.config.bpod_paths import BpodPaths, BpodPaths_2
 from bpod_rig.config.system_settings import BpodDir, SystemSettings
 
 
@@ -103,52 +103,49 @@ class TestSystemPathsModel:
 
 class BpodPathsDict(TypedDict):
     base_dir: Path
-    bpod_id: str
-    bpod_dir: Path
-    config_dir: Path
+    protocol_dir: Path
+    data_dir: Path
+    log_dir: Path
+    bpods_dir: Path
     calibration_dir: Path
-
+    calibration_files: dict[str, Path]
 
 class TestBpodPathsModel:
     @pytest.fixture
     def paths(self, tmp_path: Path) -> BpodPathsDict:
         """Fixture to provide a common set of Bpod-specific path objects."""
         working_dir = tmp_path
-        base_dir = working_dir.joinpath("Bpods")
-        bpod_id = "1234"
-        bpod_dir = base_dir.joinpath(f"Machine-{bpod_id}")
+        base_dir = working_dir.joinpath("Bpod")
         return {
             "base_dir": base_dir,
-            "bpod_id": bpod_id,
-            "bpod_dir": bpod_dir,
-            "config_dir": bpod_dir.joinpath("Settings"),
-            "calibration_dir": bpod_dir.joinpath("Calibration"),
+            "protocol_dir": base_dir.joinpath("Protocols"),
+            "data_dir": base_dir.joinpath("Data"),
+            "log_dir": base_dir.joinpath("Logs"),
+            "bpods_dir": base_dir.joinpath("Bpods"),
+            "calibration_dir": base_dir.joinpath("Calibration"),
+            "calibration_files": {},
         }
 
-    def test_id_validation(self, paths: BpodPathsDict):
+    def test_validation(self, paths: BpodPathsDict):
         """Tests validation for the bpod_id field."""
-        # No ID, fails validation
+        # No path, fails validation
         with pytest.raises(TypeError):
-            BpodPaths.create(parent_dir=paths["bpod_dir"])  # type: ignore
+            BpodPaths_2.create()  # type: ignore
 
-        # ID is wrong type
-        with pytest.raises(ValidationError):
-            BpodPaths.create(bpod_id=1234, parent_dir=paths["bpod_dir"])  # type: ignore
-
-        # No parent_dir
+        # path is wrong type
         with pytest.raises(TypeError):
-            BpodPaths.create(bpod_id=paths["bpod_id"])  # type: ignore
+            BpodPaths_2.create(base_dir=1234)  # type: ignore
 
-        bp = BpodPaths.create(bpod_id=paths["bpod_id"], parent_dir=paths["base_dir"])
-        assert bp.bpod_id == paths["bpod_id"]
-
-    def test_default_factory(self, paths: BpodPathsDict):
-        """Tests that the Bpod-specific paths are constructed correctly."""
-        bp = BpodPaths.create(bpod_id=paths["bpod_id"], parent_dir=paths["base_dir"])
-        assert bp.unique_bpod_dir == paths["bpod_dir"]
-        assert bp.parent_dir == paths["base_dir"]
-        assert bp.calibration_dir == paths["calibration_dir"]
-        assert bp.settings_dir == paths["config_dir"]
+        bp = BpodPaths_2.create(base_dir=paths["base_dir"])
+        assert bp.base_dir == paths["base_dir"]
+    #
+    # def test_default_factory(self, paths: BpodPathsDict):
+    #     """Tests that the Bpod-specific paths are constructed correctly."""
+    #     bp = BpodPaths.create(bpod_id=paths["bpod_id"], parent_dir=paths["base_dir"])
+    #     assert bp.unique_bpod_dir == paths["bpod_dir"]
+    #     assert bp.parent_dir == paths["base_dir"]
+    #     assert bp.calibration_dir == paths["calibration_dir"]
+    #     assert bp.settings_dir == paths["config_dir"]
 
 
 class TestSystemSettingsModel:

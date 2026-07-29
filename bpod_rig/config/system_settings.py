@@ -11,7 +11,6 @@ from bpod_rig.config.bpod_paths import BpodPaths_2
 from bpod_rig.defaults import (
     DEFAULT_CONFIG_DIR_NAME,
     DEFAULT_LOG_DIR_NAME,
-    SYSTEM_CONFIG_DIR,
 )
 from bpod_rig.IO import json_handler
 
