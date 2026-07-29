@@ -3,12 +3,10 @@
 from pathlib import Path
 
 from bpod_rig import log
-from bpod_rig.config import system_settings
 from bpod_rig.defaults import (
     _BPOD_RIG_PYTHON,
     _SYSTEM_PYTHON,
     DEFAULT_SUBDIRS,
-    # SYSTEM_CONFIG_DIR,
     SYSTEM_CONFIG_FILE,
 )
 from bpod_rig.examples.copy import copy_examples
@@ -93,23 +91,6 @@ def copy_default_files(bpod_folder_path: Path, *, override: bool = False) -> Non
 
     copy_examples("calibration", calibration_dir, override_contents=override)
     copy_examples("settings", settings_dir, override_contents=override)
-
-
-def get_bpod_dir_from_system() -> Path | None:
-    """Attempts to get the Bpod directory path from the system configuration file.
-
-    Checks to see if the system configuration directory exists, if so, check to see
-    if there is a system configuration file. If there is attempt to read the Bpod
-    directory path from the configuration file.
-
-    Returns
-    -------
-    pathlib.Path
-        Path to the Bpod directory read from the system configuration file
-    """
-    # Attempt to load and read path from system configuration file
-    sys_settings = system_settings.load_system_configuration(SYSTEM_CONFIG_FILE)
-    return sys_settings.paths.base_dir
 
 
 def check_system_is_initialized() -> bool:
