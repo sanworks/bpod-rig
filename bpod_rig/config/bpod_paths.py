@@ -7,14 +7,18 @@ from pydantic import Field
 
 from bpod_rig.config.base import ModelWithMetadata, SettingsMetadata
 from bpod_rig.defaults import (
+    DEFAULT_BPODS_DIR_NAME,
+    DEFAULT_CALIBRATION_DIR_NAME,
     DEFAULT_DATA_DIR_NAME,
     DEFAULT_LOG_DIR_NAME,
     DEFAULT_PROTOCOL_DIR_NAME,
-    SYSTEM_DIR, DEFAULT_BPODS_DIR_NAME, DEFAULT_CALIBRATION_DIR_NAME,
 )
+from bpod_rig.log import get_logger
+
+logger = get_logger(__name__)
 
 class BpodPaths_2(ModelWithMetadata):
-    """Path configuration for a unique bpod-rig install
+    """Path configuration for a unique bpod-rig install.
 
     Use the `create()` class method to construct instances with automatic
     subdirectory path generation from the parent directory and bpod_id.
@@ -38,8 +42,8 @@ class BpodPaths_2(ModelWithMetadata):
         Field(
             title="Bpod Protocol Directory",
             description="Local directory where Bpod protocols are stored."
-                        " The Protocol explorer will list all valid protocols found"
-                        " in this directory.",
+            " The Protocol explorer will list all valid protocols found"
+            " in this directory.",
         ),
     ]
 
@@ -63,8 +67,8 @@ class BpodPaths_2(ModelWithMetadata):
         Path,
         Field(
             title="Bpod Config Directory",
-            description="Local directory where configuration files for unique Bpods are "
-                        "stored.",
+            description="Local directory where configuration files for unique Bpods"
+            " are stored.",
         ),
     ]
 
@@ -82,10 +86,9 @@ class BpodPaths_2(ModelWithMetadata):
             default_factory=dict,
             title="Bpod calibration files",
             description="Dictionary of calibration files found in the calibration "
-                        "directory for this Bpod.",
+            "directory for this Bpod.",
         ),
     ]
-
 
     @classmethod
     def create(
@@ -130,7 +133,7 @@ class BpodPaths_2(ModelWithMetadata):
 
         Returns
         -------
-        BpodPaths
+        BpodPaths_2
             Fully initialized BpodPaths instance with all subdirectory paths populated
 
         Examples
@@ -144,7 +147,9 @@ class BpodPaths_2(ModelWithMetadata):
         data_dir = Path(data_dir or base_dir / DEFAULT_DATA_DIR_NAME)
         log_dir = Path(log_dir or base_dir / DEFAULT_LOG_DIR_NAME)
         bpods_dir = Path(bpods_dir or base_dir / DEFAULT_BPODS_DIR_NAME)
-        calibration_dir = Path(calibration_dir or base_dir / DEFAULT_CALIBRATION_DIR_NAME)
+        calibration_dir = Path(
+            calibration_dir or base_dir / DEFAULT_CALIBRATION_DIR_NAME
+        )
         calibration_files = (
             {} if calibration_files is None else dict(calibration_files)
         )  # shallow copy to ensure immutability
@@ -160,6 +165,25 @@ class BpodPaths_2(ModelWithMetadata):
             calibration_files=calibration_files,
             metadata=metadata,
         )
+
+    def verify(self) -> bool:
+        fields_to_skip = ["metadata", "base_dir"]
+        dir_verified = True
+        sp_fields = BpodPaths_2.model_fields
+        sp_fields = [field for field in sp_fields if field not in fields_to_skip]
+        sp_as_dict = self.model_dump()
+
+        for field in sp_fields:
+            field_path = sp_as_dict[field]
+            if field_path is None:
+                continue
+                # Skip None values that are not implemented yet
+            if not field_path.exists():
+                logger.error("Bpod subdirectory %s does not exist", field_path)
+                dir_verified = False
+
+        return dir_verified
+
 
 class BpodPaths(ModelWithMetadata):
     """Path configuration for a unique Bpod instance.
