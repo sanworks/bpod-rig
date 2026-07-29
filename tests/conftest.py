@@ -66,8 +66,8 @@ def bpod_device(request: pytest.FixtureRequest) -> Generator[Bpod, None, None]:
         port = None if port == "None" else port
 
         bpod_instance = Bpod(serial_number=serial_number, port=port)
-    except Exception:
-        logger.exception("Failed to connect to Bpod rig in fixture!")
+    except Exception as e:
+        logger.exception("Failed to connect to Bpod rig in fixture!", exc_info=e)
         pytest.exit("Connection to Bpod rig unsuccessful!")
     yield bpod_instance
     bpod_instance.close()

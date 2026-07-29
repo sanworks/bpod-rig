@@ -1,6 +1,7 @@
 """Base classes for configuration classes."""
 
 import datetime
+import logging
 import pathlib
 from typing import Annotated
 
@@ -13,10 +14,9 @@ from pydantic import (
     model_validator,
 )
 
-from bpod_rig import log
 from bpod_rig.IO import json_handler
 
-logger = log.get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class SettingsMetadata(BaseModel):

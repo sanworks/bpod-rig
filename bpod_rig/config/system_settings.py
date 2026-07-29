@@ -1,11 +1,11 @@
 """Module implementing the Pydantic models for any system settings."""
 
+import logging
 from pathlib import Path
 from typing import Annotated
 
 from pydantic import UUID4, Field, PastDate
 
-from bpod_rig import log
 from bpod_rig.config.base import ModelWithMetadata, SettingsMetadata
 from bpod_rig.config.bpod_settings import BpodPaths
 from bpod_rig.defaults import (
@@ -17,7 +17,7 @@ from bpod_rig.defaults import (
 )
 from bpod_rig.IO import json_handler
 
-logger = log.get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class BpodDir(ModelWithMetadata):
