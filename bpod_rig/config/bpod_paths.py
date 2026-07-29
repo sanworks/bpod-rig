@@ -167,7 +167,7 @@ class BpodPaths_2(ModelWithMetadata):
         )
 
     def verify(self) -> bool:
-        fields_to_skip = ["metadata", "base_dir"]
+        fields_to_skip = ["metadata", "base_dir", "calibration_files"]
         dir_verified = True
         sp_fields = BpodPaths_2.model_fields
         sp_fields = [field for field in sp_fields if field not in fields_to_skip]
