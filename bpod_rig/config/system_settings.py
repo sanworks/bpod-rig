@@ -144,20 +144,22 @@ class SystemSettings(ModelWithMetadata):
         ----------
         save_dir_override : Path, optional
             Optional Path to override the default save directory. If not provided,
-            system_settings.paths.base_dir will be used.
+            SYSTEM_DIR will be used.
 
         Returns
         -------
             Path
                 Path to the saved file is returned
         """
+
         logger.info("Saving system configuration as JSON!")
         self.update_modification_time()
 
-        if save_dir_override is None:
-            save_dir = self.paths.base_dir
-        else:
+        save_dir = SYSTEM_DIR
+
+        if save_dir_override is not None:
             save_dir = save_dir_override
+
         logger.debug("Save directory for SystemSettings set to %s: ", save_dir)
         self.save_model(save_dir, "config")
         return save_dir.joinpath("config.json")
