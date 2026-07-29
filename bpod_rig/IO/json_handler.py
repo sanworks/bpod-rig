@@ -1,7 +1,8 @@
-import logging
 from pathlib import Path
 
-logger = logging.getLogger(__name__)
+from bpod_rig import log
+
+logger = log.get_logger(__name__)
 
 
 def write_json(json_content: str, save_path: Path, file_name: str) -> Path:
