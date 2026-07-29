@@ -11,10 +11,11 @@ from bpod_rig.cli.prompts import prompt_for_path, yes_no_prompt
 from bpod_rig.cli.protocols import app as protocols_app
 from bpod_rig.cli.test import app as test_app
 from bpod_rig.config import utils
-from bpod_rig.config.system_settings import BpodDir
-from bpod_rig.defaults import DEFAULT_BPOD_PATH, SYSTEM_CONFIG_DIR, SYSTEM_CONFIG_FILE
+from bpod_rig.config.bpod_paths import BpodPaths_2
+from bpod_rig.defaults import DEFAULT_BPOD_PATH, SYSTEM_CONFIG_FILE
 from bpod_rig.IO import startup
 from bpod_rig.log import BpodLogger, get_log_config, get_logger
+from config import system_settings, SystemSettings
 
 DEBUG = True
 
@@ -34,11 +35,13 @@ def init() -> int:
     """Initialize the Bpod Rig on this system."""
     ### Everything below is subject to change and is for testing purposes only
     logger.info("Starting bpod-rig!")
+
     # Let's put this in a BpodSystem class later
     bpod_dir_verified = False
     reinitialize = False
-    system_initialized = False
     bpod_path = None
+    system_paths: BpodPaths_2 | None = None
+    sys_settings: SystemSettings | None = None
 
     ### Are we running from a supported environment?
     environment_allowed = startup.check_supported_environment()
@@ -57,27 +60,27 @@ def init() -> int:
     if not system_initialized:
         logger.info("Initializing Bpod Rig...")
         logger.debug("System is not initialized!")
-
         # We have no reference to paths, did the user provide a path some other way?
         # TODO: accept bpod_dir via CLI or ENV
-
     else:
         logger.debug(
             "System configuration file exists."
-            " Attempting to read bpod_path from configuration file"
+            " Attempting to read paths from configuration file"
         )
         # System has already been initialized
         try:
-            bpod_path = startup.get_bpod_dir_from_system()
+            # No reason to load this twice if it exists
+            sys_settings = system_settings.load_system_configuration(SYSTEM_CONFIG_FILE)
+            system_paths = sys_settings.paths
         except ValidationError:
             logger.exception(
                 "Configuration file at %s failed to validate! "
-                "Cannot read the Bpod Directory from existing configuration!",
+                "Cannot read the Bpod Directories from existing configuration!",
                 SYSTEM_CONFIG_FILE,
             )
-            raise
+            return -1
 
-    if bpod_path is None:
+    if system_paths is None:
         # This is the first time initializing the system; override default path?
         logger.info("Creating Bpod directory...")
         override_directory = yes_no_prompt(
@@ -99,12 +102,14 @@ def init() -> int:
             # If the user does not want to overwrite the default directory
             bpod_path = DEFAULT_BPOD_PATH
 
+        # Instantiate BpodPaths_2 object to generate subdirectories
+        system_paths = BpodPaths_2.create(base_dir=bpod_path)
+    else:
+        bpod_path = system_paths.base_dir
+
     logger.info("Bpod path set to: %s", bpod_path)
 
     ## Verify Bpod Folder Structure ##
-
-    # Instantiate BpodDir object to generate subdirectories
-    system_paths = BpodDir.create(base_dir=bpod_path)
     if system_initialized:
         # Let's only verify the directory if Bpod has already been
         # initialized on this system
@@ -143,13 +148,14 @@ def init() -> int:
         logger.error("No valid Bpod directory! Shutting down.")
         raise RuntimeError("Bpod directory verification failed after initialization!")
 
+    # We have a logging directory!
     logger.swap_stream(system_paths.log_dir)
 
-    initial_system_config = utils.init_system_configuration(bpod_path)
-    user_config_path = initial_system_config.save_system_configuration()  # noqa: F841
-    system_config_path = initial_system_config.save_system_configuration(  # noqa: F841
-        save_dir_override=SYSTEM_CONFIG_DIR
-    )
+    # Now we are initialized, and directories are validated
+    # Create and save the config.json file if this is a first install!
+    if sys_settings is None:
+        sys_settings = SystemSettings.create(paths=system_paths)
+        sys_settings.save_system_configuration()
 
     return 0
 
@@ -181,8 +187,7 @@ def run(
 
 
 def main() -> None:
-    app()
-
+    init()
 
 if __name__ == "__main__":
     main()
