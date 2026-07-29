@@ -9,8 +9,6 @@ from typing import Any, cast
 
 from bpod_rig.defaults import LOGFILE_PREFIX, TIME_FORMAT
 
-# logger = logging.getLogger(__name__)
-
 LOGGING_CONFIG: dict[str, Any] = {
     "version": 1,
     "disable_existing_loggers": True,
@@ -140,7 +138,7 @@ class DynamicFileHandler(logging.FileHandler):
         -------
             None
         """
-        self.logger = logging.getLogger("temp_file_handler")
+        self.logger = get_logger("temp_file_handler")
 
         if isinstance(logging_dir, str):
             logging_dir = Path(logging_dir)

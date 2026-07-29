@@ -2,9 +2,9 @@ import logging
 import pathlib
 import shutil
 
-from bpod_rig import examples
+from bpod_rig import examples, log
 
-logger = logging.getLogger(__name__)
+logger = log.get_logger(__name__)
 
 
 def copy_examples(
