@@ -40,6 +40,17 @@ def init() -> int:
     system_initialized = False
     bpod_path = None
 
+    ### Are we running from a supported environment?
+    environment_allowed = startup.check_supported_environment()
+    if not environment_allowed:
+        logger.error("bpod-rig is NOT running inside a virtual environment!\n",
+                     "bpod-rig must be run from inside a virtual environment!\n"
+                     "Please visit the bpod-rig wiki at"
+                     " https://bpod-rig.sanworks.io/installation for installation"
+                     "instructions. Exiting...")
+        return -1
+    else:
+        logger.debug("Virtual environment verified!")
     ### Has Bpod been initialized on this system before? ###
     system_initialized = startup.check_system_is_initialized()
     if not system_initialized:

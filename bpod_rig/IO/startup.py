@@ -5,8 +5,10 @@ from pathlib import Path
 from bpod_rig import log
 from bpod_rig.config import system_settings
 from bpod_rig.defaults import (
+    _BPOD_RIG_PYTHON,
+    _SYSTEM_PYTHON,
     DEFAULT_SUBDIRS,
-    SYSTEM_CONFIG_DIR,
+    # SYSTEM_CONFIG_DIR,
     SYSTEM_CONFIG_FILE,
 )
 from bpod_rig.examples.copy import copy_examples
@@ -125,3 +127,20 @@ def check_system_is_initialized() -> bool:
         logger.debug("System configuration file found: %s", SYSTEM_CONFIG_DIR)
         return True
     return False
+def check_supported_environment() -> bool:
+    """Checks whether bpod-rig is running from a supported environment.
+
+    bpod-rig is only supported when running inside a virtual environment. Using the
+    system python installation is not supported!
+
+    Returns
+    -------
+    bool
+        True if bpod-rig is running inside a virtual environment, False otherwise
+    """
+
+    if _SYSTEM_PYTHON == _BPOD_RIG_PYTHON:
+        logger.debug("bpod-rig interpreter: %s \n"
+                     "system interpreter: %s \n")
+        return False
+    return True
