@@ -124,9 +124,11 @@ def check_system_is_initialized() -> bool:
         True if system is initialized, False otherwise
     """
     if SYSTEM_CONFIG_FILE.exists():
-        logger.debug("System configuration file found: %s", SYSTEM_CONFIG_DIR)
+        logger.debug("System configuration file found: %s", SYSTEM_CONFIG_FILE)
         return True
     return False
+
+
 def check_supported_environment() -> bool:
     """Checks whether bpod-rig is running from a supported environment.
 

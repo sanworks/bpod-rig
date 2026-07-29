@@ -51,26 +51,19 @@ def init() -> int:
         return -1
     else:
         logger.debug("Virtual environment verified!")
+
     ### Has Bpod been initialized on this system before? ###
     system_initialized = startup.check_system_is_initialized()
     if not system_initialized:
         logger.info("Initializing Bpod Rig...")
-        logger.debug(
-            "System is not initialized. Creating system config dir [%s]",
-            SYSTEM_CONFIG_DIR,
-        )
-        # Create the system configuration directory
-        try:
-            SYSTEM_CONFIG_DIR.mkdir(exist_ok=True, parents=True)
-        except OSError:
-            logger.exception(
-                "Unable to create the system configuration directory: %s Exiting...",
-                SYSTEM_CONFIG_DIR,
-            )
-            return -1
+        logger.debug("System is not initialized!")
+
+        # We have no reference to paths, did the user provide a path some other way?
+        # TODO: accept bpod_dir via CLI or ENV
+
     else:
         logger.debug(
-            "System configuration directory is already initialized."
+            "System configuration file exists."
             " Attempting to read bpod_path from configuration file"
         )
         # System has already been initialized
