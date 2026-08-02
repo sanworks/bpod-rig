@@ -171,6 +171,10 @@ dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
     "S104",   # Possible binding to all interfaces
     "SLF001", # private-member-access
 ]
+"bpod_rig/protocols/session.py" = [
+    "PLW0602", # global-statement used for context management
+    "PLW0603", # global-statement used for context management
+]
 
 [tool.ruff.lint.pydocstyle]
 convention = "numpy"
