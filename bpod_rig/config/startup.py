@@ -158,7 +158,18 @@ def initialize_bpod_system(  # noqa: PLR0911
         the final state and any messages,
     """
     try:
-        
+        environment_allowed = check_supported_environment()
+        if not environment_allowed:
+            return InitResult(
+                state=InitState.FAILED,
+                message=["bpod-rig is NOT running inside a virtual environment!\n"
+                "bpod-rig must be run from inside a virtual environment!\n"
+                "Please visit the bpod-rig wiki at"
+                " https://bpod-rig.sanworks.io/installation for installation"
+                "instructions. Exiting..."]
+            )
+        else:
+            logger.debug("Virtual environment verified!")
 
 
         initialized = check_system_is_initialized()
