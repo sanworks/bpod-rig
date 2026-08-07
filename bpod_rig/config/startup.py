@@ -12,8 +12,7 @@ from bpod_rig.cli.prompts import prompt_for_path, yes_no_prompt
 from bpod_rig.config import system_settings, utils
 from bpod_rig.defaults import (
     DEFAULT_SUBDIRS,
-    SYSTEM_CONFIG_DIR,
-    SYSTEM_CONFIG_FILE,
+    SYSTEM_CONFIG_FILE, _SYSTEM_PYTHON, _BPOD_RIG_PYTHON,
 )
 from bpod_rig.examples.copy import copy_examples
 from bpod_rig.log import BpodLogger
@@ -159,6 +158,9 @@ def initialize_bpod_system(  # noqa: PLR0911
         the final state and any messages,
     """
     try:
+        
+
+
         initialized = check_system_is_initialized()
         if not initialized:
             exists = _create_system_config_dir_if_not_exists(logger)
@@ -396,27 +398,34 @@ def check_system_config_exists() -> bool:
 def check_system_is_initialized() -> bool:
     """Checks whether Bpod has been initialized on this system before.
 
-    If the system configuration directory does not exist, the system has
-    not been initialized
-    If the system configuration directory exists, but the system_config.json file
-    does not exist, the system likely has only been partially initialized and needs to
-    be reinitialized.
+    If the system configuration file does not exist, the system has
+    not been initialized.
 
     Returns
     -------
     bool
         True if system is initialized, False otherwise
     """
-    if not check_system_config_exists():
-        return False
+    if SYSTEM_CONFIG_FILE.exists():
+        logger.debug("System configuration file found: %s", SYSTEM_CONFIG_FILE)
+        return True
+    return False
 
-    try:
-        _ = system_settings.load_system_configuration(SYSTEM_CONFIG_FILE)
-    except ValidationError:
-        logger.exception(
-            "System configuration file is malformed: %s.",
-            SYSTEM_CONFIG_FILE,
-        )
-        return False
 
+def check_supported_environment() -> bool:
+    """Checks whether bpod-rig is running from a supported environment.
+
+    bpod-rig is only supported when running inside a virtual environment. Using the
+    system python installation is not supported!
+
+    Returns
+    -------
+    bool
+        True if bpod-rig is running inside a virtual environment, False otherwise
+    """
+
+    if _SYSTEM_PYTHON == _BPOD_RIG_PYTHON:
+        logger.debug("bpod-rig interpreter: %s \n"
+                     "system interpreter: %s \n")
+        return False
     return True
