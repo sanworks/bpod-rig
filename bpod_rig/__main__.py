@@ -7,8 +7,8 @@ from typing import Annotated
 import typer
 from rich import print  # noqa: A004
 
-from bpod_rig.cli.protocols import app as protocols_app
-from bpod_rig.cli.test import app as test_app
+from bpod_rig._cli.protocols import app as protocols_app
+from bpod_rig._cli.test import app as test_app
 from bpod_rig.config import startup
 from bpod_rig.config.startup import CLIStartupChoiceAdapter, initialize_bpod_system
 from bpod_rig.defaults import DEFAULT_BPOD_PATH

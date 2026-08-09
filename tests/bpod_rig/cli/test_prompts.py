@@ -7,7 +7,7 @@ from unittest.mock import patch
 import pytest
 from typer.testing import CliRunner
 
-from bpod_rig.cli.prompts import app as prompt_app
+from bpod_rig._cli.prompts import app as prompt_app
 
 
 class TestCliIO:
