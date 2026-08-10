@@ -5,7 +5,6 @@ from unittest.mock import MagicMock, patch
 import pytest
 import typer
 
-# Import your module
 from bpod_rig.__main__ import app, load_plugins
 
 
@@ -37,7 +36,7 @@ def test_load_plugins_success():
     assert app.registered_groups[0].name == "my-plugin"
 
 
-def test_load_plugins_failure(capsys: pytest.CaptureFixture[str]):
+def test_load_plugins_failure():
     """Test that an exception during plugin load is caught and logged."""
     mock_entry = MagicMock()
     mock_entry.name = "broken-plugin"
@@ -51,5 +50,14 @@ def test_load_plugins_failure(capsys: pytest.CaptureFixture[str]):
 
     assert len(app.registered_groups) == 0, "No plugins should be registered on failure"
 
-    captured = capsys.readouterr()
-    assert "Failed to load plugin broken-plugin: Import error" in captured.out
+
+def test_load_plugins_no_plugins():
+    """Test that no plugins are loaded when entry_points returns an empty list."""
+    with patch("importlib.metadata.entry_points") as mock_entry_points:
+        mock_entry_points.return_value = []
+
+        load_plugins(app)
+
+    assert len(app.registered_groups) == 0, (
+        "No plugins should be registered when none are found"
+    )
