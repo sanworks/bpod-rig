@@ -61,3 +61,19 @@ def test_load_plugins_no_plugins():
     assert len(app.registered_groups) == 0, (
         "No plugins should be registered when none are found"
     )
+
+
+def test_app_overloading():
+    """Test that the main Typer app can be overloaded with plugins."""
+    mock_plugin_app = typer.Typer()
+
+    # Patch entry_points and load plugin
+    mock_entry = MagicMock()
+    mock_entry.name = "run"
+    mock_entry.load.return_value = mock_plugin_app
+    with patch("importlib.metadata.entry_points") as mock_entry_points:
+        mock_entry_points.return_value = [mock_entry]
+
+        load_plugins(app)
+
+    assert len(app.registered_groups) == 0
