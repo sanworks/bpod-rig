@@ -58,6 +58,7 @@ jobs:
             uv run python -m pytest --cov --cov-report=xml
 
       - name: Upload coverage to Coveralls
+        if: matrix.os == 'ubuntu-latest'
       # coverallsapp/github-action@v2.3.6
         uses: coverallsapp/github-action@648a8eb78e6d50909eff900e4ec85cab4524a45b
         with:
