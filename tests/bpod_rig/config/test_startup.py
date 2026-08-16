@@ -1,4 +1,5 @@
 import logging
+import os
 import tempfile
 from collections.abc import Generator
 from dataclasses import dataclass
@@ -258,7 +259,10 @@ def test_create_system_config_dir_if_not_exists(
 
 def test_create_default_directories_with_invalid_path(temp_setup: TempSetup):
     # Provide an invalid path to create_default_directories
-    invalid_path = Path("/googy_egg/invalid_path_for_testing")
+    if os.name == "nt":
+        invalid_path = Path("NULL:/googy_egg/invalid_path_for_testing")  # Invalid path for Windows
+    else:
+        invalid_path = Path("/googy_egg/invalid_path_for_testing")
     with pytest.raises(OSError): # OSError for Mac, PermissionError for Linux
         startup.create_default_directories(invalid_path)
 
