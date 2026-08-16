@@ -1,4 +1,5 @@
 import logging
+import os
 import tempfile
 from collections.abc import Generator
 from dataclasses import dataclass
@@ -40,14 +41,18 @@ def temp_setup(monkeypatch: pytest.MonkeyPatch) -> Generator[TempSetup, None, No
         startup, "SYSTEM_CONFIG_FILE", system_path.joinpath("config.json")
     )
 
-    yield TempSetup(
-        temp_dir=temp_dir,
-        temp_path=temp_path,
-        bpod_path=bpod_path,
-        system_path=system_path,
-    )
-
-    temp_dir.cleanup()
+    try:
+        yield TempSetup(
+            temp_dir=temp_dir,
+            temp_path=temp_path,
+            bpod_path=bpod_path,
+            system_path=system_path,
+        )
+    finally:
+        logger = get_logger()
+        if logger.file_handler is not None:
+            logger.file_handler.close()  # Windows needs to close before cleanup
+        temp_dir.cleanup()
 
 
 @dataclass
@@ -199,11 +204,13 @@ class TestInitializeBpodSystem:
     def test_log_swap_stream(self, temp_setup: TempSetup):
         # Test that the logger's stream is swapped to the Bpod folder
         logger = get_logger()
-        if logger.file_handler is None or logger.file_handler.log_dir is None:
+        if logger.file_handler is None:
             raise RuntimeError(
                 "Logger does not have a file handler for testing log stream swapping."
             )
-        assert logger.file_handler.log_dir.is_relative_to(Path(tempfile.gettempdir()))
+        assert Path(logger.file_handler.baseFilename).is_relative_to(
+            Path(tempfile.gettempdir())
+        )
 
         result = startup.initialize_bpod_system(
             choices=ConfigurableChoiceAdapter(),
@@ -248,7 +255,7 @@ def test_create_system_config_dir_if_not_exists(
     # Invalid path returns False
     if temp_setup.system_path.exists():
         temp_setup.system_path.rmdir()
-    inaccessible_path = Path("/root/invalid_path_for_testing")
+    inaccessible_path = Path("/googy_egg/invalid_path_for_testing")
     monkeypatch.setattr(startup, "SYSTEM_CONFIG_DIR", inaccessible_path)
     monkeypatch.setattr(
         startup, "SYSTEM_CONFIG_FILE", inaccessible_path.joinpath("config.json")
@@ -258,8 +265,13 @@ def test_create_system_config_dir_if_not_exists(
 
 def test_create_default_directories_with_invalid_path(temp_setup: TempSetup):
     # Provide an invalid path to create_default_directories
-    invalid_path = Path("/root/invalid_path_for_testing")
-    with pytest.raises(PermissionError):
+    if os.name == "nt":
+        invalid_path = Path(
+            "NULL:/googy_egg/invalid_path_for_testing"
+        )  # Invalid path for Windows
+    else:
+        invalid_path = Path("/googy_egg/invalid_path_for_testing")
+    with pytest.raises(OSError):  # OSError for Mac, PermissionError for Linux
         startup.create_default_directories(invalid_path)
 
     bpod_directory_path = temp_setup.bpod_path
