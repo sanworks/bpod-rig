@@ -7,8 +7,9 @@ from typing import Annotated
 import typer
 from rich import print  # noqa: A004
 
-from bpod_rig.cli.protocols import app as protocols_app
-from bpod_rig.cli.test import app as test_app
+from bpod_rig._cli.plugins import load_plugins
+from bpod_rig._cli.protocols import app as protocols_app
+from bpod_rig._cli.test import app as test_app
 from bpod_rig.config import startup
 from bpod_rig.config.startup import CLIStartupChoiceAdapter, initialize_bpod_system
 from bpod_rig.defaults import DEFAULT_BPOD_PATH
@@ -25,7 +26,6 @@ logger: BpodLogger = get_logger(__name__)
 app = typer.Typer(no_args_is_help=True)
 app.add_typer(protocols_app, name="protocols")
 app.add_typer(test_app, name="test")
-
 
 
 @app.command()
@@ -75,6 +75,7 @@ def run(
 
 
 def main() -> None:
+    load_plugins(app)
     app()
 
 

@@ -8,7 +8,7 @@ from typing import Protocol
 
 from pydantic import ValidationError
 
-from bpod_rig.cli.prompts import prompt_for_path, yes_no_prompt
+from bpod_rig._cli.prompts import prompt_for_path, yes_no_prompt
 from bpod_rig.config import system_settings, utils
 from bpod_rig.defaults import (
     DEFAULT_SUBDIRS,
