@@ -80,15 +80,6 @@ class BpodPaths_2(ModelWithMetadata):
         ),
     ]
 
-    calibration_files: Annotated[
-        dict[str, Path],
-        Field(
-            default_factory=dict,
-            title="Bpod calibration files",
-            description="Dictionary of calibration files found in the calibration "
-            "directory for this Bpod.",
-        ),
-    ]
 
     @classmethod
     def create(
@@ -100,7 +91,6 @@ class BpodPaths_2(ModelWithMetadata):
         log_dir: Path | str | None = None,
         bpods_dir: Path | str | None = None,
         calibration_dir: Path | str | None = None,
-        calibration_files: dict[str, Path] | None = None,
         username: str | None = None,
         metadata: "SettingsMetadata | None" = None,
     ) -> "BpodPaths_2":
@@ -124,8 +114,6 @@ class BpodPaths_2(ModelWithMetadata):
             Override for settings directory (default: base_dir/Settings)
         calibration_dir : Path | str | None, optional
             Override for calibration directory (default: base_dir/Calibration)
-        calibration_files : dict[str, Path] | None, optional
-            Calibration files dictionary
         username : str | None, optional
             Username for metadata
         metadata : SettingsMetadata | None, optional
@@ -150,9 +138,6 @@ class BpodPaths_2(ModelWithMetadata):
         calibration_dir = Path(
             calibration_dir or base_dir / DEFAULT_CALIBRATION_DIR_NAME
         )
-        calibration_files = (
-            {} if calibration_files is None else dict(calibration_files)
-        )  # shallow copy to ensure immutability
         metadata = metadata or SettingsMetadata(username=username or None)
 
         return cls(
@@ -162,12 +147,11 @@ class BpodPaths_2(ModelWithMetadata):
             log_dir=log_dir,
             bpods_dir=bpods_dir,
             calibration_dir=calibration_dir,
-            calibration_files=calibration_files,
             metadata=metadata,
         )
 
     def verify(self) -> bool:
-        fields_to_skip = ["metadata", "base_dir", "calibration_files"]
+        fields_to_skip = ["metadata", "base_dir"]
         dir_verified = True
         sp_fields = BpodPaths_2.model_fields
         sp_fields = [field for field in sp_fields if field not in fields_to_skip]
