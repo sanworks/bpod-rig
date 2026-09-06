@@ -61,10 +61,8 @@ class InitResult:
     """The path to the Bpod directory that was initialized or verified."""
     copied_defaults: bool = False
     """Whether default files were copied to the Bpod directory."""
-    user_config_path: Path | None = None
-    """The path to the saved user configuration file, if applicable."""
-    system_config_path: Path | None = None
-    """The path to the saved system configuration file, if applicable."""
+    config_path: Path | None = None
+    """The path to the saved configuration file, if applicable."""
 
 
 class StartupChoiceProtocol(Protocol):
