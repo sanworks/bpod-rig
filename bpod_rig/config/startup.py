@@ -16,6 +16,7 @@ from bpod_rig.defaults import (
 )
 from bpod_rig.examples.copy import copy_examples
 from bpod_rig.log import BpodLogger
+from config import SystemSettings
 from config.bpod_paths import BpodPaths_2
 
 logger = logging.getLogger(__name__)
@@ -160,9 +161,9 @@ def initialize_bpod_system(  # noqa: PLR0911
     """
     logger.info("Initializing bpod-rig")
 
-    reinitialize: bool = False
     system_paths: BpodPaths_2 | None = None
     bpod_path: Path | None = None
+    reinitialize: bool = False
 
     try:
         environment_allowed = check_supported_environment()
@@ -191,23 +192,52 @@ def initialize_bpod_system(  # noqa: PLR0911
             except (TypeError, ValidationError):
                 # Uh oh, we cannot load the system settings
                 logger.warning("Unable to load system configuration from disk!")
-                reinit = choices.choose_reinitialize_invalid_system_config(
+                reinitialize = choices.choose_reinitialize_invalid_system_config(
                     SYSTEM_CONFIG_FILE
                 )
-                if reinit is None:
+                if reinitialize is None:
                     return InitResult(
                         state=InitState.ABORTED,
                         message="User aborted reinitialize decision "
                         "for invalid system config.",
-                        system_config_path=SYSTEM_CONFIG_FILE,
+                        config_path=SYSTEM_CONFIG_FILE,
                     )
-                if not reinit:
+                if not reinitialize:
                     return InitResult(
                         state=InitState.INITIALIZED_INVALID,
                         message="System configuration file is invalid "
                         "and user declined reinitialization.",
-                        system_config_path=SYSTEM_CONFIG_FILE,
+                        config_path=SYSTEM_CONFIG_FILE,
                     )
+
+            # Time to verify our directory structure
+            configuration_is_valid = system_paths.verify()
+
+            if not configuration_is_valid:
+                logger.info("Bpod directory at %s failed verification.", bpod_path)
+                reinit = choices.choose_reinitialize_invalid_dir(bpod_path)
+                if reinit is None:
+                    return InitResult(
+                        state=InitState.ABORTED,
+                        message="User aborted reinitialize decision.",
+                        bpod_path=bpod_path,
+                    )
+                if not reinit:
+                    return InitResult(
+                        state=InitState.INITIALIZED_INVALID,
+                        message="Directory invalid and reinitialize declined.",
+                        bpod_path=bpod_path,
+                    )
+                else:
+                    logger.debug("Reinitializing bpod directory to: %s", reinit)
+            else:
+                # Update logging path
+                logger.swap_stream(system_paths.log_dir)
+                return InitResult(
+                    state=InitState.SKIPPED,
+                    message="Bpod is already initialized and valid.",
+                    bpod_path=bpod_path,
+                )
         else:
             logger.debug("Checking for other sources of bpod_dir")
             # We have no reference to paths, did the user provide a path some other way?
@@ -215,11 +245,12 @@ def initialize_bpod_system(  # noqa: PLR0911
             # TODO: accept bpod_dir via CLI or ENV.
             # pseudocode: if external_bpod_dir_path -> create system_paths
 
-        # Does the user want to override the paths?
-        if system_paths is None:
-            logger.debug("System is not initialized")
-            # This must be a new install or a reinitialization
-            if initialized:
+
+        if system_paths is None or reinitialize:
+            # If system_paths is None that means we could not load anything (new install)
+            # If configuration_is_valid is false, that means we failed to verify an existing
+            # Directory and the user decided to reinitialize
+            if reinitialize:
                 logger.info("Reinitializing bpod-rig")
                 # We couldn't read the bpod directory path, but the user wants to
                 # reinitialize the system
@@ -227,6 +258,7 @@ def initialize_bpod_system(  # noqa: PLR0911
                 logger.info("Initializing a new bpod-rig install!")
                 # System was never initialized
 
+            # Does the user want to override the paths?
             base_directory = choices.choose_override_path(
                 default_bpod_path,
             )
@@ -237,59 +269,24 @@ def initialize_bpod_system(  # noqa: PLR0911
                 )
 
             system_paths = BpodPaths_2.create(base_dir=base_directory)
+            bpod_path = system_paths.base_dir
 
-        # Time to verify our directory structure
-        configuration_is_valid = system_paths.verify()
+            # If the user has chosen to reinitialise the choice is to copy the data
+            choices.choose_copy_defaults = lambda bpod_path: True  # noqa: ARG005
+            copied_defaults = _initialize_system_config_dir(
+                choices, bpod_path, logger
+            )
 
-
-        #     if not configuration_is_valid:
-        #         logger.info("Bpod directory at %s failed verification.", bpod_path)
-        #         reinit = choices.choose_reinitialize_invalid_dir(bpod_path)
-        #         if reinit is None:
-        #             return InitResult(
-        #                 state=InitState.ABORTED,
-        #                 message="User aborted reinitialize decision.",
-        #                 bpod_path=bpod_path,
-        #             )
-        #         if not reinit:
-        #             return InitResult(
-        #                 state=InitState.INITIALIZED_INVALID,
-        #                 message="Directory invalid and reinitialize declined.",
-        #                 bpod_path=bpod_path,
-        #             )
-        #
-        #         # If the user has chosen to reinitialise the choice is to copy the data
-        #         choices.choose_copy_defaults = lambda bpod_path: True  # noqa: ARG005
-        #         copied_defaults = _initialize_system_config_dir(
-        #             choices, bpod_path, logger
-        #         )
-        #     else:
-        #         logger.info(
-        #             "Bpod has already been initialized and is valid at %s",
-        #             bpod_path,
-        #         )
-        #         bpod_dir = system_settings.BpodDir.create(base_dir=bpod_path)
-        #         logger.swap_stream(bpod_dir.log_dir)
-        #         return InitResult(
-        #             state=InitState.SKIPPED,
-        #             message="Bpod is already initialized and valid.",
-        #             bpod_path=bpod_path,
-        #         )
-        #
-        # logger.swap_stream(bpod_dir.log_dir)
-        # initial_system_config = utils.init_system_configuration(bpod_path)
-        # user_config_path = initial_system_config.save_system_configuration()
-        # system_config_path = initial_system_config.save_system_configuration(
-        #     save_dir_override=SYSTEM_CONFIG_DIR
-        # )
-        # return InitResult(
-        #     state=InitState.COMPLETED,
-        #     message="Initialization successful.",
-        #     bpod_path=bpod_path,
-        #     copied_defaults=copied_defaults,
-        #     user_config_path=user_config_path,
-        #     system_config_path=system_config_path,
-        # )
+            logger.swap_stream(system_paths.log_dir)
+            initial_system_config = SystemSettings.create(system_paths)
+            config_path = initial_system_config.save_system_configuration()
+            return InitResult(
+                state=InitState.COMPLETED,
+                message="Initialization successful.",
+                bpod_path=bpod_path,
+                copied_defaults=copied_defaults,
+                config_path=config_path,
+            )
     except Exception as exc:
         logger.exception("Unexpected error during initialization")
         return InitResult(
