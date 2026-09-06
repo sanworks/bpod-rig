@@ -5,7 +5,6 @@ from logging.config import dictConfig
 from typing import Annotated
 
 import typer
-from rich import print  # noqa: A004
 
 from bpod_rig.cli.protocols import app as protocols_app
 from bpod_rig.cli.test import app as test_app
@@ -13,6 +12,7 @@ from bpod_rig.config import startup
 from bpod_rig.config.startup import CLIStartupChoiceAdapter, initialize_bpod_system
 from bpod_rig.defaults import DEFAULT_BPOD_PATH
 from bpod_rig.log import BpodLogger, get_log_config, get_logger
+from config import system_settings, SystemSettings
 
 DEBUG = True
 
@@ -75,8 +75,7 @@ def run(
 
 
 def main() -> None:
-    app()
-
+    init()
 
 if __name__ == "__main__":
     main()

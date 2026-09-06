@@ -12,11 +12,12 @@ from bpod_rig.cli.prompts import prompt_for_path, yes_no_prompt
 from bpod_rig.config import system_settings, utils
 from bpod_rig.defaults import (
     DEFAULT_SUBDIRS,
-    SYSTEM_CONFIG_DIR,
-    SYSTEM_CONFIG_FILE,
+    SYSTEM_CONFIG_FILE, _SYSTEM_PYTHON, _BPOD_RIG_PYTHON,
 )
 from bpod_rig.examples.copy import copy_examples
 from bpod_rig.log import BpodLogger
+from config import SystemSettings
+from config.bpod_paths import BpodPaths_2
 
 logger = logging.getLogger(__name__)
 
@@ -60,19 +61,17 @@ class InitResult:
     """The path to the Bpod directory that was initialized or verified."""
     copied_defaults: bool = False
     """Whether default files were copied to the Bpod directory."""
-    user_config_path: Path | None = None
-    """The path to the saved user configuration file, if applicable."""
-    system_config_path: Path | None = None
-    """The path to the saved system configuration file, if applicable."""
+    config_path: Path | None = None
+    """The path to the saved configuration file, if applicable."""
 
 
 class StartupChoiceProtocol(Protocol):
     """Each of the possible decisions during system initialization."""
 
-    def choose_override_path_first_init(self, default_path: Path) -> Path | None:
+    def choose_override_path(self, default_path: Path) -> Path | None:
         """
-        When the system is not initialized, ask the user if they want to override the
-        default path and if so, prompt them to enter a path.
+        When the system is not initialized or is being reinitialized, ask the user if
+        they want to override the default path and if so, prompt them to enter a path.
         Return the chosen path or None if the user aborts.
         """
         ...
@@ -106,9 +105,9 @@ class StartupChoiceProtocol(Protocol):
 
 
 class CLIStartupChoiceAdapter(StartupChoiceProtocol):
-    def choose_override_path_first_init(self, default_path: Path) -> Path | None:
+    def choose_override_path(self, default_path: Path) -> Path | None:
         override = yes_no_prompt(
-            f"Bpod has not been initialized. Override default path {default_path}?"
+            f"Override default path {default_path}?"
         )
         if override is None:
             return None
@@ -158,47 +157,60 @@ def initialize_bpod_system(  # noqa: PLR0911
         An object representing the outcome of the initialization process, including
         the final state and any messages,
     """
+    logger.info("Initializing bpod-rig")
+
+    system_paths: BpodPaths_2 | None = None
+    bpod_path: Path | None = None
+    reinitialize: bool = False
+
     try:
+        environment_allowed = check_supported_environment()
+        if not environment_allowed:
+            return InitResult(
+                state=InitState.FAILED,
+                message=["bpod-rig is NOT running inside a virtual environment!\n"
+                "bpod-rig must be run from inside a virtual environment!\n"
+                "Please visit the bpod-rig wiki at"
+                " https://bpod-rig.sanworks.io/installation for installation"
+                "instructions. Exiting..."]
+            )
+        else:
+            logger.debug("Virtual environment verified!")
+
         initialized = check_system_is_initialized()
-        if not initialized:
-            exists = _create_system_config_dir_if_not_exists(logger)
-            if not exists:
-                return InitResult(
-                    state=InitState.FAILED,
-                    message="Failed to create system configuration directory."
-                    " Check permissions, available disk space, and/or logs.",
-                )
-            if check_system_config_exists():
-                reinit = choices.choose_reinitialize_invalid_system_config(
+
+        if initialized:
+            # We found the system config file, can we read it?
+            logger.debug("Attempting to read system configuration from disk")
+            try:
+                # No reason to load this twice if it exists
+                sys_settings = system_settings.load_system_configuration(SYSTEM_CONFIG_FILE)
+                system_paths = sys_settings.paths
+                bpod_path = system_paths.base_dir
+            except (TypeError, ValidationError):
+                # Uh oh, we cannot load the system settings
+                logger.warning("Unable to load system configuration from disk!")
+                reinitialize = choices.choose_reinitialize_invalid_system_config(
                     SYSTEM_CONFIG_FILE
                 )
-                if reinit is None:
+                if reinitialize is None:
                     return InitResult(
                         state=InitState.ABORTED,
                         message="User aborted reinitialize decision "
                         "for invalid system config.",
-                        system_config_path=SYSTEM_CONFIG_FILE,
+                        config_path=SYSTEM_CONFIG_FILE,
                     )
-                if not reinit:
+                if not reinitialize:
                     return InitResult(
                         state=InitState.INITIALIZED_INVALID,
                         message="System configuration file is invalid "
                         "and user declined reinitialization.",
-                        system_config_path=SYSTEM_CONFIG_FILE,
+                        config_path=SYSTEM_CONFIG_FILE,
                     )
 
-            bpod_path = choices.choose_override_path_first_init(default_bpod_path)
-            if bpod_path is None:
-                return InitResult(
-                    state=InitState.ABORTED,
-                    message="User aborted path selection.",
-                )
-
-            copied_defaults = _initialize_system_config_dir(choices, bpod_path, logger)
-        else:
-            bpod_path = get_bpod_dir_from_system()
-            system_paths = system_settings.BpodDir.create(base_dir=bpod_path)
+            # Time to verify our directory structure
             configuration_is_valid = system_paths.verify()
+
             if not configuration_is_valid:
                 logger.info("Bpod directory at %s failed verification.", bpod_path)
                 reinit = choices.choose_reinitialize_invalid_dir(bpod_path)
@@ -214,40 +226,65 @@ def initialize_bpod_system(  # noqa: PLR0911
                         message="Directory invalid and reinitialize declined.",
                         bpod_path=bpod_path,
                     )
-
-                # If the user has chosen to reinitialise the choice is to copy the data
-                choices.choose_copy_defaults = lambda bpod_path: True  # noqa: ARG005
-                copied_defaults = _initialize_system_config_dir(
-                    choices, bpod_path, logger
-                )
+                else:
+                    logger.debug("Reinitializing bpod directory to: %s", reinit)
             else:
-                logger.info(
-                    "Bpod has already been initialized and is valid at %s",
-                    bpod_path,
-                )
-                bpod_dir = system_settings.BpodDir.create(base_dir=bpod_path)
-                logger.swap_stream(bpod_dir.log_dir)
+                # Update logging path
+                logger.swap_stream(system_paths.log_dir)
                 return InitResult(
                     state=InitState.SKIPPED,
                     message="Bpod is already initialized and valid.",
                     bpod_path=bpod_path,
                 )
+        else:
+            logger.debug("Checking for other sources of bpod_dir")
+            # We have no reference to paths, did the user provide a path some other way?
+            # Either way this is a new install
+            # TODO: accept bpod_dir via CLI or ENV.
+            # pseudocode: if external_bpod_dir_path -> create system_paths
 
-        bpod_dir = system_settings.BpodDir.create(base_dir=bpod_path)
-        logger.swap_stream(bpod_dir.log_dir)
-        initial_system_config = utils.init_system_configuration(bpod_path)
-        user_config_path = initial_system_config.save_system_configuration()
-        system_config_path = initial_system_config.save_system_configuration(
-            save_dir_override=SYSTEM_CONFIG_DIR
-        )
-        return InitResult(
-            state=InitState.COMPLETED,
-            message="Initialization successful.",
-            bpod_path=bpod_path,
-            copied_defaults=copied_defaults,
-            user_config_path=user_config_path,
-            system_config_path=system_config_path,
-        )
+
+        if system_paths is None or reinitialize:
+            # If system_paths is None that means we could not load anything (new install)
+            # If configuration_is_valid is false, that means we failed to verify an existing
+            # Directory and the user decided to reinitialize
+            if reinitialize:
+                logger.info("Reinitializing bpod-rig")
+                # We couldn't read the bpod directory path, but the user wants to
+                # reinitialize the system
+            else:
+                logger.info("Initializing a new bpod-rig install!")
+                # System was never initialized
+
+            # Does the user want to override the paths?
+            base_directory = choices.choose_override_path(
+                default_bpod_path,
+            )
+            if base_directory is None:
+                return InitResult(
+                    state=InitState.ABORTED,
+                    message="User aborted path selection.",
+                )
+
+            system_paths = BpodPaths_2.create(base_dir=base_directory)
+            bpod_path = system_paths.base_dir
+
+            # If the user has chosen to reinitialise the choice is to copy the data
+            choices.choose_copy_defaults = lambda bpod_path: True  # noqa: ARG005
+            copied_defaults = _initialize_system_config_dir(
+                choices, bpod_path, logger
+            )
+
+            logger.swap_stream(system_paths.log_dir)
+            initial_system_config = SystemSettings.create(system_paths)
+            config_path = initial_system_config.save_system_configuration()
+            return InitResult(
+                state=InitState.COMPLETED,
+                message="Initialization successful.",
+                bpod_path=bpod_path,
+                copied_defaults=copied_defaults,
+                config_path=config_path,
+            )
     except Exception as exc:
         logger.exception("Unexpected error during initialization")
         return InitResult(
@@ -268,28 +305,6 @@ def _initialize_system_config_dir(
         return True
     logger.info("Chose not to copy default files to %s", bpod_path)
     return False
-
-
-def _create_system_config_dir_if_not_exists(logger: logging.Logger) -> bool:
-    """Create the system configuration directory if it does not exist.
-    Returns True if the directory exists or was created successfully, False otherwise.
-    """
-    try:
-        if not SYSTEM_CONFIG_DIR.exists():
-            logger.debug(
-                "System configuration directory not found. Creating at %s",
-                SYSTEM_CONFIG_DIR,
-            )
-            SYSTEM_CONFIG_DIR.mkdir(parents=False, exist_ok=False)
-        else:
-            logger.debug("System configuration directory found: %s", SYSTEM_CONFIG_DIR)
-    except OSError:
-        logger.exception(
-            "Failed to create system configuration directory: %s",
-            SYSTEM_CONFIG_DIR,
-        )
-        return False
-    return True
 
 
 def create_default_directories(bpod_directory_path: Path) -> None:
@@ -359,64 +374,37 @@ def copy_default_files(bpod_folder_path: Path, *, override: bool = False) -> Non
     copy_examples("settings", settings_dir, override_contents=override)
 
 
-def get_bpod_dir_from_system() -> Path:
-    """Attempts to get the Bpod directory path from the system configuration file.
-
-    Checks to see if the system configuration directory exists, if so, check to see
-    if there is a system configuration file. If there is attempt to read the Bpod
-    directory path from the configuration file.
-
-    Returns
-    -------
-    pathlib.Path
-        Path to the Bpod directory read from the system configuration file
-    """
-    # Attempt to load and read path from system configuration file
-    sys_settings = system_settings.load_system_configuration(SYSTEM_CONFIG_FILE)
-    return sys_settings.paths.base_dir
-
-
-def check_system_config_exists() -> bool:
-    """Checks whether the system configuration file exists.
-
-    Returns
-    -------
-    bool
-        True if the system configuration file exists, False otherwise.
-    """
-    if not SYSTEM_CONFIG_DIR.exists():
-        return False
-    logger.debug("System configuration directory found: %s", SYSTEM_CONFIG_DIR)
-    if not SYSTEM_CONFIG_FILE.exists():
-        return False
-    logger.debug("System configuration file found: %s", SYSTEM_CONFIG_FILE)
-    return True
-
-
 def check_system_is_initialized() -> bool:
     """Checks whether Bpod has been initialized on this system before.
 
-    If the system configuration directory does not exist, the system has
-    not been initialized
-    If the system configuration directory exists, but the system_config.json file
-    does not exist, the system likely has only been partially initialized and needs to
-    be reinitialized.
+    If the system configuration file does not exist, the system has
+    not been initialized.
 
     Returns
     -------
     bool
         True if system is initialized, False otherwise
     """
-    if not check_system_config_exists():
-        return False
+    if SYSTEM_CONFIG_FILE.exists():
+        logger.debug("System configuration file found: %s", SYSTEM_CONFIG_FILE)
+        return True
+    return False
 
-    try:
-        _ = system_settings.load_system_configuration(SYSTEM_CONFIG_FILE)
-    except ValidationError:
-        logger.exception(
-            "System configuration file is malformed: %s.",
-            SYSTEM_CONFIG_FILE,
-        )
-        return False
 
+def check_supported_environment() -> bool:
+    """Checks whether bpod-rig is running from a supported environment.
+
+    bpod-rig is only supported when running inside a virtual environment. Using the
+    system python installation is not supported!
+
+    Returns
+    -------
+    bool
+        True if bpod-rig is running inside a virtual environment, False otherwise
+    """
+
+    if _SYSTEM_PYTHON == _BPOD_RIG_PYTHON:
+        logger.debug("bpod-rig interpreter: %s \n"
+                     "system interpreter: %s \n")
+        return False
     return True
