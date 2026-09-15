@@ -6,8 +6,8 @@ import pytest
 from pydantic import ValidationError
 
 from bpod_rig.config.base import SettingsMetadata
-from bpod_rig.config.bpod_settings import BpodPaths
-from bpod_rig.config.system_settings import BpodDir, SystemSettings
+from bpod_rig.config.bpod_paths import BpodPaths_2
+from bpod_rig.config.system_settings import SystemSettings
 
 
 class TestMetadataModel:
@@ -53,60 +53,14 @@ class TestMetadataModel:
             SettingsMetadata(username=too_short_username)
 
 
-class TestSystemPathsModel:
-    @pytest.fixture
-    def paths(self, tmp_path: Path) -> dict[str, Path]:
-        """Fixture to provide a common set of path objects for tests."""
-        working_dir = tmp_path
-        bpod_dir = working_dir.joinpath("Bpod")
-        return {
-            "bpod_dir": bpod_dir,
-            "config_dir": bpod_dir.joinpath("Config"),
-            "protocol_dir": bpod_dir.joinpath("Protocols"),
-            "data_dir": bpod_dir.joinpath("Data"),
-        }
-
-    def test_default_factory(self, paths: dict[str, Path]):
-        """Tests that the default directory paths are constructed correctly."""
-        sp = BpodDir.create(base_dir=paths["bpod_dir"])
-        assert sp.data_dir == paths["data_dir"]
-        assert sp.base_config_dir == paths["config_dir"]
-        assert sp.protocol_dir == paths["protocol_dir"]
-
-    def test_pass_username(self, paths: dict[str, Path]):
-        """Tests that a username can be passed through to the metadata."""
-        paths["bpod_dir"].mkdir(exist_ok=True)
-        paths["data_dir"].mkdir(exist_ok=True)
-        paths["protocol_dir"].mkdir(exist_ok=True)
-        paths["config_dir"].mkdir(exist_ok=True)
-
-        sp = BpodDir.create(base_dir=paths["bpod_dir"], username="valid_username")
-
-        # Does username get forwarded properly to the SettingsMetadata object
-        assert sp.metadata.username == "valid_username"
-
-        # Does the SettingsMetadata object get properly forwarded
-        md = SettingsMetadata()
-        sp2 = BpodDir.create(
-            base_dir=paths["bpod_dir"], metadata=md, username="beepbop"
-        )
-        assert sp2.metadata.username != "beepbop"
-
-    def test_not_paths(self):
-        """Tests that non-path inputs for directories raise validation errors."""
-        with pytest.raises(TypeError):
-            BpodDir.create(base_dir=1234321)  # type: ignore
-
-        sp = BpodDir.create(base_dir="/this/is/a/path")
-        assert isinstance(sp.base_dir, Path)
-
-
 class BpodPathsDict(TypedDict):
     base_dir: Path
-    bpod_id: str
-    bpod_dir: Path
-    config_dir: Path
+    protocol_dir: Path
+    data_dir: Path
+    log_dir: Path
+    bpods_dir: Path
     calibration_dir: Path
+    calibration_files: dict[str, Path]
 
 
 class TestBpodPathsModel:
@@ -114,53 +68,68 @@ class TestBpodPathsModel:
     def paths(self, tmp_path: Path) -> BpodPathsDict:
         """Fixture to provide a common set of Bpod-specific path objects."""
         working_dir = tmp_path
-        base_dir = working_dir.joinpath("Bpods")
-        bpod_id = "1234"
-        bpod_dir = base_dir.joinpath(f"Machine-{bpod_id}")
+        base_dir = working_dir.joinpath("Bpod")
         return {
             "base_dir": base_dir,
-            "bpod_id": bpod_id,
-            "bpod_dir": bpod_dir,
-            "config_dir": bpod_dir.joinpath("Settings"),
-            "calibration_dir": bpod_dir.joinpath("Calibration"),
+            "protocol_dir": base_dir.joinpath("Protocols"),
+            "data_dir": base_dir.joinpath("Data"),
+            "log_dir": base_dir.joinpath("Logs"),
+            "bpods_dir": base_dir.joinpath("Bpods"),
+            "calibration_dir": base_dir.joinpath("Calibration"),
+            "calibration_files": {},
         }
 
-    def test_id_validation(self, paths: BpodPathsDict):
+    def test_pass_username(self, paths: BpodPathsDict):
+        sp = BpodPaths_2.create(base_dir=paths["base_dir"], username="valid_username")
+        # Does username get forwarded properly to the SettingsMetadata object
+        assert sp.metadata.username == "valid_username"
+
+        # Does the SettingsMetadata object get properly forwarded
+        md = SettingsMetadata()
+        sp2 = BpodPaths_2.create(
+            base_dir=paths["base_dir"], metadata=md, username="beepbop"
+        )
+        assert sp2.metadata.username != "beepbop"
+
+    def test_validation(self, paths: BpodPathsDict):
         """Tests validation for the bpod_id field."""
-        # No ID, fails validation
+        # No path, fails validation
         with pytest.raises(TypeError):
-            BpodPaths.create(parent_dir=paths["bpod_dir"])  # type: ignore
+            BpodPaths_2.create()  # type: ignore
 
-        # ID is wrong type
-        with pytest.raises(ValidationError):
-            BpodPaths.create(bpod_id=1234, parent_dir=paths["bpod_dir"])  # type: ignore
-
-        # No parent_dir
+        # path is wrong type
         with pytest.raises(TypeError):
-            BpodPaths.create(bpod_id=paths["bpod_id"])  # type: ignore
+            BpodPaths_2.create(base_dir=1234)  # type: ignore
 
-        bp = BpodPaths.create(bpod_id=paths["bpod_id"], parent_dir=paths["base_dir"])
-        assert bp.bpod_id == paths["bpod_id"]
+        bp = BpodPaths_2.create(base_dir=paths["base_dir"])
+        assert bp.base_dir == paths["base_dir"]
 
     def test_default_factory(self, paths: BpodPathsDict):
         """Tests that the Bpod-specific paths are constructed correctly."""
-        bp = BpodPaths.create(bpod_id=paths["bpod_id"], parent_dir=paths["base_dir"])
-        assert bp.unique_bpod_dir == paths["bpod_dir"]
-        assert bp.parent_dir == paths["base_dir"]
+        bp = BpodPaths_2.create(base_dir=paths["base_dir"])
+        assert bp.base_dir == paths["base_dir"]
+        assert bp.protocol_dir == paths["protocol_dir"]
+        assert bp.data_dir == paths["data_dir"]
+        assert bp.log_dir == paths["log_dir"]
+        assert bp.bpods_dir == paths["bpods_dir"]
         assert bp.calibration_dir == paths["calibration_dir"]
-        assert bp.settings_dir == paths["config_dir"]
+        assert bp.calibration_files == {}
 
 
 class TestSystemSettingsModel:
     @pytest.fixture
-    def paths(self, tmp_path: Path) -> dict[str, BpodDir]:
+    def paths(self, tmp_path: Path) -> dict[str, BpodPaths_2]:
         """Fixture to provide a common set of path objects for tests."""
         working_dir = tmp_path
         bpod_dir = working_dir.joinpath("Bpod")
-        system_paths = BpodDir.create(base_dir=bpod_dir)
+        system_paths = BpodPaths_2.create(base_dir=bpod_dir)
         return {"system_paths": system_paths}
 
-    def test_default(self, paths: dict[str, BpodDir]):
+    def test_not_paths(self):
+        with pytest.raises(TypeError):
+            SystemSettings.create(paths=12345)  # type: ignore
+
+    def test_default(self, paths: dict[str, BpodPaths_2]):
         """Tests that the default system settings are constructed correctly."""
         settings = SystemSettings.create(paths=paths["system_paths"])
 
@@ -170,4 +139,3 @@ class TestSystemSettingsModel:
         assert not settings.phone_home_opt_in
         assert not settings.debug
         assert settings.paths == paths["system_paths"]
-        assert settings.bpod_dirs is None

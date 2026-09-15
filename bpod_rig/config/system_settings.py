@@ -7,178 +7,12 @@ from pydantic import UUID4, Field, PastDate
 
 from bpod_rig import log
 from bpod_rig.config.base import ModelWithMetadata, SettingsMetadata
-from bpod_rig.config.bpod_settings import BpodPaths
+from bpod_rig.config.bpod_paths import BpodPaths_2
 from bpod_rig.defaults import (
-    DEFAULT_CONFIG_DIR_NAME,
-    DEFAULT_DATA_DIR_NAME,
-    DEFAULT_LOG_DIR_NAME,
-    DEFAULT_PROTOCOL_DIR_NAME,
-    SYSTEM_CONFIG_DIR,
+ SYSTEM_DIR,
 )
-from bpod_rig.IO import json_handler
 
 logger = log.get_logger(__name__)
-
-
-class BpodDir(ModelWithMetadata):
-    """Bpod directory structure with required subdirectories.
-
-    Use the `create()` class method to construct instances with automatic
-    subdirectory path generation from the base directory.
-    """
-
-    base_dir: Annotated[
-        Path,
-        Field(
-            ...,
-            title="Local Bpod Directory",
-            description="Local Bpod base directory where other folders are stored."
-            " There is not any data directly stored in this directory",
-            examples=[
-                r"C:\Users\BpodUser\Documents\Bpod",
-                "/home/BpodUser/Documents/Bpod",
-            ],
-        ),
-    ]
-
-    protocol_dir: Annotated[
-        Path,
-        Field(
-            title="Bpod Protocol Directory",
-            description="Local directory where Bpod protocols are stored."
-            " The Protocol explorer will list all valid protocols found"
-            " in this directory.",
-        ),
-    ]
-
-    data_dir: Annotated[
-        Path,
-        Field(
-            title="Bpod Data Directory",
-            description="Local directory where data from protocol runs are stored.",
-        ),
-    ]
-
-    base_config_dir: Annotated[
-        Path,
-        Field(
-            title="Bpod Configuration Directory",
-            description="Local directory where Bpod configuration files are stored.",
-        ),
-    ]
-
-    log_dir: Annotated[
-        Path,
-        Field(
-            title="Bpod Log Directory",
-            description="Local directory where Bpod logs are stored.",
-        ),
-    ]
-
-    @classmethod
-    def create(
-        cls,
-        base_dir: Path | str,
-        *,
-        protocol_dir: Path | str | None = None,
-        data_dir: Path | str | None = None,
-        base_config_dir: Path | str | None = None,
-        log_dir: Path | str | None = None,
-        username: str | None = None,
-        metadata: "SettingsMetadata | None" = None,
-    ) -> "BpodDir":
-        """Factory method to create BpodDir with automatic subdirectory paths.
-
-        This is the recommended way to create BpodDir instances. It automatically
-        generates subdirectory paths based on the base_dir if not explicitly provided.
-
-        Parameters
-        ----------
-        base_dir : Path | str
-            Base Bpod directory
-        protocol_dir : Path | str | None, optional
-            Override for protocol directory (default: base_dir/Protocols)
-        data_dir : Path | str | None, optional
-            Override for data directory (default: base_dir/Data)
-        base_config_dir : Path | str | None, optional
-            Override for config directory (default: base_dir/Config)
-        log_dir : Path | str | None, optional
-            Optional log directory
-        username : str | None, optional
-            Username for metadata
-        metadata : SettingsMetadata | None, optional
-            Pre-constructed metadata object
-
-        Returns
-        -------
-        BpodDir
-            Fully initialized BpodDir instance with all subdirectory paths populated
-
-        Examples
-        --------
-        >>> bpod_dir = BpodDir.create(base_dir="/home/user/Bpod")
-        >>> bpod_dir.protocol_dir
-        PosixPath('/home/user/Bpod/Protocols')
-        """
-        base_dir = Path(base_dir)
-        protocol_dir = Path(protocol_dir or base_dir / DEFAULT_PROTOCOL_DIR_NAME)
-        data_dir = Path(data_dir or base_dir / DEFAULT_DATA_DIR_NAME)
-        base_config_dir = Path(base_config_dir or base_dir / DEFAULT_CONFIG_DIR_NAME)
-        log_dir = Path(log_dir or base_dir / DEFAULT_LOG_DIR_NAME)
-
-        return cls(
-            base_dir=base_dir,
-            protocol_dir=protocol_dir,
-            data_dir=data_dir,
-            base_config_dir=base_config_dir,
-            log_dir=log_dir,
-            metadata=metadata or SettingsMetadata(username=username or None),
-        )
-
-    def verify(self) -> bool:
-        dir_verified = True
-        sp_fields = BpodDir.model_fields
-        sp_fields = [field for field in sp_fields if field != "metadata"]
-        sp_as_dict = self.model_dump()
-
-        for field in sp_fields:
-            field_path = sp_as_dict[field]
-            if field_path is None:
-                continue
-                # Skip None values that are not implemented yet
-            if not field_path.exists():
-                logger.error("Bpod subdirectory %s does not exist", field_path)
-                dir_verified = False
-
-        return dir_verified
-
-    def save_system_paths(self, save_dir_override: Path | None) -> None:
-        """
-        Save the system paths to the system configuration directory as
-        json-formatted text.
-
-        Simultaneously will update the save_time field
-
-        Parameters
-        ----------
-        save_dir_override : Path | None
-            Optional Path to override the default save directory.
-            Default SYSTEM_CONFIG_DIR used if not provided
-
-        Returns
-        -------
-        None
-        """
-        logger.debug("Saving system paths as JSON!")
-        self.update_modification_time()
-
-        if save_dir_override is not None:
-            save_dir = save_dir_override
-        else:
-            save_dir = SYSTEM_CONFIG_DIR
-
-        system_paths_json = self.model_dump_json(indent=2)
-        json_handler.write_json(system_paths_json, save_dir, "paths")
 
 
 class SystemSettings(ModelWithMetadata):
@@ -226,31 +60,21 @@ class SystemSettings(ModelWithMetadata):
     ]
 
     paths: Annotated[
-        BpodDir,
+        BpodPaths_2,
         Field(
             title="System Paths Model",
             description="Model containing validated bpod system paths",
         ),
     ]
 
-    bpod_dirs: Annotated[
-        list[BpodPaths] | None,
-        Field(
-            title="All Bpod Paths",
-            description="List containing BpodPaths objects that contain"
-            " the folder structure for each unique Bpod",
-        ),
-    ] = None
-
     @classmethod
     def create(
         cls,
-        paths: BpodDir,
+        paths: BpodPaths_2,
         *,
         current_version: str = "0.0.0",
         phone_home_opt_in: bool = False,
         debug: bool = False,
-        bpod_dirs: list[BpodPaths] | None = None,
         username: str | None = None,
         metadata: "SettingsMetadata | None" = None,
     ) -> "SystemSettings":
@@ -260,7 +84,7 @@ class SystemSettings(ModelWithMetadata):
 
         Parameters
         ----------
-        paths : BpodDir
+        paths : BpodPaths_2
             System paths configuration
         current_version : str, optional
             Currently installed version (default: "0.0.0")
@@ -268,8 +92,6 @@ class SystemSettings(ModelWithMetadata):
             Whether user opted into telemetry (default: False)
         debug : bool, optional
             Enable debug output (default: False)
-        bpod_dirs : Optional[list[BpodPaths]], optional
-            List of Bpod-specific paths (default: None)
         username : str | None, optional
             Username for metadata
         metadata : SettingsMetadata | None, optional
@@ -282,8 +104,8 @@ class SystemSettings(ModelWithMetadata):
 
         Examples
         --------
-        >>> bpod_dir = BpodDir.create(base_dir="/home/user/Bpod")
-        >>> settings = SystemSettings.create(paths=bpod_dir, username="TestUser")
+        >>> bpod_paths = BpodPaths_2.create("/home/user/Bpod")
+        >>> settings = SystemSettings.create(paths=bpod_paths, username="TestUser")
         >>> settings.metadata.username
         'TestUser'
         """
@@ -292,7 +114,6 @@ class SystemSettings(ModelWithMetadata):
             current_version=current_version,
             phone_home_opt_in=phone_home_opt_in,
             debug=debug,
-            bpod_dirs=bpod_dirs,
             metadata=metadata or SettingsMetadata(username=username),
         )
 
@@ -309,11 +130,6 @@ class SystemSettings(ModelWithMetadata):
         super().update_modification_time()
         # Update the SystemSettings save time
 
-        if self.bpod_dirs:
-            for bpod_dir in self.bpod_dirs:
-                bpod_dir.update_modification_time()
-        # Update the save time for each bpod_dir
-
         if self.paths:
             self.paths.update_modification_time()
         # Update the save time for the system paths
@@ -328,20 +144,22 @@ class SystemSettings(ModelWithMetadata):
         ----------
         save_dir_override : Path, optional
             Optional Path to override the default save directory. If not provided,
-            system_settings.paths.base_config_dir will be used.
+            SYSTEM_DIR will be used.
 
         Returns
         -------
             Path
                 Path to the saved file is returned
         """
+
         logger.info("Saving system configuration as JSON!")
         self.update_modification_time()
 
-        if save_dir_override is None:
-            save_dir = self.paths.base_config_dir
-        else:
+        save_dir = SYSTEM_DIR
+
+        if save_dir_override is not None:
             save_dir = save_dir_override
+
         logger.debug("Save directory for SystemSettings set to %s: ", save_dir)
         self.save_model(save_dir, "config")
         return save_dir.joinpath("config.json")
